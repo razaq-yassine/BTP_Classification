@@ -1,0 +1,131 @@
+import { FieldDefinition } from '@/types/object-definition'
+
+export interface ValidationError {
+  field: string
+  message: string
+}
+
+export interface ValidationResult {
+  isValid: boolean
+  errors: ValidationError[]
+  emptyImportantFields: string[]
+}
+
+/**
+ * Validates form data against field definitions
+ * @param data - The form data to validate
+ * @param fieldDefinitions - Array of field definitions
+ * @returns ValidationResult with validation status and errors
+ */
+export function validateFormData(
+  data: Record<string, any>,
+  fieldDefinitions: FieldDefinition[]
+): ValidationResult {
+  const errors: ValidationError[] = []
+  const emptyImportantFields: string[] = []
+
+  fieldDefinitions.forEach((field) => {
+    const value = data[field.key]
+    const isEmpty = value === null || value === undefined || value === '' || 
+                   (Array.isArray(value) && value.length === 0)
+
+    // Check required fields
+    if ((field.required || field.isRequired) && isEmpty) {
+      errors.push({
+        field: field.key,
+        message: `${field.label} is required`
+      })
+    }
+
+    // Track empty important fields (but don't add as validation errors)
+    if (field.isImportant && isEmpty) {
+      emptyImportantFields.push(field.label)
+    }
+
+    // Type-specific validation
+    if (!isEmpty) {
+      switch (field.type) {
+        case 'email':
+          if (typeof value === 'string' && !isValidEmail(value)) {
+            errors.push({
+              field: field.key,
+              message: `${field.label} must be a valid email address`
+            })
+          }
+          break
+
+        case 'phone':
+          if (typeof value === 'string' && !isValidPhone(value)) {
+            errors.push({
+              field: field.key,
+              message: `${field.label} must be a valid phone number`
+            })
+          }
+          break
+
+        case 'number':
+          if (typeof value !== 'number' && isNaN(Number(value))) {
+            errors.push({
+              field: field.key,
+              message: `${field.label} must be a valid number`
+            })
+          }
+          break
+
+        case 'date':
+        case 'datetime':
+          if (typeof value === 'string' && !isValidDate(value)) {
+            errors.push({
+              field: field.key,
+              message: `${field.label} must be a valid date`
+            })
+          }
+          break
+      }
+    }
+  })
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    emptyImportantFields
+  }
+}
+
+/**
+ * Validates an email address
+ */
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+/**
+ * Validates a phone number (basic validation)
+ */
+function isValidPhone(phone: string): boolean {
+  // Remove all non-numeric characters
+  const cleanPhone = phone.replace(/\D/g, '')
+  // Basic validation: should have at least 7 digits
+  return cleanPhone.length >= 7
+}
+
+/**
+ * Validates a date string
+ */
+function isValidDate(dateString: string): boolean {
+  const date = new Date(dateString)
+  return !isNaN(date.getTime())
+}
+
+/**
+ * Gets validation errors for a specific field
+ */
+export function getFieldErrors(
+  fieldKey: string,
+  errors: ValidationError[]
+): string[] {
+  return errors
+    .filter(error => error.field === fieldKey)
+    .map(error => error.message)
+}

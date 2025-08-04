@@ -1,0 +1,41 @@
+# Development Rules for Generic SaaS Project
+
+## Backend (Django)
+- Use session-based authentication instead of token-based for simplicity
+- Always include CORS headers for frontend communication
+- Use Django REST Framework for API endpoints
+- Keep models simple and extensible
+- Include useful comments for complex business logic
+- Update requirements.txt when adding new packages
+
+## Frontend (React + TypeScript)
+- Use Zustand for state management instead of complex state libraries
+- Pre-populate login forms with default credentials for development
+- Use Tanstack Router for routing with proper authentication guards
+- Display JSON data prominently in dashboard as requested
+- Keep UI components simple and functional
+- Use axios with credentials for API calls
+
+## Database
+- Use SQLite for development (simple to configure)
+- Always run migrations after model changes
+- Include starter data for development and testing
+- Use management commands for data population
+
+## Authentication Flow
+- Frontend checks authentication status on app load
+- Redirect unauthenticated users to login page
+- Redirect authenticated users to dashboard
+- Use Django sessions for authentication state
+- Logout clears session and redirects to login
+
+## API Structure
+- /api/auth/login/ - POST for user login
+- /api/auth/logout/ - POST for user logout  
+- /api/auth/user/ - GET for current user info
+- /api/customers/ - GET for customer list (JSON format)
+
+## Development Workflow
+- Start Django backend: python manage.py runserver
+- Start frontend: npm run dev (Vite dev server on port 5173)
+- Default credentials: admin/admin123 or demo/demo123

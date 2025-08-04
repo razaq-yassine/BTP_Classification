@@ -1,0 +1,2 @@
+after editing the frontend always build to detect errors and fix them.
+Always use shadcn components over others.
