@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { RelatedObjectDefinition, GenericRecord } from '@/types/object-definition'
+import { getObjectDefinition } from '@/metadata/loader'
 import { pluralize } from '@/metadata/utils'
 import { GenericDataTable } from './GenericDataTable'
 import { Button } from '@/components/ui/button'
@@ -23,6 +25,7 @@ export function GenericRelatedListView({
   showAddButton = true,
   maxHeight = '400px'
 }: GenericRelatedListViewProps) {
+  const navigate = useNavigate()
   const [records, setRecords] = useState<GenericRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -61,9 +64,24 @@ export function GenericRelatedListView({
     }
   }
 
-  const handleRecordClick = (_record: GenericRecord) => {
-    // TODO: Navigate to the related record's detail view
+  const handleRecordClick = async (record: GenericRecord) => {
+    const def = await getObjectDefinition(relatedObjectDefinition.objectDefinition)
+    if (!def?.detailPath) return
+    const idPlaceholder = `$${relatedObjectDefinition.objectDefinition}Id`
+    const detailPath = def.detailPath.replace(idPlaceholder, String(record.id))
+    navigate({ to: detailPath })
   }
+
+  const handleReferenceClick = useCallback(
+    async (objectName: string, id: string | number) => {
+      const def = await getObjectDefinition(objectName)
+      if (!def?.detailPath) return
+      const idPlaceholder = `$${objectName}Id`
+      const detailPath = def.detailPath.replace(idPlaceholder, String(id))
+      navigate({ to: detailPath })
+    },
+    [navigate]
+  )
 
   const handleRefresh = () => {
     fetchRelatedRecords()
@@ -158,6 +176,7 @@ export function GenericRelatedListView({
             } as any}
             isLoading={loading}
             onRowClick={handleRecordClick}
+            onReferenceClick={handleReferenceClick}
           />
         )}
       </div>

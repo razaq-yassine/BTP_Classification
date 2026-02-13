@@ -17,7 +17,7 @@
       "title": "System Information",
       "columns": 2,
       "defaultOpen": false,
-      "fields": ["id", "isActive", "createdAt", "updatedAt"]
+      "fields": ["id", "createdAt", "updatedAt"]
     }
   ]
 }

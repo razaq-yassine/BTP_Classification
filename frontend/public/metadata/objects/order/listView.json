@@ -1,5 +1,5 @@
 {
-  "fields": ["orderNumber", "customerName", "status", "totalAmount", "orderDate", "isActive"],
+  "fields": ["orderNumber", "customer", "status", "totalAmount", "orderDate"],
   "defaultSort": "orderDate",
   "defaultSortOrder": "desc",
   "pageSize": 10

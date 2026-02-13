@@ -1,7 +1,7 @@
 {
   "name": "customer",
-  "label": "Customerj",
-  "labelPlural": "Customerss",
+  "label": "Customer",
+  "labelPlural": "Customers",
   "description": "Manage customer information and records",
   "apiEndpoint": "/api/customers",
   "basePath": "/customers",

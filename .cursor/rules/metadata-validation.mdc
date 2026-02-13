@@ -1,6 +1,6 @@
 ---
 description: Update metadata validation when adding new metadata features
-globs: backend/src/metadata/**, shared/protected-metadata.ts, frontend/src/metadata/schemas.ts, frontend/public/metadata/**
+globs: backend/src/metadata/**, shared/protected-metadata.ts, frontend/src/metadata/schemas.ts, frontend/public/metadata/**, frontend/src/components/generic/ListViewFieldFormatter.tsx, frontend/src/components/generic/GenericDetailInputFormatter.tsx, frontend/src/components/generic/GenericObjectDetailViewMainSection.tsx
 alwaysApply: false
 ---
 
@@ -8,7 +8,9 @@ alwaysApply: false
 
 When adding or changing metadata-driven features:
 
-1. **New field type** → Add to `VALID_FIELD_TYPES` in `backend/src/metadata/validate.ts` AND to `fieldSchema` in `frontend/src/metadata/schemas.ts`
+1. **New field type** → Add to `VALID_FIELD_TYPES` in `backend/src/metadata/validate.ts` AND to `fieldSchema` in `frontend/src/metadata/schemas.ts`. **Also ensure the field type is handled in both views:**
+   - **List view**: Add a `case` in `ListViewFieldFormatter` (`frontend/src/components/generic/ListViewFieldFormatter.tsx`) for formatting and display
+   - **Detail view**: Add a `case` in `GenericDetailInputFormatter` (`frontend/src/components/generic/GenericDetailInputFormatter.tsx`) for edit mode, and ensure `formatValue` in `GenericObjectDetailViewMainSection.tsx` handles read-only display
 
 2. **New field property** (e.g. `formula`, `computedExpression`) → Add validation in `validateFieldFile()` for required/optional rules
 

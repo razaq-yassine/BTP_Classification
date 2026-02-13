@@ -1,7 +1,6 @@
 {
   "fields": [
     "name",
-    "isActive",
     "createdAt"
   ],
   "defaultSort": "createdAt",

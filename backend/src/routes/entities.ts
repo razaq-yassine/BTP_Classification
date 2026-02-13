@@ -100,7 +100,6 @@ function buildInsertPayload(
       continue
     }
     let val = body[field] ?? (defaults as Record<string, unknown>)?.[field]
-    if (field === 'isActive' && val === undefined) val = true
     if (['orderDate', 'deliveryDate', 'createdAt', 'updatedAt'].includes(field) && typeof val === 'string') {
       val = new Date(val)
     }
@@ -140,7 +139,6 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
   const { table, objectName, searchFields, relatedListPaths } = config
   const join = 'join' in config ? (config.join as JoinConfig | undefined) : undefined
   const orderCol = getOrderColumn(table as { orderDate?: unknown; createdAt?: unknown; id?: unknown })
-  const isActiveCol = (table as { isActive?: unknown }).isActive
   const idCol = (table as { id?: unknown }).id
 
   if (relatedListPaths) {
@@ -162,14 +160,14 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
             .select({ main: table, joined: j.joinTable as any })
             .from(table)
             .leftJoin(j.joinTable as any, eq(j.leftColumn as any, j.rightColumn as any))
-            .where(and(eq(filterCol as any, parentId), eq(isActiveCol as any, true)))
+            .where(eq(filterCol as any, parentId))
             .orderBy(desc(orderCol as any))
           rows = result as any
         } else {
           rows = (await db
             .select()
             .from(table)
-            .where(and(eq(filterCol as any, parentId), eq(isActiveCol as any, true)))
+            .where(eq(filterCol as any, parentId))
             .orderBy(desc(orderCol as any))) as any
         }
 
@@ -219,16 +217,12 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
         .select({ main: table, joined: j.joinTable as any })
         .from(table)
         .leftJoin(j.joinTable as any, eq(j.leftColumn as any, j.rightColumn as any))
-        .where(eq(isActiveCol as any, true))
         .orderBy(desc(orderCol as any))
       rows = result as any
     } else {
-      let query: any = db.select().from(table).where(eq(isActiveCol as any, true))
-      if (search && searchFields.length > 0) {
-        const cond = or(...searchFields.map((f: any) => like(f, `%${search}%`)))!
-        query = query.where(and(eq(isActiveCol as any, true), cond))
-      }
-      rows = (await query.orderBy(desc(orderCol as any))) as any
+      const whereCond = search && searchFields.length > 0 ? or(...searchFields.map((f: any) => like(f, `%${search}%`)))! : undefined
+      const q = db.select().from(table).orderBy(desc(orderCol as any))
+      rows = (await (whereCond ? q.where(whereCond) : q)) as any
     }
 
     let filtered = rows
@@ -308,7 +302,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       }
     }
 
-    const payload = buildInsertPayload(insertBody, config, { isActive: true })
+    const payload = buildInsertPayload(insertBody, config, {})
     const modified = (await runTrigger(objectName, 'beforeInsert', undefined, payload)) ?? payload
     const [inserted] = await db.insert(table).values(modified).returning()
     await runTrigger(objectName, 'afterInsert', undefined, inserted as Record<string, unknown>)
@@ -348,7 +342,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     const [oldRow] = await db.select().from(table).where(eq(idCol as any, id))
     if (!oldRow) return c.json({ message: 'Not found' }, 404)
     await runTrigger(objectName, 'beforeDelete', oldRow as Record<string, unknown>)
-    await db.update(table).set({ isActive: false, updatedAt: new Date() }).where(eq(idCol as any, id))
+    await db.delete(table).where(eq(idCol as any, id))
     await runTrigger(objectName, 'afterDelete', oldRow as Record<string, unknown>)
     return c.json({})
   })

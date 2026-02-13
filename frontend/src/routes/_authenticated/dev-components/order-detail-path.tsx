@@ -22,7 +22,6 @@ const MOCK_ORDER = {
   deliveryDate: '2025-02-20',
   description: 'Sample order for Path demo',
   customer: { id: 1, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com' },
-  isActive: true,
   createdAt: '2025-02-10T10:00:00Z',
   updatedAt: '2025-02-10T10:00:00Z',
 }

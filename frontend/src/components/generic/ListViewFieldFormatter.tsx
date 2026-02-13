@@ -16,11 +16,13 @@ export interface FieldFormatterProps {
   options?: SelectOption[]
   render?: string // e.g. 'statusBadge', 'currency'
   record?: Record<string, unknown>
+  objectName?: string // For reference fields - target object to navigate to
+  onReferenceClick?: (objectName: string, id: string | number) => void
 }
 
-const EMPTY = <span className="text-muted-foreground">—</span>
+const EMPTY = <span className="text-muted-foreground italic">(Empty)</span>
 
-export function ListViewFieldFormatter({ type, value, format: dateFormat, options, render: renderType }: FieldFormatterProps) {
+export function ListViewFieldFormatter({ type, value, format: dateFormat, options, render: renderType, objectName, onReferenceClick }: FieldFormatterProps) {
   const isEmpty = value === null || value === undefined || value === ''
   if (isEmpty && type !== 'boolean') return EMPTY
 
@@ -118,12 +120,29 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
         return EMPTY
       }
 
-    case 'reference':
+    case 'reference': {
+      const refId = typeof value === 'object' ? value?.id : value
       const displayName =
         typeof value === 'object'
           ? (value.fullName ?? value.name ?? [value.firstName, value.lastName].filter(Boolean).join(' ')) || value.id
           : value
+      const canNavigate = objectName && refId != null && onReferenceClick
+      if (canNavigate) {
+        return (
+          <button
+            type="button"
+            className="text-sm text-primary hover:underline text-left"
+            onClick={(e) => {
+              e.stopPropagation()
+              onReferenceClick(objectName, refId)
+            }}
+          >
+            {displayName ?? value}
+          </button>
+        )
+      }
       return <span className="text-sm">{displayName ?? value}</span>
+    }
 
     case 'number':
       const numValue = typeof value === 'number' ? value : parseFloat(value)

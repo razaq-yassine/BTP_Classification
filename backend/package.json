@@ -15,6 +15,7 @@
     "db:sync-drops": "tsx scripts/sync-drops.ts",
     "db:deploy": "pnpm exec tsc -p ../shared/tsconfig.json && pnpm run db:validate-metadata && pnpm run db:generate-from-metadata-temp && pnpm run db:generate-temp && pnpm run db:migrate && pnpm run db:sync-drops && cp drizzle-temp/db/schema.ts src/db/schema.ts && cp drizzle-temp/routes/entity-registry.generated.ts src/routes/entity-registry.generated.ts && pnpm run db:ensure-tables",
     "db:seed": "tsx src/seed.ts",
+    "db:seed-customers": "tsx scripts/seed-customers.ts",
     "db:validate-metadata": "tsx scripts/validate-metadata.ts"
   },
   "dependencies": {

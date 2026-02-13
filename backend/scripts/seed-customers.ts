@@ -27,7 +27,6 @@ function generateCustomers(count: number) {
       notes: i % 3 === 0 ? `Notes for customer ${i}` : null,
       tags: tags[i % tags.length],
       priority: priorities[i % priorities.length],
-      isActive: true,
       createdAt: now,
       updatedAt: now,
     })

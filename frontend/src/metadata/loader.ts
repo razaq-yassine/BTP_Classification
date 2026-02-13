@@ -9,8 +9,13 @@ import type {
 } from '@/types/object-definition'
 import { getIcon, resolveAction, resolveCalculatedData } from './action-registry'
 import { objectSchema, fieldSchema } from './schemas'
+import { SYSTEM_FIELD_LABELS } from '@shared/protected-metadata'
 
 const METADATA_BASE = '/metadata'
+
+function getSystemFieldLabel(key: string): string {
+  return SYSTEM_FIELD_LABELS[key] ?? key.replace(/([A-Z])/g, ' $1').replace(/^./, (c) => c.toUpperCase()).trim()
+}
 
 async function fetchJson<T>(path: string): Promise<T> {
   const res = await fetch(`${METADATA_BASE}${path}`)
@@ -39,12 +44,11 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
     const field = fieldsMap.get(key)
     if (field) return field
     const fallbackType =
-      key === 'isActive'
-        ? ('boolean' as const)
-        : key === 'createdAt' || key === 'updatedAt'
+      key === 'createdAt' || key === 'updatedAt'
           ? ('datetime' as const)
           : ('string' as const)
-    return { key, label: key, type: fallbackType }
+    const label = getSystemFieldLabel(key)
+    return { key, label, type: fallbackType }
   })
 
   const detailSections = (detailViewData.sections as Array<{ title: string; columns?: number; defaultOpen?: boolean; fields: string[] }>) || []
@@ -56,12 +60,11 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
       const field = fieldsMap.get(key)
       if (field) return field
       const fallbackType =
-        key === 'isActive'
-          ? ('boolean' as const)
-          : key === 'createdAt' || key === 'updatedAt'
+        key === 'createdAt' || key === 'updatedAt'
             ? ('datetime' as const)
             : ('string' as const)
-      return { key, label: key, type: fallbackType }
+      const label = getSystemFieldLabel(key)
+      return { key, label, type: fallbackType }
     }),
   }))
 
@@ -109,7 +112,7 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
 
   const resolvedRelatedObjects: RelatedObjectDefinition[] = relatedObjects.map((rel) => {
     const fields: FieldDefinition[] = (rel.fields || []).map((f) => {
-      if (typeof f === 'string') return { key: f, label: f, type: 'string' as const }
+      if (typeof f === 'string') return { key: f, label: getSystemFieldLabel(f), type: 'string' as const }
       const fieldDef = (typeof f === 'object' && 'key' in f ? f : { key: '', label: '', type: 'string' }) as FieldDefinition & { render?: string }
       const renderType = fieldDef.render
       if (renderType === 'statusBadge') {
@@ -194,7 +197,7 @@ async function loadFields(objectName: string): Promise<FieldDefinition[]> {
     const index = await fetchJson<string[]>(`${objPath}/fields.json`)
     fieldNames = Array.isArray(index) ? index : []
   } catch {
-    fieldNames = ['id', 'firstName', 'lastName', 'fullName', 'email', 'phone', 'company', 'address', 'isActive', 'createdAt', 'updatedAt']
+    fieldNames = ['id', 'firstName', 'lastName', 'fullName', 'email', 'phone', 'company', 'address', 'createdAt', 'updatedAt']
   }
 
   const fieldsPath = `${objPath}/fields`

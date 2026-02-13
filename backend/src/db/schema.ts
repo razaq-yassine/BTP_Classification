@@ -16,7 +16,6 @@ export const categories = sqliteTable('categories', {
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
   description: text('description'),
-  isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 })
@@ -32,7 +31,6 @@ export const customers = sqliteTable('customers', {
   notes: text('notes'),
   tags: text('tags'),
   priority: text('priority'),
-  isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 })
@@ -40,7 +38,6 @@ export const customers = sqliteTable('customers', {
 export const opportunities = sqliteTable('opportunities', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull().unique(),
-  isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 })
@@ -54,7 +51,6 @@ export const orders = sqliteTable('orders', {
   orderDate: integer('order_date', { mode: 'timestamp' }).notNull(),
   deliveryDate: integer('delivery_date', { mode: 'timestamp' }),
   customerId: integer('customer_id').notNull().references(() => customers.id),
-  isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 })
@@ -62,7 +58,6 @@ export const orders = sqliteTable('orders', {
 export const orderitems = sqliteTable('orderitems', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull().unique(),
-  isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 })
@@ -73,7 +68,6 @@ export const products = sqliteTable('products', {
   sku: text('sku').notNull().unique(),
   price: real('price').notNull(),
   description: text('description'),
-  isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 })
@@ -84,7 +78,6 @@ export const suppliers = sqliteTable('suppliers', {
   slug: text('slug').notNull().unique(),
   contactEmail: text('contact_email'),
   website: text('website'),
-  isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 })
@@ -96,7 +89,6 @@ export const warehouses = sqliteTable('warehouses', {
   location: text('location'),
   capacity: real('capacity'),
   description: text('description').notNull(),
-  isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 })

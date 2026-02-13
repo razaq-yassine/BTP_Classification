@@ -195,7 +195,7 @@ metadataRoutes.post('/objects', async (c) => {
     }
 
     const fieldsIndex = ['name']
-    const listViewJson = { fields: ['name', 'isActive', 'createdAt'], defaultSort: 'createdAt', defaultSortOrder: 'desc', pageSize: 10 }
+    const listViewJson = { fields: ['name', 'createdAt'], defaultSort: 'createdAt', defaultSortOrder: 'desc', pageSize: 10 }
     const detailViewJson = {
       layout: 'two-column',
       sections: [

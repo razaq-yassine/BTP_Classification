@@ -1,1 +1,1 @@
-{"fields":["name","sku","price","isActive","createdAt"],"defaultSort":"createdAt","defaultSortOrder":"desc","pageSize":10}
+{"fields":["name","sku","price","createdAt"],"defaultSort":"createdAt","defaultSortOrder":"desc","pageSize":10}

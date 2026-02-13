@@ -1,1 +1,1 @@
-{"fields":["name","slug","contactEmail","isActive","createdAt"],"defaultSort":"createdAt","defaultSortOrder":"desc","pageSize":10}
+{"fields":["name","slug","contactEmail","createdAt"],"defaultSort":"createdAt","defaultSortOrder":"desc","pageSize":10}

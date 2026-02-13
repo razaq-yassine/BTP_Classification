@@ -28,6 +28,7 @@ interface GenericDataTableProps<TData extends GenericRecord> {
   isLoading?: boolean
   onRowClick?: (record: TData) => void
   onSelectionChange?: (selectedIds: string[]) => void
+  onReferenceClick?: (objectName: string, id: string | number) => void
   searchTerm?: string
 }
 
@@ -65,6 +66,7 @@ export function GenericDataTable<TData extends GenericRecord>({
   isLoading = false,
   onRowClick,
   onSelectionChange,
+  onReferenceClick,
   searchTerm = '',
 }: GenericDataTableProps<TData>) {
   // Simple state management
@@ -85,6 +87,7 @@ export function GenericDataTable<TData extends GenericRecord>({
       options: typeof field === 'object' ? field.options : undefined,
       format: typeof field === 'object' ? field.format : undefined,
       render: typeof field === 'object' ? (field.renderType ?? (typeof field.render === 'string' ? field.render : undefined)) : undefined,
+      objectName: typeof field === 'object' ? field.objectName : undefined,
     }))
   }, [objectDefinition.listView?.fields])
 
@@ -235,6 +238,8 @@ export function GenericDataTable<TData extends GenericRecord>({
                           format={field.format}
                           options={field.options}
                           render={field.render}
+                          objectName={field.objectName}
+                          onReferenceClick={onReferenceClick}
                         />
                       )
                       const isFirstColumn = fieldIndex === 0
