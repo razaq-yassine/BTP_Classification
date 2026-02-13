@@ -38,7 +38,13 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
   const resolvedListViewFields = listViewFields.map((key) => {
     const field = fieldsMap.get(key)
     if (field) return field
-    return { key, label: key, type: 'string' as const }
+    const fallbackType =
+      key === 'isActive'
+        ? ('boolean' as const)
+        : key === 'createdAt' || key === 'updatedAt'
+          ? ('datetime' as const)
+          : ('string' as const)
+    return { key, label: key, type: fallbackType }
   })
 
   const detailSections = (detailViewData.sections as Array<{ title: string; columns?: number; defaultOpen?: boolean; fields: string[] }>) || []
@@ -49,7 +55,13 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
     fields: (section.fields as string[]).map((key) => {
       const field = fieldsMap.get(key)
       if (field) return field
-      return { key, label: key, type: 'string' as const }
+      const fallbackType =
+        key === 'isActive'
+          ? ('boolean' as const)
+          : key === 'createdAt' || key === 'updatedAt'
+            ? ('datetime' as const)
+            : ('string' as const)
+      return { key, label: key, type: fallbackType }
     }),
   }))
 
@@ -200,6 +212,7 @@ async function loadFields(objectName: string): Promise<FieldDefinition[]> {
       if (fd.render === 'booleanBadge') {
         resolvedFd = {
           ...resolvedFd,
+          renderType: 'booleanBadge',
           render: (value: boolean) =>
             React.createElement('span', {
               className: `inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -210,6 +223,7 @@ async function loadFields(objectName: string): Promise<FieldDefinition[]> {
       } else if (fd.render === 'statusBadge') {
         resolvedFd = {
           ...resolvedFd,
+          renderType: 'statusBadge',
           render: (value: string) =>
             React.createElement('span', {
               className: `inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -220,6 +234,7 @@ async function loadFields(objectName: string): Promise<FieldDefinition[]> {
       } else if (fd.render === 'currency') {
         resolvedFd = {
           ...resolvedFd,
+          renderType: 'currency',
           render: (value: number) => `$${parseFloat(value?.toString() || '0').toFixed(2)}`,
         }
       }

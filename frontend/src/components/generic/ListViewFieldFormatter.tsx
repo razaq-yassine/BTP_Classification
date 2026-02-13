@@ -1,64 +1,73 @@
 import React from 'react'
-import { Badge } from '@/components/ui/badge'
-import { format } from 'date-fns'
+import { Checkbox } from '@/components/ui/checkbox'
+import { format, isValid } from 'date-fns'
+
+export interface SelectOption {
+  value: string
+  label: string
+  color?: string
+  colorHover?: string
+}
 
 export interface FieldFormatterProps {
   type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'select' | 'multiselect' | 'reference'
   value: any
-  format?: string // For date formatting, etc.
-  options?: { value: string; label: string }[] // For select fields
+  format?: string
+  options?: SelectOption[]
+  render?: string // e.g. 'statusBadge', 'currency'
+  record?: Record<string, unknown>
 }
 
-export function ListViewFieldFormatter({ type, value, format: dateFormat, options }: FieldFormatterProps) {
-  // Handle null/undefined values
-  if (value === null || value === undefined) {
-    return <span className="text-gray-400">—</span>
-  }
+const EMPTY = <span className="text-muted-foreground">—</span>
+
+export function ListViewFieldFormatter({ type, value, format: dateFormat, options, render: renderType }: FieldFormatterProps) {
+  const isEmpty = value === null || value === undefined || value === ''
+  if (isEmpty && type !== 'boolean') return EMPTY
 
   switch (type) {
     case 'boolean':
       return (
-        <Badge variant={value ? 'default' : 'secondary'} className="text-xs">
-          {value ? 'Yes' : 'No'}
-        </Badge>
+        <Checkbox
+          checked={Boolean(value === true || value === 'true')}
+          disabled
+          className="pointer-events-none"
+          aria-label={value ? 'Active' : 'Inactive'}
+        />
       )
 
     case 'date':
       try {
         const date = new Date(value)
-        const formattedDate = dateFormat ? format(date, dateFormat) : format(date, 'MMM dd, yyyy')
-        return <span className="text-sm">{formattedDate}</span>
+        if (!isValid(date)) return EMPTY
+        const formattedDate = dateFormat ? format(date, dateFormat) : format(date, 'MMM d, yyyy')
+        return <span className="text-sm tabular-nums whitespace-nowrap">{formattedDate}</span>
       } catch {
-        return <span className="text-sm text-gray-500">{value}</span>
+        return EMPTY
       }
 
     case 'email':
-      if (!value) return <span className="text-gray-400">—</span>
       return (
-        <a 
-          href={`mailto:${value}`} 
-          className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
-          onClick={(e) => e.stopPropagation()} // Prevent row click when clicking email
+        <a
+          href={`mailto:${value}`}
+          className="text-primary hover:underline text-sm"
+          onClick={(e) => e.stopPropagation()}
         >
           {value}
         </a>
       )
 
     case 'phone':
-      if (!value) return <span className="text-gray-400">—</span>
       return (
-        <a 
-          href={`tel:${value}`} 
-          className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
-          onClick={(e) => e.stopPropagation()} // Prevent row click when clicking phone
+        <a
+          href={`tel:${value}`}
+          className="text-primary hover:underline text-sm"
+          onClick={(e) => e.stopPropagation()}
         >
           {value}
         </a>
       )
 
     case 'text':
-      if (!value) return <span className="text-gray-400">—</span>
-      // Truncate long text in list view
       const truncatedText = value.length > 50 ? `${value.substring(0, 50)}...` : value
       return (
         <span className="text-sm" title={value}>
@@ -67,81 +76,70 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
       )
 
     case 'select':
-      if (!value) return <span className="text-gray-400">—</span>
-      // Find the label for the value from options
-      const option = options?.find(opt => opt.value === value)
       return (
-        <Badge variant="outline" className="text-xs">
-          {option?.label || value}
-        </Badge>
+        <SelectColoredDiv value={value} options={options ?? []} />
       )
 
     case 'multiselect':
-      if (!value || !Array.isArray(value) || value.length === 0) {
-        return <span className="text-gray-400">—</span>
-      }
+      if (!Array.isArray(value) || value.length === 0) return EMPTY
       return (
         <div className="flex flex-wrap gap-1">
           {value.slice(0, 3).map((val, index) => {
-            const option = options?.find(opt => opt.value === val)
+            const opt = options?.find((o) => o.value === val)
+            const color = opt?.color
+            const label = opt?.label || val
             return (
-              <Badge key={index} variant="secondary" className="text-xs">
-                {option?.label || val}
-              </Badge>
+              <span
+                key={index}
+                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                style={color ? { backgroundColor: `${color}20`, color } : undefined}
+              >
+                {label}
+              </span>
             )
           })}
           {value.length > 3 && (
-            <Badge variant="outline" className="text-xs">
-              +{value.length - 3} more
-            </Badge>
+            <span className="text-xs text-muted-foreground">+{value.length - 3} more</span>
           )}
         </div>
       )
 
     case 'datetime':
-      if (!value) return <span className="text-gray-400">—</span>
       try {
         const date = new Date(value)
+        if (!isValid(date)) return EMPTY
+        const formatted = dateFormat ? format(date, dateFormat) : format(date, 'MMM d, yyyy h:mm a')
         return (
-          <span className="text-sm" title={date.toLocaleString()}>
-            {format(date, dateFormat || 'MMM d, yyyy h:mm a')}
+          <span className="text-sm tabular-nums whitespace-nowrap" title={date.toLocaleString()}>
+            {formatted}
           </span>
         )
       } catch {
-        return <span className="text-sm text-gray-500">{value}</span>
+        return EMPTY
       }
 
     case 'reference':
-      if (!value) return <span className="text-gray-400">—</span>
-      // For reference fields, value might be an object with name or just an ID
-      if (typeof value === 'object' && value.name) {
-        return (
-          <Badge variant="outline" className="text-xs">
-            {value.name}
-          </Badge>
-        )
-      }
-      return (
-        <Badge variant="outline" className="text-xs">
-          {value}
-        </Badge>
-      )
+      const displayName =
+        typeof value === 'object'
+          ? (value.fullName ?? value.name ?? [value.firstName, value.lastName].filter(Boolean).join(' ')) || value.id
+          : value
+      return <span className="text-sm">{displayName ?? value}</span>
 
     case 'number':
-      if (value === null || value === undefined || value === '') {
-        return <span className="text-gray-400">—</span>
-      }
-      // Format numbers with proper locale formatting
       const numValue = typeof value === 'number' ? value : parseFloat(value)
-      if (isNaN(numValue)) {
-        return <span className="text-sm text-gray-500">{value}</span>
-      }
-      return <span className="text-sm font-mono">{numValue.toLocaleString()}</span>
+      if (isNaN(numValue)) return <span className="text-sm text-muted-foreground">{value}</span>
+      const isCurrency = renderType === 'currency'
+      const formatted = isCurrency
+        ? `$${numValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : numValue.toLocaleString()
+      return (
+        <span className={`text-sm tabular-nums block w-full ${isCurrency ? 'text-center' : ''}`}>
+          {formatted}
+        </span>
+      )
 
     case 'string':
     default:
-      if (!value) return <span className="text-gray-400">—</span>
-      // Truncate long strings in list view
       const truncatedString = value.length > 40 ? `${value.substring(0, 40)}...` : value
       return (
         <span className="text-sm" title={value}>
@@ -151,19 +149,43 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
   }
 }
 
+function SelectColoredDiv({ value, options }: { value: string; options: SelectOption[] }) {
+  const option = options.find((o) => o.value === value)
+  const label = option?.label ?? value
+  const color = option?.color
+
+  return (
+    <div
+      className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium"
+      style={
+        color
+          ? {
+              backgroundColor: `${color}20`,
+              color: color,
+            }
+          : undefined
+      }
+    >
+      {label}
+    </div>
+  )
+}
+
 // Helper function to get the appropriate formatter for a field type
 export function formatFieldValue(
-  type: FieldFormatterProps['type'], 
-  value: any, 
-  format?: string, 
-  options?: { value: string; label: string }[]
+  type: FieldFormatterProps['type'],
+  value: any,
+  format?: string,
+  options?: SelectOption[],
+  render?: string
 ): React.ReactNode {
   return (
-    <ListViewFieldFormatter 
-      type={type} 
-      value={value} 
-      format={format} 
-      options={options} 
+    <ListViewFieldFormatter
+      type={type}
+      value={value}
+      format={format}
+      options={options}
+      render={render}
     />
   )
 }

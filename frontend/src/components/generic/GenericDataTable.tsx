@@ -1,17 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import {
   Table,
   TableBody,
@@ -21,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ListViewFieldFormatter } from "@/components/generic/ListViewFieldFormatter"
 
 // Generic interfaces
 interface GenericRecord {
@@ -34,6 +28,18 @@ interface GenericDataTableProps<TData extends GenericRecord> {
   isLoading?: boolean
   onRowClick?: (record: TData) => void
   onSelectionChange?: (selectedIds: string[]) => void
+  searchTerm?: string
+}
+
+function filterData<T>(data: T[], searchTerm: string, fields: { key: string }[]): T[] {
+  if (!searchTerm.trim()) return data
+  const lowerSearch = searchTerm.toLowerCase()
+  return data.filter((item) =>
+    fields.some((field) => {
+      const value = (item as Record<string, unknown>)[field.key]
+      return value != null && String(value).toLowerCase().includes(lowerSearch)
+    })
+  )
 }
 
 // Simple sorting and filtering logic
@@ -53,97 +59,39 @@ function sortData<T>(data: T[], sortField: string | null, sortDirection: 'asc' |
   })
 }
 
-function filterData<T>(data: T[], searchTerm: string, fields: any[]): T[] {
-  if (!searchTerm.trim()) return data
-  
-  const lowerSearch = searchTerm.toLowerCase()
-  return data.filter(item => 
-    fields.some(field => {
-      const value = (item as any)[field.key]
-      return value != null && String(value).toLowerCase().includes(lowerSearch)
-    })
-  )
-}
-
-// Cell renderers
-function renderCell(value: any, field: any, isFirstColumn: boolean, onRowClick?: (record: any) => void, record?: any) {
-  // Format based on field type
-  switch (field.type) {
-    case 'email':
-      return (
-        <a href={`mailto:${value}`} className="hover:underline">
-          {String(value || '')}
-        </a>
-      )
-    case 'phone':
-      return (
-        <a href={`tel:${value}`} className="hover:underline">
-          {String(value || '')}
-        </a>
-      )
-    case 'boolean':
-      return (
-        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-          value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`}>
-          {value ? 'Active' : 'Inactive'}
-        </span>
-      )
-    case 'date':
-    case 'datetime':
-      return (
-        <span className="text-muted-foreground">
-          {value ? new Date(String(value)).toLocaleDateString() : ''}
-        </span>
-      )
-    default:
-      if (isFirstColumn && onRowClick && record) {
-        return (
-          <button 
-            className="text-left cursor-pointer hover:underline font-medium"
-            onClick={() => onRowClick(record)}
-          >
-            {String(value || '')}
-          </button>
-        )
-      }
-      return <span>{String(value || '')}</span>
-  }
-}
-
 export function GenericDataTable<TData extends GenericRecord>({
   data,
   objectDefinition,
   isLoading = false,
   onRowClick,
   onSelectionChange,
+  searchTerm = '',
 }: GenericDataTableProps<TData>) {
   // Simple state management
   const [selectedRows, setSelectedRows] = React.useState<Set<string>>(new Set())
-  const [searchTerm, setSearchTerm] = React.useState('')
   const [sortField, setSortField] = React.useState<string | null>(null)
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc' | null>(null)
-  const [hiddenColumns, setHiddenColumns] = React.useState<Set<string>>(new Set())
   const [currentPage, setCurrentPage] = React.useState(1)
-  const pageSize = 10
+  const pageSize = objectDefinition.listView?.pageSize ?? 10
 
-  // Get fields from object configuration
+  // Get fields from object configuration (include options, format, render for formatter)
   const fields = React.useMemo(() => {
     const listViewFields = objectDefinition.listView?.fields || []
-    // Ensure fields have required properties
     return listViewFields.map((field: any) => ({
       key: typeof field === 'string' ? field : field.key,
       label: typeof field === 'string' ? field : field.label || field.key,
       type: typeof field === 'string' ? 'text' : field.type || 'text',
-      sortable: typeof field === 'string' ? true : field.sortable !== false
+      sortable: typeof field === 'string' ? true : field.sortable !== false,
+      options: typeof field === 'object' ? field.options : undefined,
+      format: typeof field === 'object' ? field.format : undefined,
+      render: typeof field === 'object' ? (field.renderType ?? (typeof field.render === 'string' ? field.render : undefined)) : undefined,
     }))
   }, [objectDefinition.listView?.fields])
 
-  // Process data
+  // Process data: client-side filter (fallback when server search fails) + sort
   const processedData = React.useMemo(() => {
-    let result = filterData(data, searchTerm, fields)
-    result = sortData(result, sortField, sortDirection)
-    return result
+    const filtered = filterData(data, searchTerm, fields)
+    return sortData(filtered, sortField, sortDirection)
   }, [data, searchTerm, fields, sortField, sortDirection])
 
   // Pagination
@@ -199,57 +147,11 @@ export function GenericDataTable<TData extends GenericRecord>({
     }
   }, [sortField, sortDirection])
 
-  // Column visibility
-  const visibleFields = fields.filter((field: any) => !hiddenColumns.has(field.key))
-
   const isAllSelected = paginatedData.length > 0 && paginatedData.every(item => selectedRows.has(String(item.id || '')))
   const isSomeSelected = paginatedData.some(item => selectedRows.has(String(item.id || '')))
 
   return (
     <div className="w-full">
-      {/* Toolbar */}
-      <div className="flex items-center py-4">
-        <Input
-          placeholder={`Filter ${objectDefinition.name?.toLowerCase() || 'records'}...`}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {fields.map((field: any, index: number) => {
-              if (!field.key) return null // Skip invalid fields
-              return (
-                <DropdownMenuCheckboxItem
-                  key={field.key}
-                  className="capitalize"
-                  checked={!hiddenColumns.has(field.key)}
-                  disabled={index === 0} // First column always visible
-                  onCheckedChange={(checked) => {
-                    setHiddenColumns(prev => {
-                      const newSet = new Set(prev)
-                      if (checked) {
-                        newSet.delete(field.key)
-                      } else {
-                        newSet.add(field.key)
-                      }
-                      return newSet
-                    })
-                  }}
-                >
-                  {field.label || field.key}
-                </DropdownMenuCheckboxItem>
-              )
-            })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
       {/* Table */}
       <div className="rounded-md border">
         <Table>
@@ -264,10 +166,25 @@ export function GenericDataTable<TData extends GenericRecord>({
                 />
               </TableHead>
               {/* Data columns */}
-              {visibleFields.map((field: any) => (
-                <TableHead key={field.key}>
+              {fields.map((field: any) => (
+                <TableHead
+                  key={field.key}
+                  className={
+                    field.type === 'number' && field.render === 'currency'
+                      ? 'text-center'
+                      : field.type === 'boolean'
+                        ? 'text-center'
+                        : undefined
+                  }
+                >
                   <button
-                    className="flex items-center space-x-2 cursor-pointer hover:bg-muted/50 p-1 rounded"
+                    className={`flex items-center cursor-pointer hover:bg-muted/50 p-1 rounded ${
+                      field.type === 'number' && field.render === 'currency'
+                        ? 'justify-center w-full'
+                        : field.type === 'boolean'
+                          ? 'justify-center w-full'
+                          : 'space-x-2'
+                    }`}
                     onClick={() => handleSort(field.key)}
                   >
                     <span>{field.label}</span>
@@ -286,7 +203,7 @@ export function GenericDataTable<TData extends GenericRecord>({
               Array.from({ length: 5 }).map((_, index) => (
                 <TableRow key={index}>
                   <TableCell><Skeleton className="h-4 w-4" /></TableCell>
-                  {visibleFields.map((field: any) => (
+                  {fields.map((field: any) => (
                     <TableCell key={field.key}>
                       <Skeleton className="h-4 w-full" />
                     </TableCell>
@@ -309,23 +226,50 @@ export function GenericDataTable<TData extends GenericRecord>({
                       />
                     </TableCell>
                     {/* Data cells */}
-                    {visibleFields.map((field: any, fieldIndex: number) => (
-                      <TableCell key={field.key}>
-                        {renderCell(
-                          row[field.key as keyof typeof row],
-                          field,
-                          fieldIndex === 0,
-                          onRowClick,
-                          row
-                        )}
-                      </TableCell>
-                    ))}
+                    {fields.map((field: any, fieldIndex: number) => {
+                      const value = row[field.key as keyof typeof row]
+                      const cellContent = (
+                        <ListViewFieldFormatter
+                          type={field.type}
+                          value={value}
+                          format={field.format}
+                          options={field.options}
+                          render={field.render}
+                        />
+                      )
+                      const isFirstColumn = fieldIndex === 0
+                      const wrapped =
+                        isFirstColumn && onRowClick && row ? (
+                          <button
+                            className="text-left w-full cursor-pointer hover:underline font-medium"
+                            onClick={() => onRowClick(row)}
+                          >
+                            {cellContent}
+                          </button>
+                        ) : (
+                          cellContent
+                        )
+                      return (
+                        <TableCell
+                          key={field.key}
+                          className={
+                            field.type === 'number' && field.render === 'currency'
+                              ? 'text-center'
+                              : field.type === 'boolean'
+                                ? 'text-center'
+                                : undefined
+                          }
+                        >
+                          {wrapped}
+                        </TableCell>
+                      )
+                    })}
                   </TableRow>
                 )
               })
             ) : (
               <TableRow>
-                <TableCell colSpan={visibleFields.length + 1} className="h-24 text-center">
+                <TableCell colSpan={fields.length + 1} className="h-24 text-center">
                   No results found.
                 </TableCell>
               </TableRow>

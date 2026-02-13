@@ -39,6 +39,7 @@ export interface FieldDefinition {
   objectName?: string // For reference fields
   additionalFields?: string[] // Additional fields to display in lookup
   render?: (value: any, record: GenericRecord) => React.ReactNode // Custom render function
+  renderType?: string // Preserved string from metadata (e.g. 'currency', 'statusBadge') for list formatting
   autoNumberPattern?: string // e.g. MSG-{00000} for autoNumber type
   autoNumberStart?: number // Starting number for autoNumber
 }
