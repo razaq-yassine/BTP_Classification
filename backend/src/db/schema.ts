@@ -70,9 +70,21 @@ export const suppliers = sqliteTable('suppliers', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 })
 
+export const warehouses = sqliteTable('warehouses', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  slug: text('slug').notNull().unique(),
+  location: text('location'),
+  description: text('description'),
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  createdAt: integer('created_at', { mode: 'timestamp' }),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }),
+})
+
 export type User = typeof users.$inferSelect
 export type Category = typeof categories.$inferSelect
 export type Customer = typeof customers.$inferSelect
 export type Order = typeof orders.$inferSelect
 export type Product = typeof products.$inferSelect
 export type Supplier = typeof suppliers.$inferSelect
+export type Warehous = typeof warehouses.$inferSelect

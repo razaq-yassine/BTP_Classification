@@ -3,5 +3,6 @@
   "customer",
   "order",
   "product",
-  "supplier"
+  "supplier",
+  "warehouse"
 ]
