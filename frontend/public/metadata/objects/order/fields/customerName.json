@@ -1,0 +1,1 @@
+{"key":"customerName","label":"Customer","type":"string","sortable":true,"searchable":true,"computed":true,"computedExpression":"join","referenceField":"customer","sourceFields":["firstName","lastName"],"separator":" "}

@@ -1,0 +1,7 @@
+{
+  "key": "updatedAt",
+  "label": "Updated",
+  "type": "date",
+  "editable": false,
+  "format": "MMM dd, yyyy"
+}

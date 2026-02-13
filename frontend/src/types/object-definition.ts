@@ -78,6 +78,13 @@ export interface ObjectDefinition {
   basePath?: string // Base path for list view (e.g., '/customers')
   detailPath?: string // Path template for detail view (e.g., '/customers/$customerId')
   
+  // Sidebar configuration
+  sidebar?: {
+    showInSidebar?: boolean
+    group?: string // Nav group title (e.g. "Data", "General")
+    parent?: string // Parent item title - puts this under a collapsible parent
+  }
+  
   // Field definitions (optional for new format)
   fields?: FieldDefinition[]
   

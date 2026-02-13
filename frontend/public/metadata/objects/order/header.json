@@ -1,0 +1,52 @@
+{
+  "primaryActions": [
+    {
+      "key": "edit",
+      "label": "Edit",
+      "type": "edit",
+      "icon": "Edit",
+      "variant": "outline"
+    },
+    {
+      "key": "view",
+      "label": "View Details",
+      "type": "edit",
+      "icon": "Eye",
+      "variant": "default"
+    }
+  ],
+  "secondaryActions": [
+    {
+      "key": "ship",
+      "label": "Mark as Shipped",
+      "type": "edit",
+      "icon": "Package",
+      "variant": "ghost"
+    },
+    {
+      "key": "delete",
+      "label": "Delete",
+      "type": "delete",
+      "icon": "Trash2",
+      "variant": "destructive"
+    }
+  ],
+  "calculatedData": [
+    {
+      "key": "order_age",
+      "label": "Order Age",
+      "formula": "daysSince",
+      "sourceField": "orderDate",
+      "icon": "Calendar",
+      "format": "text"
+    },
+    {
+      "key": "total_formatted",
+      "label": "Total Amount",
+      "formula": "currency",
+      "sourceField": "totalAmount",
+      "icon": "DollarSign",
+      "format": "text"
+    }
+  ]
+}

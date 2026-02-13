@@ -1,0 +1,10 @@
+{
+  "key": "firstName",
+  "label": "First Name",
+  "type": "string",
+  "required": true,
+  "editable": true,
+  "sortable": true,
+  "searchable": true,
+  "maxLength": 50
+}

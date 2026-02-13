@@ -1,0 +1,17 @@
+{
+  "name": "order",
+  "label": "Order",
+  "labelPlural": "Orders",
+  "description": "Manage customer orders and transactions",
+  "apiEndpoint": "/api/orders",
+  "basePath": "/orders",
+  "detailPath": "/orders/$orderId",
+  "icon": "IconShoppingCart",
+  "color": "green",
+  "trigger": "order",
+  "sidebar": {
+    "showInSidebar": true,
+    "group": "Data",
+    "parent": "Sales"
+  }
+}

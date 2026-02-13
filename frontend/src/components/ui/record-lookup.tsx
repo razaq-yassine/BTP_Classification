@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Check, ChevronsUpDown, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import api from '@/services/api'
+import { pluralize } from '@/metadata/utils'
 
 // Simple debounce implementation to avoid lodash dependency
 function debounce<T extends (...args: any[]) => any>(
@@ -67,7 +68,7 @@ export function RecordLookup({
 
   // Helper function to get display name from record
   const getRecordDisplayName = (record: LookupRecord): string => {
-    return record.name || record.full_name || record.title || `Record ${record.id}` || 'Unknown'
+    return record.name || record.fullName || record.full_name || record.title || (record.id != null ? `Record ${record.id}` : 'Unknown')
   }
 
   // Generate dynamic placeholders based on searchBy field
@@ -75,8 +76,7 @@ export function RecordLookup({
   const dynamicSearchPlaceholder = searchPlaceholder || `Search by ${searchBy.replace('_', ' ')}...`
 
   // Construct API endpoint - use the object's API endpoint or construct from object name
-  // Note: api baseURL is already set to /api, so we don't need leading slash
-  const endpoint = apiEndpoint || `${objectName.toLowerCase()}`
+  const endpoint = apiEndpoint || `/api/${pluralize(objectName)}`
 
   // Fetch initial records (last 5 created)
   const fetchInitialRecords = useCallback(async () => {
@@ -87,21 +87,8 @@ export function RecordLookup({
       const response = await api.get(endpoint)
       console.log('API Response:', response.data)
       
-      // Handle different response structures
-      let recordsData = []
-      if (response.data.results) {
-        recordsData = response.data.results
-      } else if (Array.isArray(response.data)) {
-        recordsData = response.data
-      } else if (response.data.data) {
-        recordsData = response.data.data
-      } else if (response.data[objectName]) {
-        // Handle {customers: Array(5), count: 5} structure
-        recordsData = response.data[objectName]
-      } else if (response.data[objectName.toLowerCase()]) {
-        // Handle {customers: Array(5), count: 5} structure (lowercase)
-        recordsData = response.data[objectName.toLowerCase()]
-      }
+      const responseKey = pluralize(objectName)
+      let recordsData = response.data?.results ?? response.data?.[responseKey] ?? (Array.isArray(response.data) ? response.data : response.data?.data) ?? []
       
       console.log('Processed records:', recordsData)
       setRecords(recordsData)
@@ -126,21 +113,8 @@ export function RecordLookup({
         const response = await api.get(searchEndpoint)
         console.log('Search API Response:', response.data)
         
-        // Handle different response structures
-        let recordsData = []
-        if (response.data.results) {
-          recordsData = response.data.results
-        } else if (Array.isArray(response.data)) {
-          recordsData = response.data
-        } else if (response.data.data) {
-          recordsData = response.data.data
-        } else if (response.data[objectName]) {
-          // Handle {customers: Array(5), count: 5} structure
-          recordsData = response.data[objectName]
-        } else if (response.data[objectName.toLowerCase()]) {
-          // Handle {customers: Array(5), count: 5} structure (lowercase)
-          recordsData = response.data[objectName.toLowerCase()]
-        }
+        const responseKey = pluralize(objectName)
+        let recordsData = response.data?.results ?? response.data?.[responseKey] ?? (Array.isArray(response.data) ? response.data : response.data?.data) ?? []
         
         // Filter records client-side by the searchBy field if server doesn't filter
         if (recordsData.length > 0 && searchBy) {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ObjectDefinition, GenericRecord } from '@/types/object-definition'
+import { pluralize } from '@/metadata/utils'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { GenericDataTable } from './GenericDataTable'
@@ -63,19 +64,10 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
       console.log(`📋 Requested fields: [${fieldsToFetch.join(', ')}]`)
       const response = await api.get(fullEndpoint)
       
-      // Log the response structure to debug
-      console.log(`📊 ${objectDefinition.labelPlural} response structure:`, {
-        keys: Object.keys(response.data || {}),
-        recordsCount: Array.isArray(response.data) ? response.data.length : 
-                     response.data?.customers?.length || 
-                     response.data?.results?.length || 'unknown',
-        firstRecord: Array.isArray(response.data) ? response.data[0] : 
-                    response.data?.customers?.[0] || 
-                    response.data?.results?.[0] || 'unknown'
-      })
-      
-      // Handle different response structures (Spring Boot vs Django)
-      const records = response.data.customers || response.data.results || response.data
+      const responseKey = pluralize(objectDefinition.name)
+      const records = Array.isArray(response.data)
+        ? response.data
+        : response.data?.[responseKey] ?? response.data?.results ?? response.data ?? []
       setRecords(records)
       
       console.log(`✅ Successfully loaded ${records.length} ${objectDefinition.labelPlural.toLowerCase()}`)
@@ -93,7 +85,8 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
 
   const handleViewRecord = (record: GenericRecord) => {
     if (objectDefinition.detailPath) {
-      const detailPath = objectDefinition.detailPath.replace('$customerId', record.id.toString())
+      const idPlaceholder = `$${objectDefinition.name}Id`
+      const detailPath = objectDefinition.detailPath.replace(idPlaceholder, record.id.toString())
       navigate({ to: detailPath })
     } else if (basePath) {
       navigate({ to: `${basePath}/${record.id}` })

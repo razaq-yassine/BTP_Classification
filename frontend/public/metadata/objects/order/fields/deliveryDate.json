@@ -1,0 +1,7 @@
+{
+  "key": "deliveryDate",
+  "label": "Delivery Date",
+  "type": "datetime",
+  "editable": true,
+  "format": "MMM dd, yyyy"
+}

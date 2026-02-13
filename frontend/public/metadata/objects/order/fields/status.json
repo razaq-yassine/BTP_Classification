@@ -1,0 +1,16 @@
+{
+  "key": "status",
+  "label": "Status",
+  "type": "select",
+  "required": true,
+  "editable": true,
+  "sortable": true,
+  "render": "statusBadge",
+  "options": [
+    { "value": "PENDING", "label": "Pending" },
+    { "value": "CONFIRMED", "label": "Confirmed" },
+    { "value": "SHIPPED", "label": "Shipped" },
+    { "value": "DELIVERED", "label": "Delivered" },
+    { "value": "CANCELLED", "label": "Cancelled" }
+  ]
+}

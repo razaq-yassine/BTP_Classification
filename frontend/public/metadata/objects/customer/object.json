@@ -1,0 +1,16 @@
+{
+  "name": "customer",
+  "label": "Customer",
+  "labelPlural": "Customers",
+  "description": "Manage customer information and records",
+  "apiEndpoint": "/api/customers",
+  "basePath": "/customers",
+  "detailPath": "/customers/$customerId",
+  "icon": "IconUserCog",
+  "color": "blue",
+  "trigger": "customer",
+  "sidebar": {
+    "showInSidebar": true,
+    "group": "Data"
+  }
+}

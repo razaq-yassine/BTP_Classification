@@ -1,0 +1,6 @@
+{
+  "key": "address",
+  "label": "Address",
+  "type": "text",
+  "editable": true
+}

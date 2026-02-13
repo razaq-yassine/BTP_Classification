@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { RelatedObjectDefinition, GenericRecord } from '@/types/object-definition'
+import { pluralize } from '@/metadata/utils'
 import { GenericDataTable } from './GenericDataTable'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,19 +44,9 @@ export function GenericRelatedListView({
         
       const apiUrl = `${baseEndpoint}/${parentRecord.id}`
       
-      console.log(`🔍 Fetching related ${relatedObjectDefinition.label} from: ${apiUrl}`)
       const response = await api.get(apiUrl)
-      
-      // Log the response structure to debug
-      console.log(`📊 ${relatedObjectDefinition.label} response structure:`, {
-        keys: Object.keys(response.data || {}),
-        isArray: Array.isArray(response.data),
-        resultsCount: response.data?.results?.length,
-        ordersCount: response.data?.orders?.length
-      })
-      
-      // Handle different response formats - expect {orders: Array, count: N} structure
-      const data = response.data.orders || response.data.results || response.data
+      const responseKey = pluralize(relatedObjectDefinition.objectDefinition)
+      const data = response.data?.[responseKey] ?? response.data?.results ?? response.data
       const processedRecords = Array.isArray(data) ? data : []
       
       setRecords(processedRecords)

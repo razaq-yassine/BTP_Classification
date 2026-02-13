@@ -77,8 +77,7 @@ api.interceptors.response.use(
       const errorMessage = error.response?.data?.message || error.response?.data?.detail || ''
       const isValidationError = errorMessage.toLowerCase().includes('validation') || 
                                errorMessage.toLowerCase().includes('required') ||
-                               errorMessage.toLowerCase().includes('invalid') ||
-                               url.includes('/api/customers') // Customer update validation errors
+                               errorMessage.toLowerCase().includes('invalid')
       
       if (isValidationError) {
         console.warn('⚠️ Validation error (401) - not logging out user')

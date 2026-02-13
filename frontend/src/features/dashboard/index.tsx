@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -15,8 +16,33 @@ import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Overview } from './components/overview'
 import { RecentSales } from './components/recent-sales'
+import { getAllObjectDefinitions } from '@/metadata/loader'
+
+const staticTopNav = [
+  { title: 'Overview', href: 'dashboard/overview', isActive: true, disabled: false },
+  { title: 'Settings', href: 'dashboard/settings', isActive: false, disabled: true },
+]
 
 export default function Dashboard() {
+  const [topNav, setTopNav] = useState(staticTopNav)
+
+  useEffect(() => {
+    getAllObjectDefinitions().then((defs) => {
+      const withNav = defs.filter((d) => d.basePath && (d.sidebar?.showInSidebar !== false))
+      const dataLinks = withNav.slice(0, 2).map((d) => ({
+        title: d.labelPlural,
+        href: d.basePath!,
+        isActive: false,
+        disabled: true,
+      }))
+      setTopNav([
+        staticTopNav[0],
+        ...dataLinks,
+        staticTopNav[1],
+      ])
+    })
+  }, [])
+
   return (
     <>
       {/* ===== Top Heading ===== */}
@@ -188,29 +214,3 @@ export default function Dashboard() {
   )
 }
 
-const topNav = [
-  {
-    title: 'Overview',
-    href: 'dashboard/overview',
-    isActive: true,
-    disabled: false,
-  },
-  {
-    title: 'Customers',
-    href: 'dashboard/customers',
-    isActive: false,
-    disabled: true,
-  },
-  {
-    title: 'Products',
-    href: 'dashboard/products',
-    isActive: false,
-    disabled: true,
-  },
-  {
-    title: 'Settings',
-    href: 'dashboard/settings',
-    isActive: false,
-    disabled: true,
-  },
-]

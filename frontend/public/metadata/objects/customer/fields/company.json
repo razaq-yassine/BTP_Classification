@@ -1,0 +1,9 @@
+{
+  "key": "company",
+  "label": "Company",
+  "type": "string",
+  "editable": true,
+  "sortable": true,
+  "searchable": true,
+  "maxLength": 100
+}

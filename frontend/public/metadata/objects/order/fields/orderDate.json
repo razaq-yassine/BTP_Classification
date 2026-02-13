@@ -1,0 +1,9 @@
+{
+  "key": "orderDate",
+  "label": "Order Date",
+  "type": "datetime",
+  "required": true,
+  "editable": true,
+  "sortable": true,
+  "format": "MMM dd, yyyy"
+}

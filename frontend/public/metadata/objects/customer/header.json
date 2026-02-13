@@ -1,0 +1,55 @@
+{
+  "primaryActions": [
+    {
+      "key": "edit",
+      "label": "Edit",
+      "type": "edit",
+      "icon": "Edit",
+      "variant": "outline"
+    },
+    {
+      "key": "contact",
+      "label": "Contact",
+      "type": "mailto",
+      "targetField": "email",
+      "icon": "Mail",
+      "variant": "default"
+    }
+  ],
+  "secondaryActions": [
+    {
+      "key": "call",
+      "label": "Call",
+      "type": "tel",
+      "targetField": "phone",
+      "icon": "Phone",
+      "variant": "ghost"
+    },
+    {
+      "key": "delete",
+      "label": "Delete",
+      "type": "delete",
+      "icon": "Trash2",
+      "variant": "destructive"
+    }
+  ],
+  "calculatedData": [
+    {
+      "key": "account_age",
+      "label": "Account Age",
+      "formula": "daysSince",
+      "sourceField": "createdAt",
+      "icon": "Calendar",
+      "format": "text"
+    },
+    {
+      "key": "company_info",
+      "label": "Company",
+      "formula": "fallback",
+      "sourceField": "company",
+      "fallbackValue": "No company",
+      "icon": "Building",
+      "format": "text"
+    }
+  ]
+}

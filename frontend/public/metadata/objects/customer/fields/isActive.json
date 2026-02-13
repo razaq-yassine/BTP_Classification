@@ -1,0 +1,8 @@
+{
+  "key": "isActive",
+  "label": "Status",
+  "type": "boolean",
+  "editable": true,
+  "sortable": true,
+  "render": "booleanBadge"
+}

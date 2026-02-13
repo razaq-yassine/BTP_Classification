@@ -76,11 +76,6 @@ export const sidebarData: SidebarData = {
           url: '/users',
           icon: IconUsers,
         },
-        {
-          title: 'Customers',
-          url: '/customers',
-          icon: IconUserCog,
-        },
       ],
     },
     {

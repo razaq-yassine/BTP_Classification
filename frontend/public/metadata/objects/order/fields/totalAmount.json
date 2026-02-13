@@ -1,0 +1,9 @@
+{
+  "key": "totalAmount",
+  "label": "Total Amount",
+  "type": "number",
+  "required": true,
+  "editable": true,
+  "sortable": true,
+  "render": "currency"
+}

@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getObjectNames } from '@/metadata/loader'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { GenericDetailInputFormatter } from '@/components/generic/GenericDetailInputFormatter'
@@ -31,8 +32,13 @@ function DetailViewFormatterPage() {
   
   const [showImportantFieldsDialog, setShowImportantFieldsDialog] = useState(false)
   const [emptyImportantFields, setEmptyImportantFields] = useState<Array<{label: string, isEmpty: boolean, value: any}>>([])
+  const [lookupObjectName, setLookupObjectName] = useState<string>('')
 
-  // Field definitions for each type
+  useEffect(() => {
+    getObjectNames().then((names) => setLookupObjectName(names[0] || ''))
+  }, [])
+
+  // Field definitions for each type - lookupObjectName from metadata
   const fieldDefinitions: FieldDefinition[] = [
     {
       key: 'text',
@@ -111,22 +117,26 @@ function DetailViewFormatterPage() {
         { value: 'option6', label: 'Sixth Option' },
       ],
     },
-    {
-      key: 'lookup',
-      label: 'Lookup Field (Search Records)',
-      type: 'lookup',
-      required: false,
-      objectName: 'customers',
-      additionalFields: ['email', 'company'],
-    },
-    {
-      key: 'reference',
-      label: 'Reference Field (Link to Record)',
-      type: 'reference',
-      required: false,
-      objectName: 'customers',
-      additionalFields: ['email', 'company'],
-    },
+    ...(lookupObjectName
+      ? [
+          {
+            key: 'lookup',
+            label: 'Lookup Field (Search Records)',
+            type: 'lookup' as const,
+            required: false,
+            objectName: lookupObjectName,
+            additionalFields: ['email', 'company'],
+          },
+          {
+            key: 'reference',
+            label: 'Reference Field (Link to Record)',
+            type: 'reference' as const,
+            required: false,
+            objectName: lookupObjectName,
+            additionalFields: ['email', 'company'],
+          },
+        ]
+      : []),
     {
       key: 'anotherImportantField',
       label: 'Another Important Field (Has Value - Shows in Popup)',

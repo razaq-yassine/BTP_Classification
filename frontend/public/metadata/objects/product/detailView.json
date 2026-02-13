@@ -1,0 +1,1 @@
+{"layout":"two-column","sections":[{"title":"Product Information","columns":2,"defaultOpen":true,"fields":["name","sku","price","description"]},{"title":"System Information","columns":2,"defaultOpen":false,"fields":["id","isActive","createdAt","updatedAt"]}]}

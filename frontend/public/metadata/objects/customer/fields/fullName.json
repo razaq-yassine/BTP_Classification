@@ -1,0 +1,1 @@
+{"key":"fullName","label":"Full Name","type":"string","sortable":true,"searchable":true,"computed":true,"computedExpression":"concat","sourceFields":["firstName","lastName"],"separator":" "}

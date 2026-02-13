@@ -1,0 +1,1 @@
+["id", "orderNumber", "status", "totalAmount", "description", "orderDate", "deliveryDate", "isActive", "createdAt", "updatedAt", "customer", "customerName"]

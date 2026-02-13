@@ -247,7 +247,7 @@ export function GenericDetailInputFormatter({
 
       case 'lookup':
       case 'reference':
-        const { objectName, additionalFields = [] } = fieldDefinition as any
+        const { objectName, additionalFields = [], apiEndpoint, searchBy } = fieldDefinition as any
         if (!objectName) {
           return (
             <div className="text-sm text-red-500">
@@ -268,7 +268,8 @@ export function GenericDetailInputFormatter({
             value={value}
             onValueChange={(newValue) => onChange(newValue)}
             additionalFields={formattedAdditionalFields}
-            searchBy={objectName === 'customers' ? 'full_name' : 'name'}
+            searchBy={searchBy ?? 'name'}
+            apiEndpoint={apiEndpoint}
             placeholder={`Search ${objectName.toLowerCase()}...`}
             disabled={disabled}
             className={className}
