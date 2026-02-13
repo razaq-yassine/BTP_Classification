@@ -148,6 +148,11 @@ export const sidebarData: SidebarData = {
           url: '/dev-components/detail-view-formatter',
           icon: Layers,
         },
+        {
+          title: 'Salesforce Path',
+          url: '/dev-components/salesforce-path',
+          icon: Layers,
+        },
       ],
     },
     {

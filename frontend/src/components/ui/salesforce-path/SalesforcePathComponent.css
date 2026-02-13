@@ -1,0 +1,365 @@
+/* Main container - mobile first approach */
+.path-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  position: relative;
+  padding: 0.5rem;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .path-container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .path-wrapper {
+    flex: 1;
+    margin-right: 1rem;
+    min-width: 0;
+  }
+
+  .path-action-button-container {
+    flex-shrink: 0;
+  }
+}
+
+.path-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  min-height: 28px;
+}
+
+.scroll-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  background: hsl(var(--background));
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.scroll-button:hover:not(:disabled) {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.scroll-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.path-stages {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+  border-radius: 0.5rem;
+  overflow: visible;
+  gap: 0;
+  transition: transform 0.3s ease;
+  width: 100%;
+}
+
+/* Individual stage styling - hexagon shape */
+.stage {
+  position: relative;
+  padding: 0.25rem 0.75rem;
+  color: #6b7280;
+  cursor: default;
+  transition: all 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
+  min-width: 0;
+  height: 28px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  clip-path: polygon(92% 0, 100% 50%, 92% 100%, 0% 100%, 8% 50%, 0% 0%);
+  margin: 0 -6px;
+  background-color: #f2f2f2;
+  flex: 1 1 0%;
+}
+
+.stage-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.75rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+@media (min-width: 640px) {
+  .stage {
+    padding: 0.2rem 0.75rem;
+    min-width: 0;
+  }
+
+  .stage-name {
+    max-width: 100%;
+  }
+}
+
+.stage::before,
+.stage::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0.875rem solid transparent;
+  transition: border-color 0.5s ease;
+}
+
+.stage::before {
+  left: 0;
+  border-left-width: 0.875rem;
+  border-left-color: #f2f2f2;
+}
+
+.stage::after {
+  right: -0.875rem;
+  border-left-width: 0.875rem;
+  border-left-color: inherit;
+  z-index: 1;
+  border-left-color: #ffffff;
+}
+
+/* First stage styling */
+.stage--first {
+  clip-path: polygon(92% 0, 100% 50%, 92% 100%, 0% 100%, 0% 50%, 0% 0%);
+  margin-left: 0;
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  overflow: hidden;
+}
+
+.stage--first.stage--last {
+  clip-path: none;
+  border-radius: 12px;
+  margin: 0;
+}
+
+.stage--home,
+.stage--first:not(.stage--selected):not(.stage--completed):not(.stage--current-outline) {
+  border-left: 1px solid hsl(var(--primary));
+  border-top: 1px solid hsl(var(--primary));
+  border-bottom: 1px solid hsl(var(--primary));
+  color: hsl(var(--primary));
+  background-color: #f2f2f2;
+}
+
+.stage--last {
+  clip-path: polygon(100% 0, 100% 50%, 100% 100%, 0% 100%, 8% 50%, 0% 0%);
+  margin-right: 0;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  overflow: hidden;
+}
+
+.stage--clickable {
+  cursor: pointer;
+}
+
+.stage--hovered {
+  filter: brightness(0.95);
+}
+
+/* Completed stages - bright green */
+.stage--completed {
+  background-color: #047857;
+  color: white;
+  border: 1px solid #047857;
+  animation: stageComplete 0.5s ease;
+}
+
+@keyframes stageComplete {
+  0% {
+    background-color: #f2f2f2;
+    color: #6b7280;
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    background-color: var(--done-color, #047857);
+    color: white;
+    transform: scale(1);
+  }
+}
+
+.stage--completed::before {
+  border-left-color: var(--done-color, #047857);
+}
+
+.stage--completed::after {
+  border-left-color: var(--done-color, #047857);
+}
+
+.stage--completed.stage--hovered::before {
+  border-left-color: var(--done-color, #047857);
+  filter: brightness(0.85);
+}
+
+.stage--completed.stage--hovered::after {
+  border-left-color: var(--done-color, #047857);
+  filter: brightness(0.85);
+}
+
+/* Current stage (preselected) - dark green when no other selection */
+.stage--selected {
+  background-color: #0a1612;
+  color: white;
+  border: 1px solid #0a1612;
+}
+
+.stage--selected::before {
+  border-left-color: #0a1612;
+}
+
+.stage--selected::after {
+  border-left-color: #0a1612;
+}
+
+.stage--selected.stage--hovered {
+  background-color: #0d2818;
+  border-color: #0d2818;
+}
+
+.stage--selected.stage--hovered::before {
+  border-left-color: #0d2818;
+}
+
+.stage--selected.stage--hovered::after {
+  border-left-color: #0d2818;
+}
+
+/* Current stage (in DB) - outline only when user selected a different stage */
+.stage--current-outline {
+  background-color: transparent;
+  color: #0a1612;
+  border: 1px solid #0a1612;
+}
+
+.stage--current-outline::before {
+  border-left-color: #f2f2f2;
+}
+
+.stage--current-outline::after {
+  border-left-color: #f2f2f2;
+}
+
+.stage--current-outline.stage--hovered {
+  background-color: hsl(0 0% 0% / 0.04);
+}
+
+/* Selected by cursor (not yet current) - dark green, same as preselected */
+.stage--selected-pending {
+  background-color: #0a1612;
+  color: white;
+  border: 1px solid #0a1612;
+}
+
+.stage--selected-pending::before {
+  border-left-color: #0a1612;
+}
+
+.stage--selected-pending::after {
+  border-left-color: #0a1612;
+}
+
+.stage--selected-pending.stage--hovered {
+  background-color: #0d2818;
+  border-color: #0d2818;
+}
+
+.stage--selected-pending.stage--hovered::before {
+  border-left-color: #0d2818;
+}
+
+.stage--selected-pending.stage--hovered::after {
+  border-left-color: #0d2818;
+}
+
+.stage--error {
+  background-color: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+  border: 1px solid hsl(var(--destructive));
+}
+
+.stage--error::before {
+  border-left-color: hsl(var(--destructive));
+}
+
+.stage--error::after {
+  border-left-color: hsl(var(--destructive));
+}
+
+.stage--future {
+  background-color: #f2f2f2;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+}
+
+.stage--future::before {
+  border-left-color: #f2f2f2;
+}
+
+.stage--future::after {
+  border-left-color: #f2f2f2;
+}
+
+.stage--future.stage--hovered {
+  background-color: #e5e7eb;
+  border-color: #9ca3af;
+  color: #4b5563;
+}
+
+.stage--future.stage--hovered::before {
+  border-left-color: #e5e7eb;
+}
+
+.stage--future.stage--hovered::after {
+  border-left-color: #e5e7eb;
+}
+
+/* Checkmark styling */
+.stage-checkmark {
+  font-size: 0.875rem;
+  margin-right: 0.25rem;
+  animation: checkmarkAppear 0.3s ease;
+  display: inline-block;
+}
+
+@keyframes checkmarkAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-45deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
