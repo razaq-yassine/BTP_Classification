@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { handleServerError } from '@/utils/handle-server-error'
 import { FontProvider } from './context/font-context'
+import { FontSizeProvider } from './context/font-size-context'
 import { ThemeProvider } from './context/theme-context'
 import './index.css'
 // Generated Routes
@@ -97,7 +98,9 @@ if (!rootElement.innerHTML) {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider defaultTheme='light' storageKey='vite-ui-theme'>
           <FontProvider>
-            <RouterProvider router={router} />
+            <FontSizeProvider>
+              <RouterProvider router={router} />
+            </FontSizeProvider>
           </FontProvider>
         </ThemeProvider>
       </QueryClientProvider>

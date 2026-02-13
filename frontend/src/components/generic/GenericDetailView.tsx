@@ -8,7 +8,9 @@ import { GenericObjectDetailViewHeader } from './GenericObjectDetailViewHeader'
 import { GenericObjectDetailViewMainSection } from './GenericObjectDetailViewMainSection'
 import { GenericObjectDetailViewSideSection } from './GenericObjectDetailViewSideSection'
 import { GenericDetailViewSkeleton } from './GenericDetailViewSkeleton'
+import { SalesforcePath, type SalesforcePathStep } from '@/components/ui/salesforce-path'
 import api from '@/services/api'
+import { isNetworkError } from '@/utils/handle-server-error'
 
 interface GenericDetailViewProps {
   objectDefinition: ObjectDefinition
@@ -33,7 +35,10 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
       const response = await api.get(`${objectDefinition.apiEndpoint}/${recordId}`)
       setRecord(response.data)
     } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data?.error || `Failed to fetch ${objectDefinition.label.toLowerCase()}`)
+      const msg = isNetworkError(err)
+        ? 'Connection lost. Please wait and try again.'
+        : err.response?.data?.message || err.response?.data?.error || `Failed to fetch ${objectDefinition.label.toLowerCase()}`
+      setError(msg)
     } finally {
       setLoading(false)
     }
@@ -67,7 +72,14 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
           </Button>
         </div>
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription className="flex items-center justify-between gap-4">
+            {error}
+            {error.includes('Connection lost') && (
+              <Button variant="outline" size="sm" onClick={() => fetchRecord()}>
+                Retry
+              </Button>
+            )}
+          </AlertDescription>
         </Alert>
       </main>
     )
@@ -92,10 +104,40 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
   // const Icon = objectDefinition.icon
   // const displayName = getDisplayName(record)
 
+  const path = objectDefinition.path
+  const pathSteps: SalesforcePathStep[] | undefined =
+    path?.enabled && path?.steps
+      ? path.steps.map((s) => ({
+          value: s.value,
+          label: s.label,
+          color: s.color,
+          colorHover: s.colorHover,
+        }))
+      : undefined
+  const pathFieldValue = path?.enabled ? String(record[path.field] ?? '') : ''
+  const showPath = path?.enabled && pathSteps && pathSteps.length > 0
+
   return (
     <main className="flex-1 space-y-6">
       {/* Header Section */}
       <GenericObjectDetailViewHeader objectDefinition={objectDefinition} record={record} />
+
+      {/* Path (Salesforce-style) - between header and content */}
+      {showPath && (
+        <SalesforcePath
+          steps={pathSteps}
+          currentStep={pathFieldValue}
+          onStageChange={async (newValue) => {
+            try {
+              const updatePayload = { ...record, [path.field]: newValue }
+              const response = await api.put(`${objectDefinition.apiEndpoint}/${recordId}`, updatePayload)
+              setRecord(response.data)
+            } catch (err) {
+              console.error('Failed to update stage:', err)
+            }
+          }}
+        />
+      )}
 
       {/* Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">

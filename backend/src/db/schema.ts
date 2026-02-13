@@ -29,6 +29,17 @@ export const customers = sqliteTable('customers', {
   phone: text('phone'),
   company: text('company'),
   address: text('address'),
+  notes: text('notes'),
+  tags: text('tags'),
+  priority: text('priority'),
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  createdAt: integer('created_at', { mode: 'timestamp' }),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }),
+})
+
+export const opportunities = sqliteTable('opportunities', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull().unique(),
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
@@ -42,10 +53,18 @@ export const orders = sqliteTable('orders', {
   description: text('description'),
   orderDate: integer('order_date', { mode: 'timestamp' }).notNull(),
   deliveryDate: integer('delivery_date', { mode: 'timestamp' }),
-  isActive: integer('is_active', { mode: 'boolean' }).default(true),
-  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }),
   customerId: integer('customer_id').notNull().references(() => customers.id),
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  createdAt: integer('created_at', { mode: 'timestamp' }),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }),
+})
+
+export const orderitems = sqliteTable('orderitems', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull().unique(),
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  createdAt: integer('created_at', { mode: 'timestamp' }),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }),
 })
 
 export const products = sqliteTable('products', {
@@ -85,7 +104,9 @@ export const warehouses = sqliteTable('warehouses', {
 export type User = typeof users.$inferSelect
 export type Category = typeof categories.$inferSelect
 export type Customer = typeof customers.$inferSelect
+export type Opportunity = typeof opportunities.$inferSelect
 export type Order = typeof orders.$inferSelect
+export type Orderitem = typeof orderitems.$inferSelect
 export type Product = typeof products.$inferSelect
 export type Supplier = typeof suppliers.$inferSelect
 export type Warehous = typeof warehouses.$inferSelect

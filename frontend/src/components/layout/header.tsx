@@ -5,12 +5,14 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 
 interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
   fixed?: boolean
+  showSidebarTrigger?: boolean
   ref?: React.Ref<HTMLElement>
 }
 
 export const Header = ({
   className,
   fixed,
+  showSidebarTrigger = true,
   children,
   ...props
 }: HeaderProps) => {
@@ -38,8 +40,12 @@ export const Header = ({
       )}
       {...props}
     >
-      <SidebarTrigger variant='outline' className='scale-125 sm:scale-100' />
-      <Separator orientation='vertical' className='h-6' />
+      {showSidebarTrigger && (
+        <>
+          <SidebarTrigger variant='outline' className='scale-125 sm:scale-100' />
+          <Separator orientation='vertical' className='h-6' />
+        </>
+      )}
       {children}
     </header>
   )

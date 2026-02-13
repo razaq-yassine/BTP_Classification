@@ -5,6 +5,7 @@ import type {
   RelatedObjectDefinition,
   ActionDefinition,
   CalculatedDataDefinition,
+  PathDefinition,
 } from '@/types/object-definition'
 import { getIcon, resolveAction, resolveCalculatedData } from './action-registry'
 import { objectSchema, fieldSchema } from './schemas'
@@ -75,6 +76,24 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
   }
 
   const relatedObjects = Array.isArray(relatedData) ? relatedData : []
+
+  // Derive path from first field with useInPath: true (select/multiselect with options)
+  let path: PathDefinition | undefined
+  const pathField = fieldsData.find(
+    (f) => (f as FieldDefinition & { useInPath?: boolean }).useInPath === true
+  ) as (FieldDefinition & { useInPath?: boolean }) | undefined
+  if (pathField?.options && pathField.options.length > 0) {
+    path = {
+      enabled: true,
+      field: pathField.key,
+      steps: pathField.options.map((o) => ({
+        value: o.value,
+        label: o.label,
+        color: o.color,
+        colorHover: o.colorHover,
+      })),
+    }
+  }
 
   const resolvedRelatedObjects: RelatedObjectDefinition[] = relatedObjects.map((rel) => {
     const fields: FieldDefinition[] = (rel.fields || []).map((f) => {
@@ -149,6 +168,7 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
       delete: true,
     },
     relatedObjects: resolvedRelatedObjects.length > 0 ? resolvedRelatedObjects : undefined,
+    path,
     icon: Icon,
     color: objectData.color as string | undefined,
     sidebar: objectData.sidebar as ObjectDefinition['sidebar'],

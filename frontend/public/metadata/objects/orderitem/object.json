@@ -1,0 +1,15 @@
+{
+  "name": "orderitem",
+  "label": "Order Item",
+  "labelPlural": "Orderitems",
+  "description": "",
+  "apiEndpoint": "/api/orderitems",
+  "basePath": "/orderitems",
+  "detailPath": "/orderitems/$orderitemId",
+  "icon": "Layers",
+  "color": "blue",
+  "sidebar": {
+    "showInSidebar": true,
+    "group": "Data"
+  }
+}

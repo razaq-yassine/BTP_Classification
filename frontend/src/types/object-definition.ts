@@ -26,7 +26,7 @@ export interface CalculatedDataDefinition {
 export interface FieldDefinition {
   key: string
   label: string
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'select' | 'multiselect' | 'reference'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'select' | 'multiselect' | 'reference' | 'autoNumber'
   required?: boolean
   isRequired?: boolean // Alternative to required for compatibility
   isImportant?: boolean // Important fields show popup if empty on submit
@@ -34,10 +34,13 @@ export interface FieldDefinition {
   sortable?: boolean
   searchable?: boolean
   format?: string // For date formatting, etc.
-  options?: { value: string; label: string }[] // For select fields
+  options?: { value: string; label: string; color?: string; colorHover?: string }[] // For select fields
+  useInPath?: boolean // When true, this select field drives the Path component on detail view
   objectName?: string // For reference fields
   additionalFields?: string[] // Additional fields to display in lookup
   render?: (value: any, record: GenericRecord) => React.ReactNode // Custom render function
+  autoNumberPattern?: string // e.g. MSG-{00000} for autoNumber type
+  autoNumberStart?: number // Starting number for autoNumber
 }
 
 export interface RelatedObjectDefinition {
@@ -129,9 +132,27 @@ export interface ObjectDefinition {
   // Related objects configuration
   relatedObjects?: RelatedObjectDefinition[]
   
+  // Path (Salesforce-style stage progress) - shown between header and content on detail view
+  path?: PathDefinition
+  
   // UI configuration
   icon?: React.ComponentType<{ className?: string }> // Icon component
   color?: string
+}
+
+/** Path step - derived from field options when useInPath is true */
+export interface PathStepDefinition {
+  value: string
+  label: string
+  color?: string
+  colorHover?: string
+}
+
+/** Path config - derived from a field with useInPath: true */
+export interface PathDefinition {
+  enabled: boolean
+  field: string
+  steps: PathStepDefinition[]
 }
 
 

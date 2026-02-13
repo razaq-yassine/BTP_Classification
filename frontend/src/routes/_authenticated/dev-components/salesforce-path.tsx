@@ -1,19 +1,20 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { SalesforcePath, type SalesforcePathStep } from '@/components/ui/salesforce-path'
 import { Main } from '@/components/layout/main'
+import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/_authenticated/dev-components/salesforce-path')({
   component: SalesforcePathPage,
 })
 
 const sampleSteps: SalesforcePathStep[] = [
-  { value: 'prospecting', label: 'Prospecting' },
-  { value: 'qualification', label: 'Qualification' },
-  { value: 'proposal', label: 'Proposal' },
-  { value: 'negotiation', label: 'Negotiation' },
-  { value: 'closed-won', label: 'Closed Won' },
+  { value: 'prospecting', label: 'Prospecting', color: '#0369a1' },
+  { value: 'qualification', label: 'Qualification', color: '#1e40af' },
+  { value: 'proposal', label: 'Proposal', color: '#7c3aed', colorHover: '#8b5cf6' },
+  { value: 'negotiation', label: 'Negotiation', color: '#b45309' },
+  { value: 'closed-won', label: 'Closed Won', color: '#047857' },
 ]
 
 function SalesforcePathPage() {
@@ -27,13 +28,25 @@ function SalesforcePathPage() {
           <p className="text-muted-foreground">
             A horizontal step progress indicator inspired by Salesforce Sales Path.
           </p>
+          <div className="mt-2 flex gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/dev-components/order-detail-path">
+                Path demo (mock data)
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/orders/1">
+                Open Order #1 (generic detail view)
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Path with Mark as complete / Mark as current</CardTitle>
             <CardDescription>
-              Default: current stage preselected (dark green), &quot;Mark stage as complete&quot; advances to next. Click a different stage for outline, then &quot;Mark as current&quot;. Current: {currentStep}.
+              Each stage has a custom color when it&apos;s current. &quot;Mark stage as complete&quot; advances to next. Click a different stage for outline, then &quot;Mark as current&quot;. Current: {currentStep}.
             </CardDescription>
           </CardHeader>
           <CardContent>

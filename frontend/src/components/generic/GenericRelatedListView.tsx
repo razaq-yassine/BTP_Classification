@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Search, Plus, RefreshCw } from 'lucide-react'
 import api from '@/services/api'
+import { isNetworkError } from '@/utils/handle-server-error'
 
 interface GenericRelatedListViewProps {
   parentRecord: GenericRecord
@@ -51,7 +52,10 @@ export function GenericRelatedListView({
       
       setRecords(processedRecords)
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.response?.data?.message || `Failed to fetch related ${relatedObjectDefinition.label.toLowerCase()}`)
+      const msg = isNetworkError(err)
+        ? 'Connection lost. Please wait and try again.'
+        : err.response?.data?.detail || err.response?.data?.message || `Failed to fetch related ${relatedObjectDefinition.label.toLowerCase()}`
+      setError(msg)
     } finally {
       setLoading(false)
     }

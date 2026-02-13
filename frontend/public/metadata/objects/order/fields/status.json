@@ -6,11 +6,12 @@
   "editable": true,
   "sortable": true,
   "render": "statusBadge",
+  "useInPath": true,
   "options": [
-    { "value": "PENDING", "label": "Pending" },
-    { "value": "CONFIRMED", "label": "Confirmed" },
-    { "value": "SHIPPED", "label": "Shipped" },
-    { "value": "DELIVERED", "label": "Delivered" },
-    { "value": "CANCELLED", "label": "Cancelled" }
+    { "value": "PENDING", "label": "Pending", "color": "#eab308" },
+    { "value": "CONFIRMED", "label": "Confirmed", "color": "#0284c7" },
+    { "value": "SHIPPED", "label": "Shipped", "color": "#7c3aed" },
+    { "value": "DELIVERED", "label": "Delivered", "color": "#047857" },
+    { "value": "CANCELLED", "label": "Cancelled", "color": "#dc2626" }
   ]
 }

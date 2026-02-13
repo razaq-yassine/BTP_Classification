@@ -1,0 +1,10 @@
+{
+  "name": "shared",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/protected-metadata.js",
+  "exports": {
+    ".": "./dist/protected-metadata.js",
+    "./protected-metadata": "./dist/protected-metadata.js"
+  }
+}

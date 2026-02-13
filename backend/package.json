@@ -4,12 +4,18 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc -p ../shared/tsconfig.json && tsc",
     "start": "node dist/index.js",
     "db:generate": "drizzle-kit generate",
     "db:generate-from-metadata": "tsx scripts/generate-schema-from-metadata.ts",
+    "db:generate-from-metadata-temp": "tsx scripts/generate-schema-from-metadata.ts --temp-dir",
+    "db:generate-temp": "drizzle-kit generate --config=./drizzle-temp/drizzle.config.ts",
     "db:migrate": "tsx src/db/migrate.ts",
-    "db:seed": "tsx src/seed.ts"
+    "db:ensure-tables": "tsx scripts/ensure-tables.ts",
+    "db:sync-drops": "tsx scripts/sync-drops.ts",
+    "db:deploy": "pnpm exec tsc -p ../shared/tsconfig.json && pnpm run db:validate-metadata && pnpm run db:generate-from-metadata-temp && pnpm run db:generate-temp && pnpm run db:migrate && pnpm run db:sync-drops && cp drizzle-temp/db/schema.ts src/db/schema.ts && cp drizzle-temp/routes/entity-registry.generated.ts src/routes/entity-registry.generated.ts && pnpm run db:ensure-tables",
+    "db:seed": "tsx src/seed.ts",
+    "db:validate-metadata": "tsx scripts/validate-metadata.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.0",

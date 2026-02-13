@@ -17,6 +17,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@shared': path.resolve(__dirname, '../shared'),
 
       // fix loading all icon chunks in dev mode
       // https://github.com/tabler/tabler-icons/issues/1233

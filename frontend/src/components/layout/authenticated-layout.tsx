@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import Cookies from 'js-cookie'
-import { Outlet } from '@tanstack/react-router'
+import { Outlet, useLocation } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { SearchProvider } from '@/context/search-context'
 import { SidebarProvider } from '@/components/ui/sidebar'
@@ -12,6 +12,7 @@ import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import SkipToMain from '@/components/skip-to-main'
 import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
+import { useMetadataVersionPolling } from '@/hooks/useMetadataVersionPolling'
 
 interface Props {
   children?: React.ReactNode
@@ -23,6 +24,9 @@ const staticTopNav = [
 ]
 
 export function AuthenticatedLayout({ children }: Props) {
+  useMetadataVersionPolling()
+  const location = useLocation()
+  const isSettings = location.pathname.startsWith('/settings')
   const { data: defs } = useObjectDefinitionsQuery()
   const topNav = useMemo(() => {
     if (!defs?.length) return staticTopNav
@@ -33,6 +37,7 @@ export function AuthenticatedLayout({ children }: Props) {
   }, [defs])
 
   const defaultOpen = Cookies.get('sidebar_state') !== 'false'
+
   return (
     <SearchProvider>
       <SidebarProvider defaultOpen={defaultOpen}>
@@ -52,7 +57,7 @@ export function AuthenticatedLayout({ children }: Props) {
         >
           {/* ===== Top Header ===== */}
           <Header>
-            <TopNav links={topNav} />
+            {!isSettings && <TopNav links={topNav} />}
             <div className='ml-auto flex items-center space-x-4'>
               <Search />
               <ThemeSwitch />

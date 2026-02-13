@@ -10,6 +10,7 @@ import { GenericCreateDialog } from './GenericCreateDialog'
 import { Plus, Trash2 } from 'lucide-react'
 import api from '@/services/api'
 import { Main } from '@/components/layout/main'
+import { isNetworkError } from '@/utils/handle-server-error'
 
 interface GenericListViewProps {
   objectDefinition: ObjectDefinition
@@ -68,7 +69,10 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
         : response.data?.[responseKey] ?? response.data?.results ?? response.data ?? []
       setRecords(records)
     } catch (err: any) {
-      setError(err.response?.data?.message || err.response?.data?.error || `Failed to fetch ${objectDefinition.labelPlural.toLowerCase()}`)
+      const msg = isNetworkError(err)
+        ? 'Connection lost. Please wait and try again.'
+        : err.response?.data?.message || err.response?.data?.error || `Failed to fetch ${objectDefinition.labelPlural.toLowerCase()}`
+      setError(msg)
     } finally {
       setLoading(false)
     }
@@ -137,7 +141,14 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
         <div className='flex-1 overflow-auto'>
           {error ? (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription className="flex items-center justify-between gap-4">
+                {error}
+                {error.includes('Connection lost') && (
+                  <Button variant="outline" size="sm" onClick={() => fetchRecords()}>
+                    Retry
+                  </Button>
+                )}
+              </AlertDescription>
             </Alert>
           ) : (
             <GenericDataTable

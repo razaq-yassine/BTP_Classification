@@ -50,19 +50,19 @@ export function ProfileDropdown() {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link to='/settings'>
+            <Link to='/settings' target='_blank' rel='noopener noreferrer'>
               Profile
               <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to='/settings'>
+            <Link to='/settings' target='_blank' rel='noopener noreferrer'>
               Billing
               <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to='/settings'>
+            <Link to='/settings' target='_blank' rel='noopener noreferrer'>
               Settings
               <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
             </Link>

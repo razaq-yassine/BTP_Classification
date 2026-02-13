@@ -9,6 +9,7 @@ import { ChevronDown, ChevronRight, Save, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import api from '@/services/api'
 import { toast } from 'sonner'
+import { isNetworkError } from '@/utils/handle-server-error'
 
 // Field validation result
 interface FieldValidation {
@@ -36,13 +37,15 @@ function CreateFieldDisplay({
   error?: string
 }) {
   const value = formData[field.key] || ''
+  const isAutoNumber = field.type === 'autoNumber' || field.type === 'autonumber'
   
   return (
     <div className="space-y-2">
       <GenericDetailInputFormatter
         fieldDefinition={field}
         value={value}
-        onChange={(newValue) => onChange(field.key, newValue)}
+        onChange={(newValue) => !isAutoNumber && onChange(field.key, newValue)}
+        disabled={isAutoNumber}
         showLabel={true}
         className={error ? 'border-red-500' : ''}
       />
@@ -73,13 +76,16 @@ export function GenericCreateDialog({
     if (open) {
       const initialSectionStates: Record<string, boolean> = {}
       objectDefinition.detailView?.sections?.forEach((section, index) => {
-        initialSectionStates[`section_${index}`] = section.defaultOpen ?? true
+        // In create modal, always open all sections (ignore layout defaultOpen)
+        initialSectionStates[`section_${index}`] = true
       })
       setSectionStates(initialSectionStates)
       
-      // Initialize form data with default values
+      // Initialize form data with default values (exclude System Information section)
       const initialFormData: Record<string, any> = {}
-      objectDefinition.detailView?.sections?.forEach(section => {
+      objectDefinition.detailView?.sections
+        ?.filter((s) => s.title !== 'System Information')
+        ?.forEach(section => {
         section.fields.forEach(field => {
           const fieldKey = typeof field === 'string' ? field : field.key
           const fieldDefinition = typeof field === 'string' 
@@ -109,8 +115,12 @@ export function GenericCreateDialog({
 
   // Validate individual field
   const validateField = (fieldDefinition: FieldDefinition, value: any): FieldValidation => {
-    // Check if field is required and empty
-    if (fieldDefinition.required) {
+    const isAutoNumber = fieldDefinition.type === 'autoNumber' || fieldDefinition.type === 'autonumber'
+    const isNameField = fieldDefinition.key === 'name'
+    // AutoNumber fields are never required - they're generated on save
+    const isRequired = !isAutoNumber && (fieldDefinition.required || isNameField)
+
+    if (isRequired) {
       if (value === null || value === undefined || value === '') {
         return {
           isValid: false,
@@ -208,7 +218,6 @@ export function GenericCreateDialog({
       // Prepare create data
       const createData = { ...formData }
       
-      // Remove any null/undefined values for required fields to prevent backend issues
       objectDefinition.detailView?.sections?.forEach(section => {
         section.fields.forEach(field => {
           const fieldKey = typeof field === 'string' ? field : field.key
@@ -216,9 +225,10 @@ export function GenericCreateDialog({
             ? objectDefinition.fields?.find(f => f.key === fieldKey)
             : field
           
-          // For required fields, ensure they have values
-          if (fieldDefinition?.required && (createData[fieldKey] === null || createData[fieldKey] === undefined || createData[fieldKey] === '')) {
-            // Don't send empty required fields - let backend validation handle it
+          const isAutoNumber = fieldDefinition?.type === 'autoNumber' || fieldDefinition?.type === 'autonumber'
+          if (isAutoNumber) {
+            delete createData[fieldKey]
+          } else if (fieldDefinition?.required && (createData[fieldKey] === null || createData[fieldKey] === undefined || createData[fieldKey] === '')) {
             delete createData[fieldKey]
           }
         })
@@ -259,7 +269,10 @@ export function GenericCreateDialog({
       if (err.response?.status === 401) {
         setError('Authentication failed. Please try logging in again.')
       } else {
-        setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to create record')
+        const msg = isNetworkError(err)
+          ? 'Connection lost. Please wait and try again.'
+          : err.response?.data?.detail || err.response?.data?.message || 'Failed to create record'
+        setError(msg)
       }
     } finally {
       setSaving(false)
@@ -352,7 +365,10 @@ export function GenericCreateDialog({
       if (err.response?.status === 401) {
         setError('Authentication failed. Please try logging in again.')
       } else {
-        setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to create record')
+        const msg = isNetworkError(err)
+          ? 'Connection lost. Please wait and try again.'
+          : err.response?.data?.detail || err.response?.data?.message || 'Failed to create record'
+        setError(msg)
       }
     } finally {
       setSaving(false)
@@ -382,7 +398,10 @@ export function GenericCreateDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-7xl max-h-[95vh] w-[95vw] sm:w-[98vw] md:w-[95vw] lg:w-[90vw] overflow-hidden flex flex-col p-0">
+        <DialogContent
+          className="max-h-[95vh] overflow-hidden flex flex-col p-0"
+          style={{ width: '95vw', maxWidth: '95vw' }}
+        >
           <DialogHeader className="flex-shrink-0 px-6 pt-6">
             <DialogTitle className="text-xl font-semibold">
               New {objectDefinition.label || objectDefinition.name}
@@ -397,7 +416,10 @@ export function GenericCreateDialog({
             )}
 
             <div className="space-y-4">
-              {objectDefinition.detailView?.sections?.map((section, sectionIndex) => {
+              {objectDefinition.detailView?.sections
+                ?.map((section, idx) => ({ section, sectionIndex: idx }))
+                ?.filter(({ section }) => section.title !== 'System Information')
+                ?.map(({ section, sectionIndex }) => {
                 const sectionKey = `section_${sectionIndex}`
                 const isOpen = sectionStates[sectionKey] ?? true
                 

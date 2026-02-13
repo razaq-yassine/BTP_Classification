@@ -14,10 +14,26 @@ export interface PathStageProps {
   isLast?: boolean
   hasError?: boolean
   doneColor?: string
+  /** Color when stage is current (selected/selectedPending) */
+  currentColor?: string
+  /** Hover color when stage is current */
+  currentColorHover?: string
+  /** Background when current is in outline mode */
+  currentOutlineColor?: string
+  /** Background hover when current is in outline mode */
+  currentOutlineColorHover?: string
+  /** Border color when current is in outline mode */
+  currentOutlineBorderColor?: string
   onClick?: () => void
   onMouseEnter?: () => void
   onMouseLeave?: () => void
 }
+
+const DEFAULT_CURRENT = '#0a1612'
+const DEFAULT_CURRENT_HOVER = '#0d2818'
+const DEFAULT_OUTLINE = '#ecfdf5'
+const DEFAULT_OUTLINE_HOVER = '#d1fae5'
+const DEFAULT_OUTLINE_BORDER = '#0a1612'
 
 export function PathStage({
   name,
@@ -28,6 +44,11 @@ export function PathStage({
   isLast = false,
   hasError = false,
   doneColor = '#047857',
+  currentColor = DEFAULT_CURRENT,
+  currentColorHover = DEFAULT_CURRENT_HOVER,
+  currentOutlineColor = DEFAULT_OUTLINE,
+  currentOutlineColorHover = DEFAULT_OUTLINE_HOVER,
+  currentOutlineBorderColor = DEFAULT_OUTLINE_BORDER,
   onClick,
   onMouseEnter,
   onMouseLeave,
@@ -64,16 +85,26 @@ export function PathStage({
     }
   }
 
-  const DARK_GREEN = '#0a1612'
-  const DARK_GREEN_HOVER = '#0d2818'
-
   const getInlineStyles = (): React.CSSProperties => {
-    if (status === 'selectedPending') {
+    if (status === 'selected' || status === 'selectedPending') {
+      const fill = isHovered ? currentColorHover : currentColor
       return {
-        backgroundColor: isHovered ? DARK_GREEN_HOVER : DARK_GREEN,
-        borderColor: isHovered ? DARK_GREEN_HOVER : DARK_GREEN,
+        backgroundColor: fill,
+        borderColor: fill,
         color: 'white',
-        ['--done-color' as string]: DARK_GREEN,
+        ['--current-color' as string]: fill,
+        ['--done-color' as string]: currentColor,
+      }
+    }
+    if (status === 'currentOutline') {
+      const fill = isHovered ? currentOutlineColorHover : currentOutlineColor
+      const borderCol = isHovered ? currentColorHover : currentOutlineBorderColor
+      return {
+        backgroundColor: fill,
+        color: currentOutlineBorderColor,
+        boxShadow: `inset 0 0 0 1px ${borderCol}`,
+        ['--current-outline-color' as string]: fill,
+        ['--current-outline-border-color' as string]: borderCol,
       }
     }
     if (status === 'done') {

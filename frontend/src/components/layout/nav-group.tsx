@@ -1,6 +1,7 @@
 import { ReactNode } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
+import { IconExternalLink } from '@tabler/icons-react'
 import {
   Collapsible,
   CollapsibleContent,
@@ -66,10 +67,15 @@ const SidebarMenuLink = ({ item, href }: { item: NavLink; href: string }) => {
         isActive={checkIsActive(href, item)}
         tooltip={item.title}
       >
-        <Link to={item.url} onClick={() => setOpenMobile(false)}>
+        <Link
+          to={item.url}
+          onClick={() => setOpenMobile(false)}
+          {...(item.external && { target: '_blank', rel: 'noopener noreferrer' })}
+        >
           {item.icon && <item.icon />}
           <span>{item.title}</span>
           {item.badge && <NavBadge>{item.badge}</NavBadge>}
+          {item.external && <IconExternalLink className='ml-auto size-4 opacity-60' />}
         </Link>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -107,7 +113,11 @@ const SidebarMenuCollapsible = ({
                   asChild
                   isActive={checkIsActive(href, subItem)}
                 >
-                  <Link to={subItem.url} onClick={() => setOpenMobile(false)}>
+                  <Link
+                    to={subItem.url}
+                    onClick={() => setOpenMobile(false)}
+                    {...(subItem.external && { target: '_blank', rel: 'noopener noreferrer' })}
+                  >
                     {subItem.icon && <subItem.icon />}
                     <span>{subItem.title}</span>
                     {subItem.badge && <NavBadge>{subItem.badge}</NavBadge>}
@@ -153,6 +163,7 @@ const SidebarMenuCollapsedDropdown = ({
               <Link
                 to={sub.url}
                 className={`${checkIsActive(href, sub) ? 'bg-secondary' : ''}`}
+                {...(sub.external && { target: '_blank', rel: 'noopener noreferrer' })}
               >
                 {sub.icon && <sub.icon />}
                 <span className='max-w-52 text-wrap'>{sub.title}</span>

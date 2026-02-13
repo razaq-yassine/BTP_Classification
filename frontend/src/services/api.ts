@@ -39,12 +39,26 @@ api.interceptors.request.use(
   }
 )
 
+function isNetworkError(err: { response?: unknown; code?: string; message?: string }): boolean {
+  if (err.response) return false
+  const { code, message } = err
+  return (
+    code === 'ERR_NETWORK' ||
+    code === 'ECONNREFUSED' ||
+    code === 'ETIMEDOUT' ||
+    (message && (message.includes('Network Error') || message.includes('Failed to fetch')))
+  )
+}
+
 /**
  * Response Interceptor: Handle authentication errors
  */
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Never clear token or redirect on network errors (backend restart, etc.)
+    if (isNetworkError(error)) return Promise.reject(error)
+
     const status = error.response?.status
     const url = error.config?.url || ''
     // Handle 401 Unauthorized errors (except for login endpoint)

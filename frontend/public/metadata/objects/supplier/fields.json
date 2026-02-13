@@ -1,1 +1,6 @@
-["id","name","slug","contactEmail","website","isActive","createdAt","updatedAt"]
+[
+  "name",
+  "slug",
+  "contactEmail",
+  "website"
+]

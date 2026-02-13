@@ -1,0 +1,11 @@
+{
+  "key": "name",
+  "label": "Name",
+  "type": "autoNumber",
+  "required": true,
+  "editable": false,
+  "sortable": true,
+  "searchable": true,
+  "autoNumberStart": 1,
+  "autoNumberPattern": "OI-{0000}"
+}

@@ -8,6 +8,7 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { SYSTEM_FIELDS, SYSTEM_FIELDS_SET, SYSTEM_FIELD_COLUMN_CONFIG } from '../../shared/protected-metadata'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const backendRoot = path.join(__dirname, '..')
@@ -61,7 +62,7 @@ function loadObjectMetadata(objectName: string): { object: Record<string, unknow
   const fields: FieldDef[] = []
 
   for (const key of fieldsIndex) {
-    if (key === 'id') continue
+    if (SYSTEM_FIELDS_SET.has(key)) continue
     const fieldPath = path.join(objPath, 'fields', `${key}.json`)
     if (!fs.existsSync(fieldPath)) continue
     const fd = JSON.parse(fs.readFileSync(fieldPath, 'utf-8')) as FieldDef
@@ -77,7 +78,7 @@ function loadAllFields(objectName: string): FieldDef[] {
   const fieldsIndex = JSON.parse(fs.readFileSync(path.join(objPath, 'fields.json'), 'utf-8')) as string[]
   const fields: FieldDef[] = []
   for (const key of fieldsIndex) {
-    if (key === 'id') continue
+    if (SYSTEM_FIELDS_SET.has(key)) continue
     const fieldPath = path.join(objPath, 'fields', `${key}.json`)
     if (!fs.existsSync(fieldPath)) continue
     const fd = JSON.parse(fs.readFileSync(fieldPath, 'utf-8')) as FieldDef
@@ -113,7 +114,8 @@ function generateTable(objectName: string, tableName: string, fields: FieldDef[]
       lines.push(`  ${field.key}Id: integer('${colName}_id').notNull().references(() => ${refTable}.id),`)
     } else {
       const notNull = field.required ? '.notNull()' : ''
-      const unique = field.unique ? '.unique()' : ''
+      const isAutoNum = field.type === 'autoNumber' || field.type === 'autonumber'
+      const unique = (field.unique || isAutoNum) ? '.unique()' : ''
       const tsMode = field.type === 'boolean' ? ", { mode: 'boolean' }" : (field.type === 'date' || field.type === 'datetime') ? ", { mode: 'timestamp' }" : ''
       if (field.type === 'boolean') {
         lines.push(`  ${field.key}: integer('${colName}'${tsMode}).default(true),`)
@@ -125,20 +127,23 @@ function generateTable(objectName: string, tableName: string, fields: FieldDef[]
     }
   }
 
-  // Standard columns
-  if (!fields.some((f) => f.key === 'isActive')) {
-    lines.push(`  isActive: integer('is_active', { mode: 'boolean' }).default(true),`)
-  }
-  if (!fields.some((f) => f.key === 'createdAt')) {
-    lines.push(`  createdAt: integer('created_at', { mode: 'timestamp' }),`)
-  }
-  if (!fields.some((f) => f.key === 'updatedAt')) {
-    lines.push(`  updatedAt: integer('updated_at', { mode: 'timestamp' }),`)
+  // Standard columns (from protected-metadata, exclude id)
+  for (const fk of SYSTEM_FIELDS) {
+    if (fk === 'id') continue
+    const cfg = SYSTEM_FIELD_COLUMN_CONFIG[fk as keyof typeof SYSTEM_FIELD_COLUMN_CONFIG]
+    if (cfg && !fields.some((f) => f.key === fk)) {
+      const modeStr = cfg.mode === 'boolean' ? "mode: 'boolean'" : "mode: 'timestamp'"
+      lines.push(`  ${fk}: integer('${cfg.col}', { ${modeStr} })${cfg.drizzleDefault},`)
+    }
   }
 
   lines.push('})')
   return lines.join('\n')
 }
+
+const TEMP_DIR = process.argv.includes('--temp-dir')
+  ? path.join(backendRoot, 'drizzle-temp')
+  : null
 
 function main() {
   if (!fs.existsSync(OBJECTS_PATH)) {
@@ -196,7 +201,10 @@ export type User = typeof users.$inferSelect
 ${tableNames.filter((t) => t !== 'users').map((t) => `export type ${singularize(t).charAt(0).toUpperCase() + singularize(t).slice(1)} = typeof ${t}.$inferSelect`).join('\n')}
 `
 
-  const schemaPath = path.join(backendRoot, 'src/db/schema.ts')
+  const schemaPath = TEMP_DIR
+    ? path.join(TEMP_DIR, 'db', 'schema.ts')
+    : path.join(backendRoot, 'src/db/schema.ts')
+  if (TEMP_DIR) fs.mkdirSync(path.dirname(schemaPath), { recursive: true })
   fs.writeFileSync(schemaPath, schemaContent)
   console.log('Generated schema from metadata:', schemaPath)
 
@@ -205,6 +213,11 @@ ${tableNames.filter((t) => t !== 'users').map((t) => `export type ${singularize(
   const indexContent = JSON.stringify(objectDirs, null, 2)
   fs.writeFileSync(indexPath, indexContent)
   console.log('Updated object index:', indexPath)
+
+  // Write version for frontend cache invalidation (no restart needed for frontend to pick up changes)
+  const versionPath = path.join(METADATA_PATH, 'version.json')
+  fs.writeFileSync(versionPath, JSON.stringify({ version: Date.now() }, null, 2))
+  console.log('Updated metadata version:', versionPath)
 
   // Generate entity registry for generic routes
   generateEntityRegistry(objectDirs)
@@ -245,12 +258,11 @@ function generateEntityRegistry(objectDirs: string[]) {
 
     const insertFields = fields.filter((f) => f.type !== 'reference').map((f) => f.key)
     const referenceFields = fields.filter((f) => f.type === 'reference')
+    const systemInsertFields = SYSTEM_FIELDS.filter((f) => f !== 'id')
     const insertFieldsArr = [...new Set([
       ...insertFields,
       ...referenceFields.map((f) => `${f.key}Id`),
-      'isActive',
-      'createdAt',
-      'updatedAt',
+      ...systemInsertFields,
     ])]
     const updateFieldsArr = insertFieldsArr.filter((f) => f !== 'createdAt')
 
@@ -284,6 +296,15 @@ function generateEntityRegistry(objectDirs: string[]) {
     const relatedPaths = relatedListPathsByEntity.get(tableName)
     const relatedPathsStr = relatedPaths && Object.keys(relatedPaths).length > 0 ? JSON.stringify(relatedPaths) : 'undefined'
 
+    const autoNumberFields = allFields
+      .filter((f) => (f.type === 'autoNumber' || f.type === 'autonumber') && f.key)
+      .map((f) => {
+        const pattern = ((f as any).autoNumberPattern || '{0000}').replace(/'/g, "\\'")
+        const start = (f as any).autoNumberStart ?? 1
+        return `'${f.key}': { pattern: '${pattern}', start: ${start} }`
+      })
+    const autoNumberConfig = autoNumberFields.length > 0 ? `autoNumberFields: { ${autoNumberFields.join(', ')} }` : ''
+
     const configParts = [
       `table: ${tableName}`,
       `objectName: '${objectName}'`,
@@ -294,6 +315,7 @@ function generateEntityRegistry(objectDirs: string[]) {
       joinConfig,
       `computedFields: ${computedConfig}`,
       `relatedListPaths: ${relatedPathsStr}`,
+      autoNumberConfig,
     ].filter(Boolean)
 
     entityConfigs.push(`  '${tableName}': { ${configParts.join(', ')} },`)
@@ -310,7 +332,10 @@ ${entityConfigs.join('\n')}
 
 export type EntityPath = keyof typeof entityRegistry
 `
-  const registryPath = path.join(backendRoot, 'src/routes/entity-registry.generated.ts')
+  const registryPath = TEMP_DIR
+    ? path.join(TEMP_DIR, 'routes', 'entity-registry.generated.ts')
+    : path.join(backendRoot, 'src/routes/entity-registry.generated.ts')
+  if (TEMP_DIR) fs.mkdirSync(path.dirname(registryPath), { recursive: true })
   fs.writeFileSync(registryPath, registryContent)
   console.log('Generated entity registry:', registryPath)
 }

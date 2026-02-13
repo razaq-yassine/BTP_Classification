@@ -6,8 +6,10 @@ import { fonts } from '@/config/fonts'
 import { cn } from '@/lib/utils'
 import { showSubmittedData } from '@/utils/show-submitted-data'
 import { useFont } from '@/context/font-context'
+import { useFontSize } from '@/context/font-size-context'
 import { useTheme } from '@/context/theme-context'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Form,
   FormControl,
@@ -22,18 +24,21 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 const appearanceFormSchema = z.object({
   theme: z.enum(['light', 'dark']),
   font: z.enum(fonts),
+  fontSize: z.number().min(12).max(24),
 })
 
 type AppearanceFormValues = z.infer<typeof appearanceFormSchema>
 
 export function AppearanceForm() {
   const { font, setFont } = useFont()
+  const { fontSize, setFontSize } = useFontSize()
   const { theme, setTheme } = useTheme()
 
   // This can come from your database or API.
   const defaultValues: Partial<AppearanceFormValues> = {
     theme: theme as 'light' | 'dark',
     font,
+    fontSize,
   }
 
   const form = useForm<AppearanceFormValues>({
@@ -44,6 +49,7 @@ export function AppearanceForm() {
   function onSubmit(data: AppearanceFormValues) {
     if (data.font != font) setFont(data.font)
     if (data.theme != theme) setTheme(data.theme)
+    if (data.fontSize != fontSize) setFontSize(data.fontSize)
 
     showSubmittedData(data)
   }
@@ -151,6 +157,44 @@ export function AppearanceForm() {
                   </FormLabel>
                 </FormItem>
               </RadioGroup>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name='fontSize'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Font Size</FormLabel>
+              <div className='space-y-2'>
+                <div className='flex items-center gap-2 w-max'>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      min='12'
+                      max='24'
+                      step='1'
+                      className='w-24'
+                      value={field.value ?? fontSize}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value, 10)
+                        if (!isNaN(value) && value >= 12 && value <= 24) {
+                          field.onChange(value)
+                          // Update font size immediately for preview
+                          setFontSize(value)
+                        } else if (e.target.value === '') {
+                          field.onChange(undefined)
+                        }
+                      }}
+                    />
+                  </FormControl>
+                  <span className='text-sm text-muted-foreground'>px</span>
+                </div>
+                <FormDescription>
+                  Adjust the font size for the entire website. Range: 12px - 24px
+                </FormDescription>
+                <FormMessage />
+              </div>
             </FormItem>
           )}
         />

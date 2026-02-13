@@ -10,6 +10,7 @@ import { ImportantFieldsDialog } from '@/components/ui/important-fields-dialog'
 import { Edit2, ChevronDown, ChevronRight, Save, Undo2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import api from '@/services/api'
+import { isNetworkError } from '@/utils/handle-server-error'
 import { toast } from 'sonner'
 
 // Field validation result
@@ -338,7 +339,10 @@ function DetailsTabContent({
       if (err.response?.status === 401) {
         setError('Authentication failed. Please try logging in again.')
       } else {
-        setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to save changes')
+        const msg = isNetworkError(err)
+          ? 'Connection lost. Please wait and try again.'
+          : err.response?.data?.detail || err.response?.data?.message || 'Failed to save changes'
+        setError(msg)
       }
     } finally {
       setSaving(false)
@@ -427,7 +431,10 @@ function DetailsTabContent({
       if (err.response?.status === 401) {
         setError('Authentication failed. Please try logging in again.')
       } else {
-        setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to save changes')
+        const msg = isNetworkError(err)
+          ? 'Connection lost. Please wait and try again.'
+          : err.response?.data?.detail || err.response?.data?.message || 'Failed to save changes'
+        setError(msg)
       }
     } finally {
       setSaving(false)

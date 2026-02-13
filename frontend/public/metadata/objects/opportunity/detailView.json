@@ -1,0 +1,24 @@
+{
+  "layout": "two-column",
+  "sections": [
+    {
+      "title": "Basic Information",
+      "columns": 2,
+      "defaultOpen": true,
+      "fields": [
+        "name"
+      ]
+    },
+    {
+      "title": "System Information",
+      "columns": 2,
+      "defaultOpen": false,
+      "fields": [
+        "id",
+        "isActive",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import {
   IconBarrierBlock,
+  IconBox,
   IconBrowserCheck,
   IconBug,
   IconChecklist,
@@ -21,7 +22,21 @@ import {
 } from '@tabler/icons-react'
 import { AudioWaveform, Command, GalleryVerticalEnd, Layers } from 'lucide-react'
 
-import { type SidebarData } from '../types'
+import { type SidebarData, type NavGroup } from '../types'
+
+export const settingsNavGroups: NavGroup[] = [
+  {
+    title: 'Settings',
+    items: [
+      { title: 'Object Manager', url: '/settings/object-manager', icon: IconBox },
+      { title: 'Profile', url: '/settings', icon: IconUserCog },
+      { title: 'Account', url: '/settings/account', icon: IconTool },
+      { title: 'Appearance', url: '/settings/appearance', icon: IconPalette },
+      { title: 'Notifications', url: '/settings/notifications', icon: IconNotification },
+      { title: 'Display', url: '/settings/display', icon: IconBrowserCheck },
+    ],
+  },
+]
 
 export const sidebarData: SidebarData = {
   user: {
@@ -160,34 +175,9 @@ export const sidebarData: SidebarData = {
       items: [
         {
           title: 'Settings',
+          url: '/settings',
           icon: IconSettings,
-          items: [
-            {
-              title: 'Profile',
-              url: '/settings',
-              icon: IconUserCog,
-            },
-            {
-              title: 'Account',
-              url: '/settings/account',
-              icon: IconTool,
-            },
-            {
-              title: 'Appearance',
-              url: '/settings/appearance',
-              icon: IconPalette,
-            },
-            {
-              title: 'Notifications',
-              url: '/settings/notifications',
-              icon: IconNotification,
-            },
-            {
-              title: 'Display',
-              url: '/settings/display',
-              icon: IconBrowserCheck,
-            },
-          ],
+          external: true,
         },
         {
           title: 'Help Center',

@@ -8,6 +8,10 @@ data.db
 .env.*.local
 .DS_Store
 
+# Deploy temp (generated each run)
+drizzle-temp/db/
+drizzle-temp/routes/
+
 # Python
 __pycache__/
 *.py[cod]

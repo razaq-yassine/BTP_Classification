@@ -266,89 +266,89 @@
   filter: brightness(0.85);
 }
 
-/* Current stage (preselected) - dark green when no other selection */
+/* Current stage (preselected) - configurable via --current-color */
 .stage--selected {
-  background-color: #0a1612;
+  background-color: var(--current-color, #0a1612);
   color: white;
-  border: 1px solid #0a1612;
+  border: 1px solid var(--current-color, #0a1612);
 }
 
 .stage--selected::before {
-  border-left-color: #0a1612;
+  border-left-color: var(--current-color, #0a1612);
 }
 
 .stage--selected::after {
-  border-left-color: #0a1612;
+  border-left-color: var(--current-color, #0a1612);
 }
 
 .stage--selected.stage--hovered {
-  background-color: #0d2818;
-  border-color: #0d2818;
+  background-color: var(--current-color, #0d2818);
+  border-color: var(--current-color, #0d2818);
 }
 
 .stage--selected.stage--hovered::before {
-  border-left-color: #0d2818;
+  border-left-color: var(--current-color, #0d2818);
 }
 
 .stage--selected.stage--hovered::after {
-  border-left-color: #0d2818;
+  border-left-color: var(--current-color, #0d2818);
 }
 
-/* Current stage (in DB) - outline + very light green when user selected a different stage */
+/* Current stage (in DB) - outline when user selected different stage, configurable via --current-outline-color */
 .stage--current-outline {
-  background-color: #ecfdf5;
-  color: #0a1612;
+  background-color: var(--current-outline-color, #ecfdf5);
+  color: var(--current-outline-border-color, #0a1612);
   border: none;
-  box-shadow: inset 0 0 0 1px #0a1612;
+  box-shadow: inset 0 0 0 1px var(--current-outline-border-color, #0a1612);
 }
 
 .stage--current-outline::before {
-  border-left-color: #ecfdf5;
+  border-left-color: var(--current-outline-color, #ecfdf5);
 }
 
 .stage--current-outline::after {
-  border-left-color: #ecfdf5;
+  border-left-color: var(--current-outline-color, #ecfdf5);
 }
 
 .stage--current-outline.stage--hovered {
-  background-color: #d1fae5;
-  box-shadow: inset 0 0 0 1px #0d2818;
+  background-color: var(--current-outline-color, #d1fae5);
+  box-shadow: inset 0 0 0 1px var(--current-outline-border-color, #0d2818);
 }
 
 .stage--current-outline.stage--hovered::before {
-  border-left-color: #d1fae5;
+  border-left-color: var(--current-outline-color, #d1fae5);
 }
 
 .stage--current-outline.stage--hovered::after {
-  border-left-color: #d1fae5;
+  border-left-color: var(--current-outline-color, #d1fae5);
 }
 
-/* Selected by cursor (not yet current) - dark green, same as preselected */
+/* Selected by cursor (not yet current) - configurable via --current-color */
 .stage--selected-pending {
-  background-color: #0a1612;
+  background-color: var(--current-color, #0a1612);
   color: white;
-  border: 1px solid #0a1612;
+  border: 1px solid var(--current-color, #0a1612);
 }
 
 .stage--selected-pending::before {
-  border-left-color: #0a1612;
+  border-left-color: var(--current-color, #0a1612);
 }
 
 .stage--selected-pending::after {
-  border-left-color: #0a1612;
+  border-left-color: var(--current-color, #0a1612);
 }
 
 .stage--selected-pending.stage--hovered {
-  background-color: #0d2818;
-  border-color: #0d2818;
+  background-color: var(--current-color, #0d2818);
+  border-color: var(--current-color, #0d2818);
 }
 
 .stage--selected-pending.stage--hovered::before {
-  border-left-color: #0d2818;
+  border-left-color: var(--current-color, #0d2818);
 }
 
 .stage--selected-pending.stage--hovered::after {
-  border-left-color: #0d2818;
+  border-left-color: var(--current-color, #0d2818);
 }
 
 .stage--error {

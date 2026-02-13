@@ -21,10 +21,11 @@ interface BaseNavItem {
 type NavLink = BaseNavItem & {
   url: LinkProps['to']
   items?: never
+  external?: boolean
 }
 
 type NavCollapsible = BaseNavItem & {
-  items: (BaseNavItem & { url: LinkProps['to'] })[]
+  items: (BaseNavItem & { url: LinkProps['to']; external?: boolean })[]
   url?: never
 }
 

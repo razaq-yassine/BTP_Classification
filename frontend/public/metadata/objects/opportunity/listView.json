@@ -1,0 +1,10 @@
+{
+  "fields": [
+    "name",
+    "isActive",
+    "createdAt"
+  ],
+  "defaultSort": "createdAt",
+  "defaultSortOrder": "desc",
+  "pageSize": 10
+}

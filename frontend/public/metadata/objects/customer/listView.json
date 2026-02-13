@@ -1,6 +1,1 @@
-{
-  "fields": ["fullName", "email", "company", "phone", "isActive", "createdAt"],
-  "defaultSort": "createdAt",
-  "defaultSortOrder": "desc",
-  "pageSize": 10
-}
+{"fields":["fullName","email","company","priority","tags","notes","phone","isActive","createdAt"],"defaultSort":"createdAt","defaultSortOrder":"desc","pageSize":10}

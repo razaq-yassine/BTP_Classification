@@ -1,1 +1,13 @@
-["id", "firstName", "lastName", "fullName", "email", "phone", "company", "address", "isActive", "createdAt", "updatedAt"]
+[
+  "name",
+  "firstName",
+  "lastName",
+  "fullName",
+  "email",
+  "phone",
+  "company",
+  "address",
+  "notes",
+  "tags",
+  "priority"
+]

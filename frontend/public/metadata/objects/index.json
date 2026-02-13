@@ -1,7 +1,9 @@
 [
   "category",
   "customer",
+  "opportunity",
   "order",
+  "orderitem",
   "product",
   "supplier",
   "warehouse"

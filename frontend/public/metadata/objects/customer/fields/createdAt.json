@@ -1,8 +1,0 @@
-{
-  "key": "createdAt",
-  "label": "Created",
-  "type": "date",
-  "editable": false,
-  "sortable": true,
-  "format": "MMM dd, yyyy"
-}

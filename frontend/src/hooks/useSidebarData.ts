@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
+import { useLocation } from '@tanstack/react-router'
 import type { ObjectDefinition } from '@/types/object-definition'
 import type { SidebarData, NavGroup, NavItem, NavLink, NavCollapsible } from '@/components/layout/types'
 import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
-import { sidebarData as staticSidebarData } from '@/components/layout/data/sidebar-data'
+import { sidebarData as staticSidebarData, settingsNavGroups } from '@/components/layout/data/sidebar-data'
 
 function buildDataNavGroup(defs: ObjectDefinition[]): NavGroup | null {
   const withSidebar = defs.filter(
@@ -52,15 +53,18 @@ function buildDataNavGroup(defs: ObjectDefinition[]): NavGroup | null {
 }
 
 export function useSidebarData(): SidebarData {
+  const location = useLocation()
   const { data: defs } = useObjectDefinitionsQuery()
+  const isSettings = location.pathname.startsWith('/settings')
 
   const navGroups = useMemo(() => {
+    if (isSettings) return settingsNavGroups
     if (!defs) return staticSidebarData.navGroups
     const dataGroup = buildDataNavGroup(defs)
     if (!dataGroup) return staticSidebarData.navGroups
     const existing = staticSidebarData.navGroups.filter((g) => g.title !== dataGroup.title)
     return [dataGroup, ...existing]
-  }, [defs])
+  }, [defs, isSettings])
 
   return {
     ...staticSidebarData,

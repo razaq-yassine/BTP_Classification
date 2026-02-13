@@ -4,6 +4,7 @@ node_modules/
 # Build outputs
 dist/
 build/
+shared/dist/
 
 # Environment
 .env

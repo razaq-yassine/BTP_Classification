@@ -25,7 +25,7 @@ export const fieldSchema = z.object({
   label: z.string(),
   type: z.enum([
     'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text',
-    'select', 'multiselect', 'reference', 'lookup' // lookup maps to reference
+    'select', 'multiselect', 'reference', 'lookup', 'autoNumber' // lookup maps to reference
   ]),
   required: z.boolean().optional(),
   editable: z.boolean().optional(),
@@ -33,10 +33,22 @@ export const fieldSchema = z.object({
   searchable: z.boolean().optional(),
   format: z.string().optional(),
   maxLength: z.number().optional(),
-  options: z.array(z.object({ value: z.string(), label: z.string() })).optional(),
+  options: z
+    .array(
+      z.object({
+        value: z.string(),
+        label: z.string(),
+        color: z.string().optional(),
+        colorHover: z.string().optional(),
+      })
+    )
+    .optional(),
+  useInPath: z.boolean().optional(),
   isImportant: z.boolean().optional(),
   render: z.string().optional(),
   computed: z.boolean().optional(),
+  autoNumberPattern: z.string().optional(),
+  autoNumberStart: z.number().optional(),
 })
 
 export const listViewSchema = z.object({

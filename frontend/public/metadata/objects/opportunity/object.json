@@ -1,0 +1,15 @@
+{
+  "name": "opportunity",
+  "label": "Opportunity",
+  "labelPlural": "Opportunities",
+  "description": "",
+  "apiEndpoint": "/api/opportunities",
+  "basePath": "/opportunities",
+  "detailPath": "/opportunities/$opportunityId",
+  "icon": "Layers",
+  "color": "blue",
+  "sidebar": {
+    "showInSidebar": true,
+    "group": "Data"
+  }
+}

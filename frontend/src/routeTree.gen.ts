@@ -31,13 +31,17 @@ import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedObjectNameIndexRouteImport } from './routes/_authenticated/$objectName/index'
+import { Route as AuthenticatedSettingsObjectManagerRouteImport } from './routes/_authenticated/settings/object-manager'
 import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedDevComponentsSalesforcePathRouteImport } from './routes/_authenticated/dev-components/salesforce-path'
+import { Route as AuthenticatedDevComponentsOrderDetailPathRouteImport } from './routes/_authenticated/dev-components/order-detail-path'
 import { Route as AuthenticatedDevComponentsDetailViewFormatterRouteImport } from './routes/_authenticated/dev-components/detail-view-formatter'
 import { Route as AuthenticatedObjectNameRecordIdRouteImport } from './routes/_authenticated/$objectName/$recordId'
+import { Route as AuthenticatedSettingsObjectManagerIndexRouteImport } from './routes/_authenticated/settings/object-manager/index'
+import { Route as AuthenticatedSettingsObjectManagerObjectNameRouteImport } from './routes/_authenticated/settings/object-manager/$objectName'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -152,6 +156,12 @@ const AuthenticatedObjectNameIndexRoute =
     path: '/$objectName/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsObjectManagerRoute =
+  AuthenticatedSettingsObjectManagerRouteImport.update({
+    id: '/object-manager',
+    path: '/object-manager',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedSettingsNotificationsRoute =
   AuthenticatedSettingsNotificationsRouteImport.update({
     id: '/notifications',
@@ -182,6 +192,12 @@ const AuthenticatedDevComponentsSalesforcePathRoute =
     path: '/dev-components/salesforce-path',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDevComponentsOrderDetailPathRoute =
+  AuthenticatedDevComponentsOrderDetailPathRouteImport.update({
+    id: '/dev-components/order-detail-path',
+    path: '/dev-components/order-detail-path',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDevComponentsDetailViewFormatterRoute =
   AuthenticatedDevComponentsDetailViewFormatterRouteImport.update({
     id: '/dev-components/detail-view-formatter',
@@ -193,6 +209,18 @@ const AuthenticatedObjectNameRecordIdRoute =
     id: '/$objectName/$recordId',
     path: '/$objectName/$recordId',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSettingsObjectManagerIndexRoute =
+  AuthenticatedSettingsObjectManagerIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsObjectManagerRoute,
+  } as any)
+const AuthenticatedSettingsObjectManagerObjectNameRoute =
+  AuthenticatedSettingsObjectManagerObjectNameRouteImport.update({
+    id: '/$objectName',
+    path: '/$objectName',
+    getParentRoute: () => AuthenticatedSettingsObjectManagerRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -212,11 +240,13 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/$objectName/$recordId': typeof AuthenticatedObjectNameRecordIdRoute
   '/dev-components/detail-view-formatter': typeof AuthenticatedDevComponentsDetailViewFormatterRoute
+  '/dev-components/order-detail-path': typeof AuthenticatedDevComponentsOrderDetailPathRoute
   '/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/settings/object-manager': typeof AuthenticatedSettingsObjectManagerRouteWithChildren
   '/$objectName': typeof AuthenticatedObjectNameIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
@@ -224,6 +254,8 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
+  '/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -241,6 +273,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/$objectName/$recordId': typeof AuthenticatedObjectNameRecordIdRoute
   '/dev-components/detail-view-formatter': typeof AuthenticatedDevComponentsDetailViewFormatterRoute
+  '/dev-components/order-detail-path': typeof AuthenticatedDevComponentsOrderDetailPathRoute
   '/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
@@ -253,6 +286,8 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
+  '/settings/object-manager': typeof AuthenticatedSettingsObjectManagerIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -273,11 +308,13 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/$objectName/$recordId': typeof AuthenticatedObjectNameRecordIdRoute
   '/_authenticated/dev-components/detail-view-formatter': typeof AuthenticatedDevComponentsDetailViewFormatterRoute
+  '/_authenticated/dev-components/order-detail-path': typeof AuthenticatedDevComponentsOrderDetailPathRoute
   '/_authenticated/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/_authenticated/settings/object-manager': typeof AuthenticatedSettingsObjectManagerRouteWithChildren
   '/_authenticated/$objectName/': typeof AuthenticatedObjectNameIndexRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
@@ -285,6 +322,8 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
+  '/_authenticated/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -305,11 +344,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/$objectName/$recordId'
     | '/dev-components/detail-view-formatter'
+    | '/dev-components/order-detail-path'
     | '/dev-components/salesforce-path'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
     | '/settings/notifications'
+    | '/settings/object-manager'
     | '/$objectName'
     | '/apps'
     | '/chats'
@@ -317,6 +358,8 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/tasks'
     | '/users'
+    | '/settings/object-manager/$objectName'
+    | '/settings/object-manager/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -334,6 +377,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/$objectName/$recordId'
     | '/dev-components/detail-view-formatter'
+    | '/dev-components/order-detail-path'
     | '/dev-components/salesforce-path'
     | '/settings/account'
     | '/settings/appearance'
@@ -346,6 +390,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/users'
+    | '/settings/object-manager/$objectName'
+    | '/settings/object-manager'
   id:
     | '__root__'
     | '/'
@@ -365,11 +411,13 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/$objectName/$recordId'
     | '/_authenticated/dev-components/detail-view-formatter'
+    | '/_authenticated/dev-components/order-detail-path'
     | '/_authenticated/dev-components/salesforce-path'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
     | '/_authenticated/settings/notifications'
+    | '/_authenticated/settings/object-manager'
     | '/_authenticated/$objectName/'
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
@@ -377,6 +425,8 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
+    | '/_authenticated/settings/object-manager/$objectName'
+    | '/_authenticated/settings/object-manager/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -551,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObjectNameIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/object-manager': {
+      id: '/_authenticated/settings/object-manager'
+      path: '/object-manager'
+      fullPath: '/settings/object-manager'
+      preLoaderRoute: typeof AuthenticatedSettingsObjectManagerRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/notifications': {
       id: '/_authenticated/settings/notifications'
       path: '/notifications'
@@ -586,6 +643,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDevComponentsSalesforcePathRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dev-components/order-detail-path': {
+      id: '/_authenticated/dev-components/order-detail-path'
+      path: '/dev-components/order-detail-path'
+      fullPath: '/dev-components/order-detail-path'
+      preLoaderRoute: typeof AuthenticatedDevComponentsOrderDetailPathRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dev-components/detail-view-formatter': {
       id: '/_authenticated/dev-components/detail-view-formatter'
       path: '/dev-components/detail-view-formatter'
@@ -600,14 +664,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObjectNameRecordIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/object-manager/': {
+      id: '/_authenticated/settings/object-manager/'
+      path: '/'
+      fullPath: '/settings/object-manager/'
+      preLoaderRoute: typeof AuthenticatedSettingsObjectManagerIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsObjectManagerRoute
+    }
+    '/_authenticated/settings/object-manager/$objectName': {
+      id: '/_authenticated/settings/object-manager/$objectName'
+      path: '/$objectName'
+      fullPath: '/settings/object-manager/$objectName'
+      preLoaderRoute: typeof AuthenticatedSettingsObjectManagerObjectNameRouteImport
+      parentRoute: typeof AuthenticatedSettingsObjectManagerRoute
+    }
   }
 }
+
+interface AuthenticatedSettingsObjectManagerRouteChildren {
+  AuthenticatedSettingsObjectManagerObjectNameRoute: typeof AuthenticatedSettingsObjectManagerObjectNameRoute
+  AuthenticatedSettingsObjectManagerIndexRoute: typeof AuthenticatedSettingsObjectManagerIndexRoute
+}
+
+const AuthenticatedSettingsObjectManagerRouteChildren: AuthenticatedSettingsObjectManagerRouteChildren =
+  {
+    AuthenticatedSettingsObjectManagerObjectNameRoute:
+      AuthenticatedSettingsObjectManagerObjectNameRoute,
+    AuthenticatedSettingsObjectManagerIndexRoute:
+      AuthenticatedSettingsObjectManagerIndexRoute,
+  }
+
+const AuthenticatedSettingsObjectManagerRouteWithChildren =
+  AuthenticatedSettingsObjectManagerRoute._addFileChildren(
+    AuthenticatedSettingsObjectManagerRouteChildren,
+  )
 
 interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
   AuthenticatedSettingsDisplayRoute: typeof AuthenticatedSettingsDisplayRoute
   AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
+  AuthenticatedSettingsObjectManagerRoute: typeof AuthenticatedSettingsObjectManagerRouteWithChildren
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
@@ -618,6 +715,8 @@ const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteCh
     AuthenticatedSettingsDisplayRoute: AuthenticatedSettingsDisplayRoute,
     AuthenticatedSettingsNotificationsRoute:
       AuthenticatedSettingsNotificationsRoute,
+    AuthenticatedSettingsObjectManagerRoute:
+      AuthenticatedSettingsObjectManagerRouteWithChildren,
     AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   }
 
@@ -631,6 +730,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedObjectNameRecordIdRoute: typeof AuthenticatedObjectNameRecordIdRoute
   AuthenticatedDevComponentsDetailViewFormatterRoute: typeof AuthenticatedDevComponentsDetailViewFormatterRoute
+  AuthenticatedDevComponentsOrderDetailPathRoute: typeof AuthenticatedDevComponentsOrderDetailPathRoute
   AuthenticatedDevComponentsSalesforcePathRoute: typeof AuthenticatedDevComponentsSalesforcePathRoute
   AuthenticatedObjectNameIndexRoute: typeof AuthenticatedObjectNameIndexRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
@@ -646,6 +746,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedObjectNameRecordIdRoute: AuthenticatedObjectNameRecordIdRoute,
   AuthenticatedDevComponentsDetailViewFormatterRoute:
     AuthenticatedDevComponentsDetailViewFormatterRoute,
+  AuthenticatedDevComponentsOrderDetailPathRoute:
+    AuthenticatedDevComponentsOrderDetailPathRoute,
   AuthenticatedDevComponentsSalesforcePathRoute:
     AuthenticatedDevComponentsSalesforcePathRoute,
   AuthenticatedObjectNameIndexRoute: AuthenticatedObjectNameIndexRoute,

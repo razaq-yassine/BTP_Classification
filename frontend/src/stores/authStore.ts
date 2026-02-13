@@ -2,6 +2,18 @@ import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import api from '@/services/api'
 
+/** Decode JWT payload for placeholder user when backend is unreachable */
+function decodeUserFromToken(token: string): AuthUser | null {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1] ?? ''))
+    const id = typeof payload.id === 'number' ? payload.id : 0
+    const username = typeof payload.sub === 'string' ? payload.sub : 'User'
+    return { id, username, email: '', firstName: '', lastName: '' }
+  } catch {
+    return null
+  }
+}
+
 /**
  * User interface matching backend User entity
  */
@@ -160,17 +172,34 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
       })
       
       
-    } catch (_error: any) {
-      
-      // Clear invalid token
-      localStorage.removeItem('jwt_token')
-      
-      set({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null // Don't show error for failed auth check
-      })
+    } catch (err: any) {
+      const isNetworkError =
+        !err.response &&
+        (err.code === 'ERR_NETWORK' ||
+          err.code === 'ECONNREFUSED' ||
+          err.code === 'ETIMEDOUT' ||
+          err.message?.includes('Network Error') ||
+          err.message?.includes('Failed to fetch'))
+
+      // Don't clear token on network errors (e.g. server restarting) - keep user logged in
+      if (!isNetworkError) {
+        localStorage.removeItem('jwt_token')
+        set({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+          error: null
+        })
+      } else {
+        // Have token but backend unreachable: assume still authenticated so we don't redirect to login
+        const placeholder = decodeUserFromToken(token) ?? { id: 0, username: 'User', email: '', firstName: '', lastName: '' }
+        set({
+          user: placeholder,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null
+        })
+      }
     }
   },
 

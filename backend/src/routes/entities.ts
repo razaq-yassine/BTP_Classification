@@ -12,6 +12,36 @@ entityRoutes.use('*', authMiddleware)
 type EntityConfig = (typeof entityRegistry)[EntityPath]
 type JoinConfig = { joinTable: { id: unknown }; leftColumn: unknown; rightColumn: unknown }
 
+/** Generate next autoNumber value: pattern e.g. "OP-{0000}", start e.g. 1 */
+function generateNextAutoNumber(
+  table: { [k: string]: unknown },
+  columnName: string,
+  pattern: string,
+  start: number
+): string {
+  const match = pattern.match(/\{0+}/)
+  const padLength = match ? match[0].length - 1 : 4 // {0000} -> 4 digits
+  const prefix = pattern.split(/\{0+\}/)[0] || ''
+  const suffix = pattern.split(/\{0+\}/)[1] || ''
+  const regex = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\d+)${suffix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`)
+
+  const col = (table as Record<string, unknown>)[columnName]
+  if (!col) return `${prefix}${String(start).padStart(padLength, '0')}${suffix}`
+
+  const rows = db.select({ val: col }).from(table as any).all() as { val: string }[]
+  let maxNum = start - 1
+  for (const row of rows) {
+    const m = String(row?.val ?? '').match(regex)
+    if (m) {
+      const n = parseInt(m[1], 10)
+      if (!isNaN(n) && n > maxNum) maxNum = n
+    }
+  }
+  const nextNum = maxNum + 1
+  const padded = String(nextNum).padStart(padLength, '0')
+  return `${prefix}${padded}${suffix}`
+}
+
 function toRecord(
   row: Record<string, unknown>,
   joinedRow: Record<string, unknown> | null,
@@ -257,7 +287,28 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       const refLabel = config.referenceFields?.[0]?.key
       return c.json({ message: `Required reference field${refLabel ? ` (${refLabel})` : ''} missing` }, 400)
     }
-    const payload = buildInsertPayload(body, config, { isActive: true })
+
+    const autoNumberFields = (config as { autoNumberFields?: Record<string, { pattern: string; start: number }> }).autoNumberFields
+    const requiredIdFields = ['name', 'orderNumber'].filter(
+      (f) => config.insertFields.includes(f) && !(autoNumberFields && f in autoNumberFields)
+    )
+    for (const field of requiredIdFields) {
+      const val = body[field]
+      if (val == null || String(val).trim() === '') {
+        const label = field === 'orderNumber' ? 'Order number' : 'Name'
+        return c.json({ message: `${label} is required` }, 400)
+      }
+    }
+
+    let insertBody = { ...body }
+    if (autoNumberFields) {
+      for (const [fieldKey, { pattern, start }] of Object.entries(autoNumberFields)) {
+        const generated = generateNextAutoNumber(table as any, fieldKey, pattern, start)
+        insertBody = { ...insertBody, [fieldKey]: generated }
+      }
+    }
+
+    const payload = buildInsertPayload(insertBody, config, { isActive: true })
     const modified = (await runTrigger(objectName, 'beforeInsert', undefined, payload)) ?? payload
     const [inserted] = await db.insert(table).values(modified).returning()
     await runTrigger(objectName, 'afterInsert', undefined, inserted as Record<string, unknown>)

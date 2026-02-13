@@ -8,6 +8,10 @@ import { Button } from '@/components/ui/button'
 export interface SalesforcePathStep {
   value: string
   label: string
+  /** When this stage is the current one, use this color instead of the default */
+  color?: string
+  /** Hover color when this stage is current. Defaults to color if not set */
+  colorHover?: string
 }
 
 interface SalesforcePathProps {
@@ -23,6 +27,16 @@ interface SalesforcePathProps {
   hasError?: boolean
   fieldLabel?: string
   className?: string
+  /** Default color when a stage is current (used when step has no color override). Default: #0a1612 */
+  currentColor?: string
+  /** Default hover color when current. Default: #0d2818 */
+  currentColorHover?: string
+  /** Default background when current is in outline mode. Default: #ecfdf5 */
+  currentOutlineColor?: string
+  /** Default background hover when current is in outline mode. Default: #d1fae5 */
+  currentOutlineColorHover?: string
+  /** Default border when current is in outline mode. Default: #0a1612 */
+  currentOutlineBorderColor?: string
 }
 
 export function SalesforcePath({
@@ -33,6 +47,11 @@ export function SalesforcePath({
   hasError = false,
   fieldLabel,
   className,
+  currentColor = '#0a1612',
+  currentColorHover = '#0d2818',
+  currentOutlineColor = '#ecfdf5',
+  currentOutlineColorHover = '#d1fae5',
+  currentOutlineBorderColor = '#0a1612',
 }: SalesforcePathProps) {
   const [hoveredStage, setHoveredStage] = useState<string | null>(null)
   const [selectedStage, setSelectedStage] = useState<string | null>(null)
@@ -159,21 +178,32 @@ export function SalesforcePath({
               aria-valuemin={0}
               aria-valuemax={100}
             >
-              {steps.map((step, index) => (
+              {steps.map((step, index) => {
+                const status = determineStageStatus(step.value)
+                const isCurrent = status === 'selected' || status === 'selectedPending' || status === 'currentOutline'
+                const stageColor = isCurrent && step.color ? step.color : currentColor
+                const stageColorHover = isCurrent && step.color ? (step.colorHover ?? step.color) : currentColorHover
+                const stageOutlineBorder = isCurrent && step.color ? step.color : currentOutlineBorderColor
+                return (
                 <PathStage
                   key={step.value}
                   name={step.label}
-                  status={determineStageStatus(step.value)}
+                  status={status}
                   isFirst={index === 0}
                   isLast={index === steps.length - 1}
                   isClickable={!isUpdating && (!!onStepClick || !!onStageChange)}
                   isHovered={hoveredStage === step.value}
                   hasError={hasError && step.value === currentStep}
+                  currentColor={stageColor}
+                  currentColorHover={stageColorHover}
+                  currentOutlineColor={currentOutlineColor}
+                  currentOutlineColorHover={currentOutlineColorHover}
+                  currentOutlineBorderColor={stageOutlineBorder}
                   onClick={() => handleStageClick(step.value)}
                   onMouseEnter={() => setHoveredStage(step.value)}
                   onMouseLeave={() => setHoveredStage(null)}
                 />
-              ))}
+              )})}
             </div>
           </div>
           {needsScrolling && (

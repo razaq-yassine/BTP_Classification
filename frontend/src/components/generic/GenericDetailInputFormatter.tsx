@@ -46,7 +46,9 @@ export function GenericDetailInputFormatter({
   const [emailError, setEmailError] = useState('')
   const [phoneError, setPhoneError] = useState('')
   
-  const isFieldRequired = required || isRequired
+  const isAutoNumber = type === 'autoNumber' || type === 'autonumber'
+  const isNameField = fieldDefinition.key === 'name'
+  const isFieldRequired = (required || isRequired || (isNameField && !isAutoNumber))
   const isFieldImportant = isImportant
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -94,6 +96,18 @@ export function GenericDetailInputFormatter({
 
   const renderInput = () => {
     switch (type) {
+      case 'autoNumber':
+        return (
+          <Input
+            type="text"
+            value={value || ''}
+            disabled
+            readOnly
+            placeholder="Auto-generated"
+            className={cn(className, 'bg-muted cursor-not-allowed')}
+          />
+        )
+
       case 'string':
       case 'text':
         return (
