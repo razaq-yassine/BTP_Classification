@@ -45,6 +45,9 @@ type FieldDef = {
   sourceFields?: string[]
   separator?: string
   referenceField?: string
+  /** 'masterDetail' = required + cascade delete. Implies deleteOnCascade. */
+  relationshipType?: string
+  deleteOnCascade?: boolean
 }
 
 function mapTypeToSql(field: FieldDef): string {
@@ -111,7 +114,11 @@ function generateTable(objectName: string, tableName: string, fields: FieldDef[]
 
     if (field.type === 'reference') {
       const refTable = references.get(field.key) || pluralize(field.key)
-      lines.push(`  ${field.key}Id: integer('${colName}_id').notNull().references(() => ${refTable}.id),`)
+      const cascade = field.relationshipType === 'masterDetail' || field.deleteOnCascade === true
+      const refCall = cascade
+        ? `references(() => ${refTable}.id, { onDelete: 'cascade' })`
+        : `references(() => ${refTable}.id)`
+      lines.push(`  ${field.key}Id: integer('${colName}_id').notNull().${refCall},`)
     } else {
       const notNull = field.required ? '.notNull()' : ''
       const isAutoNum = field.type === 'autoNumber' || field.type === 'autonumber'

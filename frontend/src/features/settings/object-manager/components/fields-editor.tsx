@@ -47,6 +47,8 @@ interface FieldDef {
   format?: string
   additionalFields?: string[]
   render?: string
+  relationshipType?: 'reference' | 'masterDetail'
+  deleteOnCascade?: boolean
 }
 
 /** Reserved field keys that cannot be created (name is created with object) */
@@ -489,6 +491,7 @@ function FieldEditor({
                   <SelectItem value='datetime'>Date & time</SelectItem>
                   <SelectItem value='email'>Email</SelectItem>
                   <SelectItem value='phone'>Phone</SelectItem>
+                  <SelectItem value='url'>URL</SelectItem>
                   <SelectItem value='reference'>Reference</SelectItem>
                   <SelectItem value='select'>Select</SelectItem>
                   <SelectItem value='multiselect'>Multi-select</SelectItem>
@@ -526,6 +529,31 @@ function FieldEditor({
                   />
                   <p className='text-muted-foreground mt-1 text-xs'>Field to display when searching/selecting.</p>
                 </div>
+                <div>
+                  <Label className='text-xs'>Relationship type</Label>
+                  <Select
+                    value={form.relationshipType === 'masterDetail' ? 'masterDetail' : 'reference'}
+                    onValueChange={(v) => {
+                      const isMasterDetail = v === 'masterDetail'
+                      update({
+                        relationshipType: isMasterDetail ? 'masterDetail' : undefined,
+                        deleteOnCascade: isMasterDetail ? true : undefined,
+                        ...(isMasterDetail && { required: true }),
+                      })
+                    }}
+                  >
+                    <SelectTrigger className='mt-1'>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='reference'>Reference (optional, no cascade)</SelectItem>
+                      <SelectItem value='masterDetail'>Master-detail (required + cascade delete)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className='text-muted-foreground mt-1 text-xs'>
+                    Use master-detail for junction/detail objects (e.g. order items). Child records are required and deleted when parent is deleted.
+                  </p>
+                </div>
               </div>
             )}
             {(form.type === 'select' || form.type === 'multiselect') && (
@@ -560,8 +588,8 @@ function FieldEditor({
               <div>
                 <Label className='text-xs'>Display (optional)</Label>
                 <Select
-                  value={form.render === 'currency' ? 'currency' : form.render === 'percentage' ? 'percentage' : 'default'}
-                  onValueChange={(v) => update({ render: v === 'currency' ? 'currency' : v === 'percentage' ? 'percentage' : undefined })}
+                  value={form.render === 'currency' ? 'currency' : form.render === 'percent' ? 'percent' : 'default'}
+                  onValueChange={(v) => update({ render: v === 'currency' ? 'currency' : v === 'percent' ? 'percent' : undefined })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -569,7 +597,7 @@ function FieldEditor({
                   <SelectContent>
                     <SelectItem value='default'>Default</SelectItem>
                     <SelectItem value='currency'>Currency</SelectItem>
-                    <SelectItem value='percentage'>Percentage</SelectItem>
+                    <SelectItem value='percent'>Percent</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

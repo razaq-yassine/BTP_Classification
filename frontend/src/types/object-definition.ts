@@ -26,7 +26,7 @@ export interface CalculatedDataDefinition {
 export interface FieldDefinition {
   key: string
   label: string
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'select' | 'multiselect' | 'reference' | 'autoNumber'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'autoNumber'
   required?: boolean
   isRequired?: boolean // Alternative to required for compatibility
   isImportant?: boolean // Important fields show popup if empty on submit
@@ -37,6 +37,10 @@ export interface FieldDefinition {
   options?: { value: string; label: string; color?: string; colorHover?: string }[] // For select fields
   useInPath?: boolean // When true, this select field drives the Path component on detail view
   objectName?: string // For reference fields
+  /** 'masterDetail' = required + cascade delete (use for junction/detail objects) */
+  relationshipType?: 'reference' | 'masterDetail'
+  /** When true, parent delete cascades to children. Implied by relationshipType: 'masterDetail' */
+  deleteOnCascade?: boolean
   additionalFields?: string[] // Additional fields to display in lookup
   render?: (value: any, record: GenericRecord) => React.ReactNode // Custom render function
   renderType?: string // Preserved string from metadata (e.g. 'currency', 'statusBadge') for list formatting

@@ -24,7 +24,7 @@ export const fieldSchema = z.object({
   key: z.string(),
   label: z.string(),
   type: z.enum([
-    'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text',
+    'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text', 'url',
     'select', 'multiselect', 'reference', 'lookup', 'autoNumber' // lookup maps to reference
   ]),
   required: z.boolean().optional(),
@@ -46,6 +46,10 @@ export const fieldSchema = z.object({
   useInPath: z.boolean().optional(),
   isImportant: z.boolean().optional(),
   render: z.string().optional(),
+  /** For reference fields: 'masterDetail' = required + cascade delete (use for junction/detail objects) */
+  relationshipType: z.enum(['reference', 'masterDetail']).optional(),
+  /** For reference fields: when true, parent delete cascades to children. Implied by relationshipType: 'masterDetail' */
+  deleteOnCascade: z.boolean().optional(),
   computed: z.boolean().optional(),
   autoNumberPattern: z.string().optional(),
   autoNumberStart: z.number().optional(),

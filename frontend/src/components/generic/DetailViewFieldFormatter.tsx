@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 
 export interface DetailFieldFormatterProps {
-  type: 'string' | 'number' | 'boolean' | 'date' | 'email' | 'phone' | 'text' | 'select'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'email' | 'phone' | 'text' | 'url' | 'select'
   value: any
   format?: string // For date formatting, etc.
   options?: { value: string; label: string }[] // For select fields
@@ -51,6 +51,20 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
           {value}
         </a>
       )
+
+    case 'url': {
+      const href = /^https?:\/\//i.test(value) ? value : `https://${value}`
+      return (
+        <a 
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          {value}
+        </a>
+      )
+    }
 
     case 'text':
       return (

@@ -10,7 +10,7 @@ export interface SelectOption {
 }
 
 export interface FieldFormatterProps {
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'select' | 'multiselect' | 'reference'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference'
   value: any
   format?: string
   options?: SelectOption[]
@@ -68,6 +68,22 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
           {value}
         </a>
       )
+
+    case 'url': {
+      const href = /^https?:\/\//i.test(value) ? value : `https://${value}`
+      const display = value.length > 40 ? `${value.substring(0, 40)}...` : value
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary hover:underline text-sm"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {display}
+        </a>
+      )
+    }
 
     case 'text':
       const truncatedText = value.length > 50 ? `${value.substring(0, 50)}...` : value
@@ -148,11 +164,14 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
       const numValue = typeof value === 'number' ? value : parseFloat(value)
       if (isNaN(numValue)) return <span className="text-sm text-muted-foreground">{value}</span>
       const isCurrency = renderType === 'currency'
+      const isPercent = renderType === 'percent'
       const formatted = isCurrency
         ? `$${numValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : numValue.toLocaleString()
+        : isPercent
+          ? `${(numValue * 100).toFixed(1)}%`
+          : numValue.toLocaleString()
       return (
-        <span className={`text-sm tabular-nums block w-full ${isCurrency ? 'text-center' : ''}`}>
+        <span className={`text-sm tabular-nums block w-full ${(isCurrency || isPercent) ? 'text-center' : ''}`}>
           {formatted}
         </span>
       )

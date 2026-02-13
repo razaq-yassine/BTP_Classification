@@ -12,12 +12,14 @@ When adding or changing metadata-driven features:
    - **List view**: Add a `case` in `ListViewFieldFormatter` (`frontend/src/components/generic/ListViewFieldFormatter.tsx`) for formatting and display
    - **Detail view**: Add a `case` in `GenericDetailInputFormatter` (`frontend/src/components/generic/GenericDetailInputFormatter.tsx`) for edit mode, and ensure `formatValue` in `GenericObjectDetailViewMainSection.tsx` handles read-only display
 
-2. **New field property** (e.g. `formula`, `computedExpression`) → Add validation in `validateFieldFile()` for required/optional rules
+2. **Reference relationship type** → For junction/detail objects (e.g. order items, opportunity line items), use `relationshipType: "masterDetail"` on the parent reference field. This implies `required: true` and `deleteOnCascade: true`. Validation enforces required when masterDetail.
 
-3. **New metadata file** (e.g. `header.json`) → Add `validate*File()` and call it from `validateMetadataFull()`
+3. **New field property** (e.g. `formula`, `computedExpression`) → Add validation in `validateFieldFile()` for required/optional rules
 
-4. **System field/object/table** → Update `shared/protected-metadata.ts` (SYSTEM_FIELDS, SYSTEM_OBJECTS, PROTECTED_TABLES)
+4. **New metadata file** (e.g. `header.json`) → Add `validate*File()` and call it from `validateMetadataFull()`
 
-5. **Computed fields** → Validate `computedExpression` is one of concat|join|lookup, `sourceFields` exist, `referenceField` valid for join
+5. **System field/object/table** → Update `shared/protected-metadata.ts` (SYSTEM_FIELDS, SYSTEM_OBJECTS, PROTECTED_TABLES)
 
-6. **New object.json property** → Add check in `validateObjectFile()`
+6. **Computed fields** → Validate `computedExpression` is one of concat|join|lookup, `sourceFields` exist, `referenceField` valid for join
+
+7. **New object.json property** → Add check in `validateObjectFile()`

@@ -240,6 +240,12 @@ async function loadFields(objectName: string): Promise<FieldDefinition[]> {
           renderType: 'currency',
           render: (value: number) => `$${parseFloat(value?.toString() || '0').toFixed(2)}`,
         }
+      } else if (fd.render === 'percent') {
+        resolvedFd = {
+          ...resolvedFd,
+          renderType: 'percent',
+          render: (value: number) => `${(parseFloat(value?.toString() || '0') * 100).toFixed(1)}%`,
+        }
       }
       results.push(resolvedFd)
     } catch {

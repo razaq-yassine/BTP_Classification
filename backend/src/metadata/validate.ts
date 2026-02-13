@@ -10,7 +10,7 @@ import { addError } from './types.js'
 import { SYSTEM_FIELDS_SET, SYSTEM_OBJECTS_SET } from '../../../shared/dist/protected-metadata.js'
 
 const VALID_FIELD_TYPES = new Set([
-  'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text',
+  'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text', 'url',
   'select', 'multiselect', 'reference', 'lookup', 'autoNumber'
 ])
 
@@ -222,6 +222,12 @@ function validateFieldFile(
       }
       if (refObj === objectName) {
         addError(errors, pathPrefix, 'Reference cannot point to the same object', 'REFERENCE_SELF_REFERENCE')
+      }
+    }
+    const relType = data.relationshipType as string | undefined
+    if (relType === 'masterDetail') {
+      if (data.required !== true) {
+        addError(errors, pathPrefix, 'Master-detail relationship requires required: true', 'MASTER_DETAIL_REQUIRED')
       }
     }
   }

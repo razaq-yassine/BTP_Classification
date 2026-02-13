@@ -80,6 +80,25 @@ function FieldDisplay({
           return date.toLocaleDateString()
         }
         return '(Empty)'
+      case 'url':
+        return (
+          <a
+            href={/^https?:\/\//i.test(val) ? val : `https://${val}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {val}
+          </a>
+        )
+      case 'number':
+        const numVal = typeof val === 'number' ? val : parseFloat(val)
+        if (isNaN(numVal)) return typeof val === 'object' ? JSON.stringify(val) : String(val)
+        if (field.renderType === 'percent') {
+          return `${(numVal * 100).toFixed(1)}%`
+        }
+        return numVal.toLocaleString()
       case 'email':
       case 'phone':
       default:

@@ -142,6 +142,18 @@ export function GenericDetailInputFormatter({
           </div>
         )
 
+      case 'url':
+        return (
+          <Input
+            type="url"
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={disabled}
+            placeholder="https://"
+            className={className}
+          />
+        )
+
       case 'phone':
         const countryOptions: SearchableSelectOption[] = countries.map(country => ({
           value: country.code,
@@ -198,10 +210,13 @@ export function GenericDetailInputFormatter({
         return (
           <Input
             type="number"
-            value={value || ''}
+            value={value ?? ''}
             onChange={(e) => onChange(e.target.value ? Number(e.target.value) : '')}
             disabled={disabled}
-            placeholder="Enter number"
+            placeholder={fieldDefinition.renderType === 'percent' ? 'e.g. 0.85 for 85%' : 'Enter number'}
+            step={fieldDefinition.renderType === 'percent' ? '0.01' : undefined}
+            min={fieldDefinition.renderType === 'percent' ? 0 : undefined}
+            max={fieldDefinition.renderType === 'percent' ? 1 : undefined}
             className={className}
           />
         )

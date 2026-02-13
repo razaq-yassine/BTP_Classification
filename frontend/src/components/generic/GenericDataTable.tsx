@@ -1,9 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Table,
@@ -73,8 +71,9 @@ export function GenericDataTable<TData extends GenericRecord>({
   const [selectedRows, setSelectedRows] = React.useState<Set<string>>(new Set())
   const [sortField, setSortField] = React.useState<string | null>(null)
   const [sortDirection, setSortDirection] = React.useState<'asc' | 'desc' | null>(null)
-  const [currentPage, setCurrentPage] = React.useState(1)
-  const pageSize = objectDefinition.listView?.pageSize ?? 10
+  const pageSize = objectDefinition.listView?.pageSize ?? 20
+  const [displayedCount, setDisplayedCount] = React.useState(pageSize)
+  const loadMoreRef = React.useRef<HTMLDivElement>(null)
 
   // Get fields from object configuration (include options, format, render for formatter)
   const fields = React.useMemo(() => {
@@ -97,10 +96,31 @@ export function GenericDataTable<TData extends GenericRecord>({
     return sortData(filtered, sortField, sortDirection)
   }, [data, searchTerm, fields, sortField, sortDirection])
 
-  // Pagination
-  const totalPages = Math.ceil(processedData.length / pageSize)
-  const startIndex = (currentPage - 1) * pageSize
-  const paginatedData = processedData.slice(startIndex, startIndex + pageSize)
+  // Infinite scroll: show first displayedCount rows, load more when scrolling to bottom
+  const paginatedData = processedData.slice(0, displayedCount)
+  const hasMore = displayedCount < processedData.length
+
+  // Reset displayed count when data or filters change
+  React.useEffect(() => {
+    setDisplayedCount(pageSize)
+  }, [processedData.length, searchTerm, sortField, sortDirection, pageSize])
+
+  // IntersectionObserver for load-more on scroll
+  React.useEffect(() => {
+    if (!hasMore || isLoading) return
+    const el = loadMoreRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && hasMore) {
+          setDisplayedCount((prev) => Math.min(prev + pageSize, processedData.length))
+        }
+      },
+      { rootMargin: '100px', threshold: 0 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasMore, isLoading, pageSize, processedData.length])
 
   // Selection handlers
   const handleSelectAll = React.useCallback((checked: boolean) => {
@@ -173,7 +193,7 @@ export function GenericDataTable<TData extends GenericRecord>({
                 <TableHead
                   key={field.key}
                   className={
-                    field.type === 'number' && field.render === 'currency'
+                    field.type === 'number' && (field.render === 'currency' || field.render === 'percent')
                       ? 'text-center'
                       : field.type === 'boolean'
                         ? 'text-center'
@@ -182,7 +202,7 @@ export function GenericDataTable<TData extends GenericRecord>({
                 >
                   <button
                     className={`flex items-center cursor-pointer hover:bg-muted/50 p-1 rounded ${
-                      field.type === 'number' && field.render === 'currency'
+                      field.type === 'number' && (field.render === 'currency' || field.render === 'percent')
                         ? 'justify-center w-full'
                         : field.type === 'boolean'
                           ? 'justify-center w-full'
@@ -258,7 +278,7 @@ export function GenericDataTable<TData extends GenericRecord>({
                         <TableCell
                           key={field.key}
                           className={
-                            field.type === 'number' && field.render === 'currency'
+                            field.type === 'number' && (field.render === 'currency' || field.render === 'percent')
                               ? 'text-center'
                               : field.type === 'boolean'
                                 ? 'text-center'
@@ -283,36 +303,19 @@ export function GenericDataTable<TData extends GenericRecord>({
         </Table>
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between px-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {selectedRows.size} of {processedData.length} row(s) selected.
+      {/* Load-more sentinel for infinite scroll */}
+      {hasMore && paginatedData.length > 0 && (
+        <div ref={loadMoreRef} className="h-4 flex items-center justify-center py-4">
+          <span className="text-sm text-muted-foreground">Scroll for more...</span>
         </div>
-        <div className="flex items-center space-x-6 lg:space-x-8">
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Page</p>
-            <span className="text-sm font-medium">
-              {currentPage} of {totalPages || 1}
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              className="h-8 w-8 p-0"
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              disabled={currentPage <= 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              className="h-8 w-8 p-0"
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              disabled={currentPage >= totalPages}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+      )}
+
+      {/* Footer */}
+      <div className="flex items-center justify-between px-2 py-4">
+        <div className="text-sm text-muted-foreground">
+          {selectedRows.size > 0
+            ? `${selectedRows.size} of ${processedData.length} selected`
+            : `Showing ${paginatedData.length} of ${processedData.length}`}
         </div>
       </div>
     </div>
