@@ -1,0 +1,21 @@
+---
+description: Update metadata validation when adding new metadata features
+globs: backend/src/metadata/**, shared/protected-metadata.ts, frontend/src/metadata/schemas.ts, frontend/public/metadata/**
+alwaysApply: false
+---
+
+# Metadata Validation Checklist
+
+When adding or changing metadata-driven features:
+
+1. **New field type** → Add to `VALID_FIELD_TYPES` in `backend/src/metadata/validate.ts` AND to `fieldSchema` in `frontend/src/metadata/schemas.ts`
+
+2. **New field property** (e.g. `formula`, `computedExpression`) → Add validation in `validateFieldFile()` for required/optional rules
+
+3. **New metadata file** (e.g. `header.json`) → Add `validate*File()` and call it from `validateMetadataFull()`
+
+4. **System field/object/table** → Update `shared/protected-metadata.ts` (SYSTEM_FIELDS, SYSTEM_OBJECTS, PROTECTED_TABLES)
+
+5. **Computed fields** → Validate `computedExpression` is one of concat|join|lookup, `sourceFields` exist, `referenceField` valid for join
+
+6. **New object.json property** → Add check in `validateObjectFile()`

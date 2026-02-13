@@ -2,6 +2,14 @@
   "name": "generic-saas",
   "private": true,
   "scripts": {
-    "deploy": "cd backend && pnpm run db:deploy"
+    "deploy": "cd backend && pnpm run db:deploy",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7"
+  },
+  "lint-staged": {
+    "frontend/public/metadata/**/*.json": "cd backend && pnpm run db:validate-metadata"
   }
 }

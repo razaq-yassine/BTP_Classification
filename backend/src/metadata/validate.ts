@@ -79,12 +79,98 @@ function validateFieldsFile(
   return validKeys
 }
 
+function loadFieldKeysForObject(objectsPath: string, objectName: string): string[] {
+  try {
+    const fieldsPath = path.join(objectsPath, objectName, 'fields.json')
+    if (!fs.existsSync(fieldsPath)) return []
+    const data = JSON.parse(fs.readFileSync(fieldsPath, 'utf-8'))
+    if (!Array.isArray(data)) return []
+    return data.filter((k: string) => typeof k === 'string' && !SYSTEM_FIELDS_SET.has(k))
+  } catch {
+    return []
+  }
+}
+
+function loadFieldDefinition(objectsPath: string, objectName: string, fieldKey: string): Record<string, unknown> | null {
+  try {
+    const fieldPath = path.join(objectsPath, objectName, 'fields', `${fieldKey}.json`)
+    if (!fs.existsSync(fieldPath)) return null
+    return JSON.parse(fs.readFileSync(fieldPath, 'utf-8')) as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
+const VALID_COMPUTED_EXPRESSIONS = new Set(['concat', 'join', 'lookup'])
+
+function validateComputedField(
+  objectName: string,
+  fieldKey: string,
+  data: Record<string, unknown>,
+  fieldKeys: string[],
+  objectNames: string[],
+  objectsPath: string,
+  errors: ValidationError[]
+): void {
+  const pathPrefix = `${objectName}/fields/${fieldKey}`
+  const expr = (data.computedExpression as string)?.toLowerCase()
+  if (!expr || !VALID_COMPUTED_EXPRESSIONS.has(expr)) {
+    addError(errors, pathPrefix, `computedExpression must be one of: concat, join, lookup`, 'COMPUTED_INVALID_EXPRESSION')
+    return
+  }
+  const sourceFields = data.sourceFields as string[] | undefined
+  if (!Array.isArray(sourceFields) || sourceFields.length === 0) {
+    addError(errors, pathPrefix, 'sourceFields must be a non-empty array', 'COMPUTED_MISSING_SOURCE_FIELDS')
+    return
+  }
+  const keySet = new Set(fieldKeys)
+  if (expr === 'concat' || expr === 'lookup') {
+    for (const sf of sourceFields) {
+      if (typeof sf !== 'string' || !sf.trim()) continue
+      if (!keySet.has(sf)) {
+        addError(errors, pathPrefix, `sourceFields "${sf}" does not exist in fields.json`, 'COMPUTED_SOURCE_FIELD_NOT_FOUND')
+      }
+    }
+    return
+  }
+  if (expr === 'join') {
+    const refField = (data.referenceField as string)?.trim()
+    if (!refField) {
+      addError(errors, pathPrefix, 'referenceField is required for join expression', 'COMPUTED_JOIN_MISSING_REFERENCE')
+      return
+    }
+    if (!keySet.has(refField)) {
+      addError(errors, pathPrefix, `referenceField "${refField}" does not exist in fields.json`, 'COMPUTED_REFERENCE_NOT_FOUND')
+      return
+    }
+    const refDef = loadFieldDefinition(objectsPath, objectName, refField)
+    if (!refDef || (refDef.type as string)?.toLowerCase() !== 'reference') {
+      addError(errors, pathPrefix, `referenceField "${refField}" must be a reference type`, 'COMPUTED_REFERENCE_INVALID_TYPE')
+      return
+    }
+    const refObjectName = (refDef.objectName as string)?.trim()
+    if (!refObjectName || !objectNames.includes(refObjectName)) {
+      addError(errors, pathPrefix, `Referenced object "${refObjectName ?? refField}" does not exist`, 'COMPUTED_REFERENCE_OBJECT_NOT_FOUND')
+      return
+    }
+    const refFieldKeys = loadFieldKeysForObject(objectsPath, refObjectName)
+    const refKeySet = new Set(refFieldKeys)
+    for (const sf of sourceFields) {
+      if (typeof sf !== 'string' || !sf.trim()) continue
+      if (!refKeySet.has(sf)) {
+        addError(errors, pathPrefix, `sourceFields "${sf}" does not exist on referenced object "${refObjectName}"`, 'COMPUTED_JOIN_SOURCE_NOT_FOUND')
+      }
+    }
+  }
+}
+
 function validateFieldFile(
   objectName: string,
   fieldKey: string,
   data: Record<string, unknown>,
   objectNames: string[],
-  errors: ValidationError[]
+  errors: ValidationError[],
+  context?: { objectsPath: string; fieldKeys: string[] }
 ): void {
   const pathPrefix = `${objectName}/fields/${fieldKey}`
   if (SYSTEM_FIELDS_SET.has(fieldKey)) {
@@ -104,6 +190,9 @@ function validateFieldFile(
   const type = (data.type as string).toLowerCase()
   if (!VALID_FIELD_TYPES.has(type) && type !== 'autonumber') {
     addError(errors, pathPrefix, `Invalid field type: ${data.type}`, 'FIELD_INVALID_TYPE')
+  }
+  if (data.computed === true && context) {
+    validateComputedField(objectName, fieldKey, data, context.fieldKeys, objectNames, context.objectsPath, errors)
   }
   if (fieldKey === 'name') {
     if (data.required !== true) {
@@ -287,7 +376,10 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
         }
         try {
           const fieldData = JSON.parse(fs.readFileSync(path.join(fieldsDir, file), 'utf-8')) as Record<string, unknown>
-          validateFieldFile(objectName, fieldKey, fieldData, objectNames, errors)
+          validateFieldFile(objectName, fieldKey, fieldData, objectNames, errors, {
+            objectsPath,
+            fieldKeys: fieldsList,
+          })
         } catch (e) {
           addError(errors, `${objectName}/fields/${file}`, `Failed to parse: ${(e as Error).message}`, 'PARSE_ERROR')
         }
@@ -320,19 +412,21 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
 
 /**
  * Validate a single field - used by API when saving a field.
+ * Pass objectsPath and fieldKeys to validate computed fields.
  */
 export function validateField(
   objectName: string,
   fieldKey: string,
   fieldData: Record<string, unknown>,
-  objectNames: string[]
+  objectNames: string[],
+  context?: { objectsPath: string; fieldKeys: string[] }
 ): ValidationResult {
   const errors: ValidationError[] = []
   if (SYSTEM_FIELDS_SET.has(fieldKey)) {
     addError(errors, `${objectName}/fields/${fieldKey}`, `System fields cannot be edited`, 'SYSTEM_FIELD_FORBIDDEN')
     return { valid: false, errors }
   }
-  validateFieldFile(objectName, fieldKey, fieldData, objectNames, errors)
+  validateFieldFile(objectName, fieldKey, fieldData, objectNames, errors, context)
   return { valid: errors.length === 0, errors }
 }
 

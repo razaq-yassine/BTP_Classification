@@ -404,7 +404,11 @@ metadataRoutes.put('/objects/:name/fields/:fieldKey', async (c) => {
       body.editable = false
     }
     const objectNames = getObjectNamesForValidation(OBJECTS_PATH)
-    const result = validateField(safeName, safeFieldKey, body, objectNames)
+    const fieldKeys = loadFieldKeys(safeName)
+    const result = validateField(safeName, safeFieldKey, body, objectNames, {
+      objectsPath: OBJECTS_PATH,
+      fieldKeys,
+    })
     if (!result.valid) {
       const message = result.errors[0]?.message ?? 'Validation failed'
       return c.json({ message, errors: result.errors }, 400)
