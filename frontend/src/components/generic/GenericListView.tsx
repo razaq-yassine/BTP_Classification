@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ObjectDefinition, GenericRecord } from '@/types/object-definition'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { GenericDataTable } from './GenericDataTable'
-import { Search, Plus, Trash2 } from 'lucide-react'
-import axios from 'axios'
-import { Header } from '@/components/layout/header'
+import { GenericListViewSkeleton } from './GenericListViewSkeleton'
+import { GenericCreateDialog } from './GenericCreateDialog'
+import { Plus, Trash2 } from 'lucide-react'
+import api from '@/services/api'
 import { Main } from '@/components/layout/main'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { ThemeSwitch } from '@/components/theme-switch'
 
 interface GenericListViewProps {
   objectDefinition: ObjectDefinition
@@ -20,10 +19,9 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
   const navigate = useNavigate()
   const [records, setRecords] = useState<GenericRecord[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedRecords, setSelectedRecords] = useState<Set<string | number>>(new Set())
-  const [isDeleting, setIsDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
 
   useEffect(() => {
     fetchRecords()
@@ -32,11 +30,62 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
   const fetchRecords = async () => {
     try {
       setLoading(true)
-      setError('')
-      const response = await axios.get(objectDefinition.apiEndpoint + '/')
-      setRecords(response.data.customers || response.data.results || response.data)
+      setError(null)
+      
+      // Ensure the endpoint doesn't have a trailing slash
+      const endpoint = objectDefinition.apiEndpoint.endsWith('/') 
+        ? objectDefinition.apiEndpoint.slice(0, -1) 
+        : objectDefinition.apiEndpoint
+      
+      // Extract field keys from listView configuration to optimize API call
+      const fieldsToFetch = ['id'] // Always include ID for navigation
+      
+      if (objectDefinition.listView?.fields) {
+        objectDefinition.listView.fields.forEach(field => {
+          const fieldKey = typeof field === 'string' ? field : field.key
+          if (fieldKey && !fieldsToFetch.includes(fieldKey)) {
+            fieldsToFetch.push(fieldKey)
+          }
+        })
+      }
+      
+      // Build query parameters to only fetch required fields
+      const queryParams = new URLSearchParams()
+      if (fieldsToFetch.length > 1) { // More than just 'id'
+        queryParams.append('fields', fieldsToFetch.join(','))
+      }
+      
+      const fullEndpoint = queryParams.toString() 
+        ? `${endpoint}?${queryParams.toString()}`
+        : endpoint
+      
+      console.log(`🔍 Fetching ${objectDefinition.labelPlural} from endpoint: ${fullEndpoint}`)
+      console.log(`📋 Requested fields: [${fieldsToFetch.join(', ')}]`)
+      const response = await api.get(fullEndpoint)
+      
+      // Log the response structure to debug
+      console.log(`📊 ${objectDefinition.labelPlural} response structure:`, {
+        keys: Object.keys(response.data || {}),
+        recordsCount: Array.isArray(response.data) ? response.data.length : 
+                     response.data?.customers?.length || 
+                     response.data?.results?.length || 'unknown',
+        firstRecord: Array.isArray(response.data) ? response.data[0] : 
+                    response.data?.customers?.[0] || 
+                    response.data?.results?.[0] || 'unknown'
+      })
+      
+      // Handle different response structures (Spring Boot vs Django)
+      const records = response.data.customers || response.data.results || response.data
+      setRecords(records)
+      
+      console.log(`✅ Successfully loaded ${records.length} ${objectDefinition.labelPlural.toLowerCase()}`)
     } catch (err: any) {
-      setError(err.response?.data?.detail || `Failed to fetch ${objectDefinition.labelPlural.toLowerCase()}`)
+      console.error(`❌ Error fetching ${objectDefinition.labelPlural}:`, {
+        message: err.response?.data?.message || err.message,
+        status: err.response?.status,
+        data: err.response?.data
+      })
+      setError(err.response?.data?.message || err.response?.data?.error || `Failed to fetch ${objectDefinition.labelPlural.toLowerCase()}`)
     } finally {
       setLoading(false)
     }
@@ -51,119 +100,81 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
     }
   }
 
-  const handleSelectRecord = (recordId: string | number, selected: boolean) => {
-    const newSelected = new Set(selectedRecords)
-    if (selected) {
-      newSelected.add(recordId)
-    } else {
-      newSelected.delete(recordId)
-    }
-    setSelectedRecords(newSelected)
+  const handleAddRecord = () => {
+    setShowCreateDialog(true)
   }
 
-  const handleSelectAll = (selected: boolean) => {
-    if (selected) {
-      setSelectedRecords(new Set(filteredRecords.map(record => record.id)))
-    } else {
-      setSelectedRecords(new Set())
-    }
+  const handleRecordCreated = (newRecord: GenericRecord) => {
+    // Add the new record to the list
+    setRecords(prev => [newRecord, ...prev])
+    // Optionally refresh the entire list to get updated data
+    fetchRecords()
   }
 
-  const handleMassDelete = async () => {
-    if (selectedRecords.size === 0) return
-    
-    try {
-      setIsDeleting(true)
-      const deletePromises = Array.from(selectedRecords).map(id => 
-        axios.delete(`${objectDefinition.apiEndpoint}/${id}/`)
-      )
-      await Promise.all(deletePromises)
-      
-      // Refresh the records list
-      await fetchRecords()
-      setSelectedRecords(new Set())
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete selected records')
-    } finally {
-      setIsDeleting(false)
-    }
+
+
+  const handleTableSelectionChange = (ids: string[]) => {
+    setSelectedIds(ids)
   }
 
-  // Filter records based on search term
-  const filteredRecords = records.filter(record => {
-    if (!searchTerm) return true
-    
-    const searchFields = objectDefinition.listView.searchFields || objectDefinition.listView.fields
-    return searchFields.some(fieldKey => {
-      const value = record[fieldKey]
-      return value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-    })
-  })
+  if (loading) {
+    return <GenericListViewSkeleton />
+  }
 
   return (
     <>
-      <Header fixed>
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={`Search ${objectDefinition.labelPlural.toLowerCase()}...`}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-        <div className='ml-auto flex items-center space-x-4'>
-          <ThemeSwitch />
-          <ProfileDropdown />
-        </div>
-      </Header>
-
-      <Main>
-        <div className='mb-2 flex flex-wrap items-center justify-between space-y-2 gap-x-4'>
-          <div className="flex items-center gap-4">
-            <div>
-              <h2 className='text-2xl font-bold tracking-tight'>{objectDefinition.labelPlural}</h2>
-              <p className='text-muted-foreground'>
-                {filteredRecords.length > 0 
-                  ? `${filteredRecords.length} ${filteredRecords.length === 1 ? objectDefinition.label.toLowerCase() : objectDefinition.labelPlural.toLowerCase()}`
-                  : `No ${objectDefinition.labelPlural.toLowerCase()} found`
-                }
-              </p>
-            </div>
-            {selectedRecords.size > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleMassDelete}
-                disabled={isDeleting}
-                className="ml-4"
+      <Main className="px-4">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{objectDefinition.labelPlural}</h1>
+            <p className="text-muted-foreground">
+              {records.length} {objectDefinition.labelPlural.toLowerCase()}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {selectedIds.length > 0 && (
+              <Button 
+                variant="destructive" 
+                onClick={() => {
+                  // TODO: Implement delete functionality
+                  console.log('Delete selected items:', selectedIds)
+                }}
               >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete {selectedRecords.size} {selectedRecords.size === 1 ? 'item' : 'items'}
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete {selectedIds.length} item{selectedIds.length > 1 ? 's' : ''}
               </Button>
             )}
+            <Button onClick={handleAddRecord}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add {objectDefinition.label}
+            </Button>
           </div>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Add {objectDefinition.label}
-          </Button>
         </div>
         
-        <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
-          <GenericDataTable
-            objectDefinition={objectDefinition}
-            records={filteredRecords}
-            loading={loading}
-            error={error}
-            onRecordClick={handleViewRecord}
-            selectedRecords={selectedRecords}
-            onSelectRecord={handleSelectRecord}
-            onSelectAll={handleSelectAll}
-            compact={false}
-            sortable={true}
-          />
+        <div className='flex-1 overflow-auto'>
+          {error ? (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : (
+            <GenericDataTable
+              data={records}
+              objectDefinition={objectDefinition}
+              isLoading={loading}
+              onRowClick={handleViewRecord}
+              onSelectionChange={handleTableSelectionChange}
+            />
+          )}
         </div>
       </Main>
+      
+      {/* Create Dialog */}
+      <GenericCreateDialog
+        objectDefinition={objectDefinition}
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onRecordCreated={handleRecordCreated}
+      />
     </>
   )
 }

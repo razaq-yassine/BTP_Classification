@@ -9,13 +9,13 @@ interface GenericObjectManagerProps {
   basePath?: string
 }
 
-export function GenericObjectManager({ 
-  objectDefinition, 
-  view, 
-  recordId, 
-  basePath 
+export function GenericObjectManager({
+  objectDefinition,
+  view,
+  recordId,
+  basePath
 }: GenericObjectManagerProps) {
-  
+
   if (view === 'detail' && recordId) {
     return (
       <div className="px-2 md:px-2 lg:px-3 py-1">
@@ -29,11 +29,9 @@ export function GenericObjectManager({
   }
 
   return (
-    <div className="px-2 md:px-2 lg:px-13 py-2">
       <GenericListView
         objectDefinition={objectDefinition}
         basePath={basePath}
       />
-    </div>
   )
 }

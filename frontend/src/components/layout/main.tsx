@@ -11,7 +11,6 @@ export const Main = ({ fixed, className, ...props }: MainProps) => {
     <main
       className={cn(
         'peer-[.header-fixed]/header:mt-16',
-        'px-6 md:px-8 lg:px-12 py-6',
         fixed && 'fixed-main flex grow flex-col overflow-hidden',
         className
       )}

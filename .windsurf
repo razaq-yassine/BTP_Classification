@@ -1,2 +1,5 @@
 after editing the frontend always build to detect errors and fix them.
 Always use shadcn components over others.
+When editing backend always compile to make sure there is no errors
+Don't ever test using Windsurf Browser
+If an error is being repeated, use the brave mcp to check in the internet.

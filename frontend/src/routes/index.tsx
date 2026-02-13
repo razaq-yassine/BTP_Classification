@@ -5,12 +5,12 @@ export const Route = createFileRoute('/')({
   component: () => null, // This component won't render due to redirect
   beforeLoad: async () => {
     // Check authentication status and redirect accordingly
-    const { checkAuth } = useAuthStore.getState().auth
+    const { checkAuth } = useAuthStore.getState()
     
     // Try to check if user is already authenticated via session
     try {
       await checkAuth()
-      const { isAuthenticated: updatedAuth } = useAuthStore.getState().auth
+      const { isAuthenticated: updatedAuth } = useAuthStore.getState()
       if (updatedAuth) {
         throw redirect({ to: '/dashboard' })
       }

@@ -12,7 +12,7 @@ export const Route = createFileRoute('/login')({
   component: LoginPage,
   beforeLoad: async () => {
     // Check authentication status first
-    const { checkAuth, isAuthenticated } = useAuthStore.getState().auth
+    const { checkAuth, isAuthenticated } = useAuthStore.getState()
     
     // If already authenticated, redirect immediately
     if (isAuthenticated) {
@@ -22,7 +22,7 @@ export const Route = createFileRoute('/login')({
     try {
       await checkAuth()
       // If checkAuth succeeds, user is authenticated
-      const { isAuthenticated: updatedAuthStatus } = useAuthStore.getState().auth
+      const { isAuthenticated: updatedAuthStatus } = useAuthStore.getState()
       if (updatedAuthStatus) {
         throw redirect({ to: '/dashboard' })
       }

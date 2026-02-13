@@ -23,6 +23,7 @@ interface GenericDetailInputFormatterProps {
   onChange: (value: any) => void
   disabled?: boolean
   className?: string
+  showLabel?: boolean // Whether to show the field label
 }
 
 export function GenericDetailInputFormatter({
@@ -30,7 +31,8 @@ export function GenericDetailInputFormatter({
   value,
   onChange,
   disabled = false,
-  className
+  className,
+  showLabel = true
 }: GenericDetailInputFormatterProps) {
   const { type, label, required, isRequired, isImportant, options } = fieldDefinition
   const [selectedCountry, setSelectedCountry] = useState<Country>(() => {
@@ -351,13 +353,15 @@ export function GenericDetailInputFormatter({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-1">
-        <Label htmlFor={fieldDefinition.key} className="text-sm font-medium">
-          {label}
-        </Label>
-        {isFieldRequired && <span className="text-red-500 text-sm">*</span>}
-        {isFieldImportant && <span className="text-orange-500 text-sm" title="Important field">!</span>}
-      </div>
+      {showLabel && (
+        <div className="flex items-center gap-1">
+          <Label htmlFor={fieldDefinition.key} className="text-sm font-medium">
+            {label}
+          </Label>
+          {isFieldRequired && <span className="text-red-500 text-sm">*</span>}
+          {isFieldImportant && <span className="text-orange-500 text-sm" title="Important field">!</span>}
+        </div>
+      )}
       {renderInput()}
     </div>
   )

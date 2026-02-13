@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 
 import { Check, ChevronsUpDown, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import axios from 'axios'
+import api from '@/services/api'
 
 // Simple debounce implementation to avoid lodash dependency
 function debounce<T extends (...args: any[]) => any>(
@@ -75,7 +75,7 @@ export function RecordLookup({
   const dynamicSearchPlaceholder = searchPlaceholder || `Search by ${searchBy.replace('_', ' ')}...`
 
   // Construct API endpoint - use the object's API endpoint or construct from object name
-  // Note: axios baseURL is already set to /api, so we don't need leading slash
+  // Note: api baseURL is already set to /api, so we don't need leading slash
   const endpoint = apiEndpoint || `${objectName.toLowerCase()}`
 
   // Fetch initial records (last 5 created)
@@ -84,7 +84,7 @@ export function RecordLookup({
       setLoading(true)
       console.log('Fetching initial records from:', endpoint)
       
-      const response = await axios.get(endpoint)
+      const response = await api.get(endpoint)
       console.log('API Response:', response.data)
       
       // Handle different response structures
@@ -123,7 +123,7 @@ export function RecordLookup({
         
         // Use search endpoint with query parameter
         const searchEndpoint = `${endpoint}?search=${encodeURIComponent(query)}`
-        const response = await axios.get(searchEndpoint)
+        const response = await api.get(searchEndpoint)
         console.log('Search API Response:', response.data)
         
         // Handle different response structures
@@ -173,10 +173,10 @@ export function RecordLookup({
           let response
           try {
             // Try with trailing slash first
-            response = await axios.get(`${endpoint}/${value}/`)
+            response = await api.get(`${endpoint}/${value}/`)
           } catch (error) {
             // Try without trailing slash
-            response = await axios.get(`${endpoint}/${value}`)
+            response = await api.get(`${endpoint}/${value}`)
           }
           
           console.log('Fetched record by ID:', response.data)

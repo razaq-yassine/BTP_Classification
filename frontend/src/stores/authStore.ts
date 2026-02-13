@@ -1,171 +1,202 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
+import api from '@/services/api'
 
-import axios from 'axios'
-
-// Configure axios for Django backend
-axios.defaults.baseURL = 'http://localhost:8000/api'
-axios.defaults.withCredentials = true
-
-interface AuthUser {
+/**
+ * User interface matching backend User entity
+ */
+export interface AuthUser {
   id: number
   username: string
   email: string
-  first_name: string
-  last_name: string
-  is_active: boolean
-  date_joined: string
+  firstName: string
+  lastName: string
 }
 
+/**
+ * Authentication state interface
+ */
 interface AuthState {
-  auth: {
-    user: AuthUser | null
-    isAuthenticated: boolean
-    isLoading: boolean
-    setUser: (user: AuthUser | null) => void
-    setLoading: (loading: boolean) => void
-    login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>
-    logout: () => Promise<void>
-    checkAuth: () => Promise<void>
-    reset: () => void
-  }
+  user: AuthUser | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  error: string | null
 }
 
-export const useAuthStore = create<AuthState>()(subscribeWithSelector((set) => ({
-  auth: {
-    user: null,
-    isAuthenticated: false,
-    isLoading: false,
-    setUser: (user) =>
-      set((state) => ({ 
-        ...state, 
-        auth: { 
-          ...state.auth, 
-          user, 
-          isAuthenticated: !!user 
-        } 
-      })),
-    setLoading: (isLoading) =>
-      set((state) => ({ 
-        ...state, 
-        auth: { ...state.auth, isLoading } 
-      })),
-    login: async (username: string, password: string) => {
-      try {
-        console.log('🔐 Starting login attempt...', { username })
-        set((state) => ({ 
-          ...state, 
-          auth: { ...state.auth, isLoading: true } 
-        }))
-        
-        console.log('📡 Making POST request to /auth/login/')
-        const response = await axios.post('/auth/login/', {
-          username,
-          password
-        })
-        
-        console.log('✅ Login response received:', response.data)
-        const user = response.data.user
-        set((state) => ({ 
-          ...state, 
-          auth: { 
-            ...state.auth, 
-            user, 
-            isAuthenticated: true, 
-            isLoading: false 
-          } 
-        }))
-        
-        console.log('🎉 Login successful, user authenticated:', user)
-        return { success: true }
-      } catch (error: any) {
-        console.error('❌ Login failed:', error)
-        console.error('Response data:', error.response?.data)
-        console.error('Response status:', error.response?.status)
-        console.error('Response headers:', error.response?.headers)
-        
-        set((state) => ({ 
-          ...state, 
-          auth: { 
-            ...state.auth, 
-            isLoading: false 
-          } 
-        }))
-        
-        const errorMessage = error.response?.data?.non_field_errors?.[0] || 
-                           error.response?.data?.detail || 
-                           error.response?.data?.username?.[0] ||
-                           error.response?.data?.password?.[0] ||
-                           error.message ||
-                           'Login failed'
-        console.error('Error message to display:', errorMessage)
-        return { success: false, error: errorMessage }
+/**
+ * Authentication actions interface
+ */
+interface AuthActions {
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>
+  logout: () => void
+  checkAuth: () => Promise<void>
+  clearError: () => void
+}
+
+type AuthStore = AuthState & AuthActions
+
+/**
+ * Clean, robust authentication store
+ */
+export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => ({
+  // Initial state
+  user: null,
+  isAuthenticated: false,
+  isLoading: false,
+  error: null,
+
+  /**
+   * Login with username and password
+   */
+  login: async (username: string, password: string) => {
+    console.log('🔐 Starting login process for user:', username)
+    
+    set({ isLoading: true, error: null })
+    
+    try {
+      // Make login request to backend
+      const response = await api.post('/api/auth/login', {
+        username,
+        password
+      })
+      
+      const { accessToken, ...userData } = response.data
+      
+      // Store JWT token
+      localStorage.setItem('jwt_token', accessToken)
+      console.log('✅ JWT token stored successfully')
+      
+      // Create user object
+      const user: AuthUser = {
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName
       }
-    },
-    logout: async () => {
-      try {
-        await axios.post('/auth/logout/')
-      } catch (error) {
-        console.error('Logout error:', error)
-      } finally {
-        set((state) => ({ 
-          ...state, 
-          auth: { 
-            ...state.auth, 
-            user: null, 
-            isAuthenticated: false 
-          } 
-        }))
+      
+      // Update state
+      set({
+        user,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null
+      })
+      
+      console.log('🎉 Login successful for user:', user.username)
+      return { success: true }
+      
+    } catch (error: any) {
+      console.error('❌ Login failed:', error)
+      
+      // Clear any stored token on login failure
+      localStorage.removeItem('jwt_token')
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed'
+      
+      set({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: errorMessage
+      })
+      
+      return { success: false, error: errorMessage }
+    }
+  },
+
+  /**
+   * Logout and clear authentication state
+   */
+  logout: () => {
+    console.log('🚺 Logging out user')
+    
+    // Clear all cached data to prevent cache issues
+    localStorage.clear()
+    sessionStorage.clear()
+    
+    // Reset state
+    set({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null
+    })
+    
+    console.log('✅ Logout completed - all cache cleared')
+  },
+
+  /**
+   * Check authentication status with stored token
+   */
+  checkAuth: async () => {
+    const token = localStorage.getItem('jwt_token')
+    
+    if (!token) {
+      console.log('📭 No JWT token found - user not authenticated')
+      set({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null
+      })
+      return
+    }
+    
+    console.log('🔍 Checking authentication with stored token')
+    set({ isLoading: true, error: null })
+    
+    try {
+      // Validate token with backend
+      const response = await api.get('/api/auth/me')
+      const userData = response.data
+      
+      // Create user object
+      const user: AuthUser = {
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName
       }
-    },
-    checkAuth: async () => {
-      try {
-        const response = await axios.get('/auth/user/')
-        const user = response.data
-        console.log('✅ User authenticated:', user)
-        set((state) => ({ 
-          ...state, 
-          auth: { 
-            ...state.auth, 
-            user, 
-            isAuthenticated: true 
-          } 
-        }))
-      } catch (error: any) {
-        // Don't log 403 errors as they're expected when not authenticated
-        if (error.response?.status !== 403) {
-          console.error('❌ Auth check failed:', error)
-        }
-        set((state) => ({ 
-          ...state, 
-          auth: { 
-            ...state.auth, 
-            user: null, 
-            isAuthenticated: false 
-          } 
-        }))
-      }
-    },
-    reset: () =>
-      set((state) => ({
-        ...state,
-        auth: { 
-          ...state.auth, 
-          user: null, 
-          isAuthenticated: false, 
-          isLoading: false 
-        }
-      }))
+      
+      // Update state
+      set({
+        user,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null
+      })
+      
+      console.log('✅ Authentication check successful for user:', user.username)
+      
+    } catch (error: any) {
+      console.warn('⚠️ Authentication check failed:', error.message)
+      
+      // Clear invalid token
+      localStorage.removeItem('jwt_token')
+      
+      set({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null // Don't show error for failed auth check
+      })
+    }
+  },
+
+  /**
+   * Clear error state
+   */
+  clearError: () => {
+    set({ error: null })
   }
 })))
 
-// Stable selectors to prevent infinite loops
-export const selectAuth = (state: any) => state.auth
-export const selectUser = (state: any) => state.auth.user
-export const selectIsAuthenticated = (state: any) => state.auth.isAuthenticated
-export const selectIsLoading = (state: any) => state.auth.isLoading
-export const selectLogin = (state: any) => state.auth.login
-export const selectLogout = (state: any) => state.auth.logout
-
-// Helper hook with shallow comparison to prevent unnecessary re-renders
-export const useAuth = () => useAuthStore(selectAuth)
+// Selector helpers for components
+export const selectUser = (state: AuthStore) => state.user
+export const selectIsAuthenticated = (state: AuthStore) => state.isAuthenticated
+export const selectIsLoading = (state: AuthStore) => state.isLoading
+export const selectError = (state: AuthStore) => state.error
+export const selectLogin = (state: AuthStore) => state.login
+export const selectLogout = (state: AuthStore) => state.logout

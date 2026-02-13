@@ -1,18 +1,24 @@
 // Object definition types for generic components
 import React from 'react'
 
+// Generic record type
+export interface GenericRecord {
+  id: string | number
+  [key: string]: any
+}
+
 export interface ActionDefinition {
   key: string
   label: string
   icon?: React.ComponentType<any>
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
-  onClick: (record: any) => void
+  onClick: (record: GenericRecord) => void
 }
 
 export interface CalculatedDataDefinition {
   key: string
   label: string
-  calculator: (record: any) => string | number
+  calculator: (record: GenericRecord) => string | number
   format?: 'currency' | 'percentage' | 'number' | 'text'
   icon?: React.ComponentType<any>
 }
@@ -31,17 +37,27 @@ export interface FieldDefinition {
   options?: { value: string; label: string }[] // For select fields
   objectName?: string // For lookup/reference fields
   additionalFields?: string[] // Additional fields to display in lookup
-  render?: (value: any, record: any) => React.ReactNode // Custom render function
+  render?: (value: any, record: GenericRecord) => React.ReactNode // Custom render function
 }
 
 export interface RelatedObjectDefinition {
-  key: string
+  name: string
   label: string
-  type?: string
-  apiEndpoint?: string // Custom API endpoint, supports {parentId} placeholder
-  displayField?: string
-  objectDefinition?: ObjectDefinition // Full object definition for the related object
-  showFields?: string[] // Override which fields to show in the table
+  labelPlural: string
+  objectDefinition: string // Reference to object definition name
+  relationshipType: 'one-to-many' | 'many-to-one' | 'many-to-many'
+  foreignKey: string // Field in the related object that references this object
+  apiEndpoint: string // Endpoint to fetch related data
+  fields: FieldDefinition[] // Fields to display in the related object table
+  defaultSort?: string
+  defaultSortOrder?: 'asc' | 'desc'
+  pageSize?: number
+  permissions?: {
+    create?: boolean
+    read?: boolean
+    update?: boolean
+    delete?: boolean
+  }
   compact?: boolean // Whether to use compact table styling
   showSearch?: boolean // Whether to show search functionality
   showAddButton?: boolean // Whether to show add new button
@@ -62,11 +78,10 @@ export interface ObjectDefinition {
   basePath?: string // Base path for list view (e.g., '/customers')
   detailPath?: string // Path template for detail view (e.g., '/customers/$customerId')
   
-  // Field definitions
-  fields: FieldDefinition[]
+  // Field definitions (optional for new format)
+  fields?: FieldDefinition[]
   
   // Related objects configuration
-  relatedObjects?: RelatedObjectDefinition[] // Related objects to show in tabs
   
   // Header configuration
   header?: {
@@ -78,7 +93,7 @@ export interface ObjectDefinition {
   
   // View configurations
   listView: {
-    fields: string[] // Field keys to show in list view
+    fields: string[] | FieldDefinition[] // Field keys or field definitions to show in list view
     defaultSort?: string // Default sort field
     defaultSortOrder?: 'asc' | 'desc'
     searchFields?: string[] // Fields to search in
@@ -86,12 +101,13 @@ export interface ObjectDefinition {
   }
   
   detailView: {
-    fields: string[] // Field keys to show in detail view
+    fields?: string[] // Field keys to show in detail view
     layout?: 'single-column' | 'two-column' | 'tabs'
     sections?: {
       title: string
-      fields: string[]
+      fields: string[] | FieldDefinition[]
       columns?: number // Number of columns for this section
+      defaultOpen?: boolean // Whether section is open by default in accordion
     }[]
   }
   
@@ -103,12 +119,12 @@ export interface ObjectDefinition {
     delete?: boolean
   }
   
+  // Related objects configuration
+  relatedObjects?: RelatedObjectDefinition[]
+  
   // UI configuration
   icon?: React.ComponentType<{ className?: string }> // Icon component
   color?: string
 }
 
-export interface GenericRecord {
-  id: number | string
-  [key: string]: any
-}
+

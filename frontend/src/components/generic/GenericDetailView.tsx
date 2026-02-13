@@ -3,11 +3,12 @@ import { useNavigate } from '@tanstack/react-router'
 import { ObjectDefinition, GenericRecord } from '@/types/object-definition'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { GenericObjectDetailViewHeader } from './GenericObjectDetailViewHeader'
 import { GenericObjectDetailViewMainSection } from './GenericObjectDetailViewMainSection'
 import { GenericObjectDetailViewSideSection } from './GenericObjectDetailViewSideSection'
-import axios from 'axios'
+import { GenericDetailViewSkeleton } from './GenericDetailViewSkeleton'
+import api from '@/services/api'
 
 interface GenericDetailViewProps {
   objectDefinition: ObjectDefinition
@@ -29,10 +30,10 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
     try {
       setLoading(true)
       setError('')
-      const response = await axios.get(`${objectDefinition.apiEndpoint}/${recordId}/`)
+      const response = await api.get(`${objectDefinition.apiEndpoint}/${recordId}`)
       setRecord(response.data)
     } catch (err: any) {
-      setError(err.response?.data?.detail || `Failed to fetch ${objectDefinition.label.toLowerCase()}`)
+      setError(err.response?.data?.message || err.response?.data?.error || `Failed to fetch ${objectDefinition.label.toLowerCase()}`)
     } finally {
       setLoading(false)
     }
@@ -53,16 +54,7 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
   // const Icon = objectDefinition.icon
 
   if (loading) {
-    return (
-      <main className="flex-1 space-y-4">
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-muted-foreground">Loading {objectDefinition.label.toLowerCase()}...</p>
-          </div>
-        </div>
-      </main>
-    )
+    return <GenericDetailViewSkeleton />
   }
 
   if (error) {
@@ -113,6 +105,7 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
             objectDefinition={objectDefinition} 
             record={record} 
             onRecordUpdate={setRecord}
+            isLoading={loading}
           />
         </div>
         

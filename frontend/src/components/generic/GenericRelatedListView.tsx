@@ -1,34 +1,26 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { ObjectDefinition, GenericRecord, RelatedObjectDefinition } from '@/types/object-definition'
+import { RelatedObjectDefinition, GenericRecord } from '@/types/object-definition'
 import { GenericDataTable } from './GenericDataTable'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Search, Plus, RefreshCw } from 'lucide-react'
-import axios from 'axios'
+import api from '@/services/api'
 
 interface GenericRelatedListViewProps {
-  parentObjectDefinition: ObjectDefinition
   parentRecord: GenericRecord
   relatedObjectDefinition: RelatedObjectDefinition
-  relatedObjectConfig: ObjectDefinition // Full config for the related object
-  compact?: boolean
   showSearch?: boolean
   showAddButton?: boolean
   maxHeight?: string
 }
 
 export function GenericRelatedListView({ 
-  parentObjectDefinition,
   parentRecord,
   relatedObjectDefinition,
-  relatedObjectConfig,
-  compact = true,
-  showSearch = false,
-  showAddButton = false,
+  showSearch = true,
+  showAddButton = true,
   maxHeight = '400px'
 }: GenericRelatedListViewProps) {
-  const navigate = useNavigate()
   const [records, setRecords] = useState<GenericRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -44,36 +36,46 @@ export function GenericRelatedListView({
       setError('')
       
       // Build the API endpoint for related data
-      // This could be customized based on the relationship type
-      let apiUrl = ''
+      // Use the endpoint from the related object definition
+      const baseEndpoint = relatedObjectDefinition.apiEndpoint.endsWith('/') 
+        ? relatedObjectDefinition.apiEndpoint.slice(0, -1) 
+        : relatedObjectDefinition.apiEndpoint
+        
+      const apiUrl = `${baseEndpoint}/${parentRecord.id}`
       
-      if (relatedObjectDefinition.apiEndpoint) {
-        // Use custom endpoint if provided
-        apiUrl = relatedObjectDefinition.apiEndpoint.replace('{parentId}', parentRecord.id.toString())
-      } else {
-        // Default: assume related objects are fetched via parent endpoint
-        apiUrl = `${parentObjectDefinition.apiEndpoint}/${parentRecord.id}/${relatedObjectDefinition.key}/`
-      }
+      console.log(`🔍 Fetching related ${relatedObjectDefinition.label} from: ${apiUrl}`)
+      const response = await api.get(apiUrl)
       
-      const response = await axios.get(apiUrl)
+      // Log the response structure to debug
+      console.log(`📊 ${relatedObjectDefinition.label} response structure:`, {
+        keys: Object.keys(response.data || {}),
+        isArray: Array.isArray(response.data),
+        resultsCount: response.data?.results?.length,
+        ordersCount: response.data?.orders?.length
+      })
       
-      // Handle different response formats
-      const data = response.data.results || response.data[relatedObjectDefinition.key] || response.data
-      setRecords(Array.isArray(data) ? data : [])
+      // Handle different response formats - expect {orders: Array, count: N} structure
+      const data = response.data.orders || response.data.results || response.data
+      const processedRecords = Array.isArray(data) ? data : []
       
+      setRecords(processedRecords)
+      console.log(`✅ Successfully loaded ${processedRecords.length} related ${relatedObjectDefinition.label.toLowerCase()}`)
     } catch (err: any) {
-      setError(err.response?.data?.detail || `Failed to fetch related ${relatedObjectDefinition.label.toLowerCase()}`)
+      console.error(`❌ Error fetching related ${relatedObjectDefinition.label}:`, {
+        message: err.response?.data?.message || err.message,
+        status: err.response?.status,
+        data: err.response?.data
+      })
+      setError(err.response?.data?.detail || err.response?.data?.message || `Failed to fetch related ${relatedObjectDefinition.label.toLowerCase()}`)
     } finally {
       setLoading(false)
     }
   }
 
   const handleRecordClick = (record: GenericRecord) => {
-    // Navigate to the related record's detail view if configured
-    if (relatedObjectConfig.detailPath) {
-      const detailPath = relatedObjectConfig.detailPath.replace('$customerId', record.id.toString())
-      navigate({ to: detailPath })
-    }
+    // Navigate to the related record's detail view
+    // For now, just log the click - navigation can be implemented later
+    console.log('Related record clicked:', record)
   }
 
   const handleRefresh = () => {
@@ -90,8 +92,12 @@ export function GenericRelatedListView({
   const filteredRecords = records.filter(record => {
     if (!searchTerm) return true
     
-    const searchFields = relatedObjectConfig.listView.searchFields || relatedObjectConfig.listView.fields
-    return searchFields.some(fieldKey => {
+    // Use the fields from the related object definition
+    const searchFields = relatedObjectDefinition.fields
+      .filter(f => f.searchable)
+      .map(f => f.key)
+    
+    return searchFields.some((fieldKey: string) => {
       const value = record[fieldKey]
       return value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
     })
@@ -144,15 +150,31 @@ export function GenericRelatedListView({
 
       {/* Data Table */}
       <div style={{ maxHeight }} className="overflow-y-auto">
-        <GenericDataTable
-          objectDefinition={relatedObjectConfig}
-          records={filteredRecords}
-          loading={loading}
-          error={error}
-          onRecordClick={handleRecordClick}
-          compact={compact}
-          sortable={true}
-        />
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <span>Loading...</span>
+          </div>
+        ) : error ? (
+          <div className="text-red-500 py-4">{error}</div>
+        ) : (
+          <GenericDataTable
+            data={filteredRecords}
+            objectDefinition={{
+              name: relatedObjectDefinition.name,
+              label: relatedObjectDefinition.label,
+              labelPlural: relatedObjectDefinition.labelPlural,
+              listView: {
+                fields: relatedObjectDefinition.fields,
+                defaultSort: relatedObjectDefinition.defaultSort,
+                defaultSortOrder: relatedObjectDefinition.defaultSortOrder,
+                pageSize: relatedObjectDefinition.pageSize
+              },
+              permissions: relatedObjectDefinition.permissions
+            } as any}
+            isLoading={loading}
+            onRowClick={handleRecordClick}
+          />
+        )}
       </div>
     </div>
   )

@@ -6,12 +6,12 @@ export const Route = createFileRoute('/_authenticated')({
   component: AuthenticatedLayout,
   beforeLoad: async () => {
     // Check authentication status
-    const { checkAuth } = useAuthStore.getState().auth
+    const { checkAuth } = useAuthStore.getState()
     
     try {
       await checkAuth()
       // If checkAuth succeeds, user is authenticated, allow access
-      const { isAuthenticated: currentAuthStatus } = useAuthStore.getState().auth
+      const { isAuthenticated: currentAuthStatus } = useAuthStore.getState()
       if (!currentAuthStatus) {
         throw redirect({ to: '/login' })
       }

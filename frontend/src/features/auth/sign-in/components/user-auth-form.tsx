@@ -31,7 +31,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
-  const login = useAuthStore((state) => state.auth.login)
+  const login = useAuthStore((state) => state.login)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
