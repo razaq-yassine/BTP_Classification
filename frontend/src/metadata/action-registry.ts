@@ -1,25 +1,21 @@
 import React from 'react'
-import { Edit, Trash2, Mail, Phone, Building, Calendar, Eye, Package, DollarSign, Layers } from 'lucide-react'
-import { IconUserCog, IconShoppingCart } from '@tabler/icons-react'
+import { DynamicIcon, dynamicIconImports } from 'lucide-react/dynamic'
+import type { IconName } from 'lucide-react/dynamic'
 import type { ActionDefinition, CalculatedDataDefinition, GenericRecord } from '@/types/object-definition'
 
-export const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  Edit,
-  Trash2,
-  Mail,
-  Phone,
-  Building,
-  Calendar,
-  Eye,
-  Package,
-  DollarSign,
-  Layers,
-  IconUserCog,
-  IconShoppingCart,
+/** Convert metadata icon name (PascalCase or IconXxx) to Lucide kebab-case key */
+function toLucideKey(name: string): string {
+  const stripped = name.replace(/^Icon/, '')
+  return stripped.replace(/([A-Z])/g, (m) => `-${m.toLowerCase()}`).replace(/^-/, '')
 }
 
 export function getIcon(iconName: string): React.ComponentType<{ className?: string }> | undefined {
-  return iconMap[iconName]
+  const key = toLucideKey(iconName) as IconName
+  if (key in dynamicIconImports) {
+    return (props: { className?: string }) =>
+      React.createElement(DynamicIcon, { name: key, ...props })
+  }
+  return undefined
 }
 
 export type ActionHandler = (record: GenericRecord, config: Record<string, unknown>) => void
@@ -35,12 +31,10 @@ export const actionHandlers: Record<string, ActionHandler> = {
     const value = record[field]
     if (value) window.location.href = `tel:${value}`
   },
-  edit: (record) => {
-    console.log('Edit:', record)
+  edit: (_record) => {
     // TODO: Navigate to edit page
   },
-  delete: (record) => {
-    console.log('Delete:', record)
+  delete: (_record) => {
     // TODO: Show confirmation dialog
   },
 }

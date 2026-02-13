@@ -31,7 +31,7 @@ export function useObjectDefinition(
         const def = await getObjectDefinition(name)
         if (!cancelled && def) setDefinition(def)
       } catch (err) {
-        if (!cancelled) setError(err?.message || 'Failed to load object definition')
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load object definition')
       } finally {
         if (!cancelled) setLoading(false)
       }

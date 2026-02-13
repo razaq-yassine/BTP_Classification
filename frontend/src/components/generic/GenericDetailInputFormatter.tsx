@@ -245,13 +245,12 @@ export function GenericDetailInputFormatter({
           />
         )
 
-      case 'lookup':
       case 'reference':
         const { objectName, additionalFields = [], apiEndpoint, searchBy } = fieldDefinition as any
         if (!objectName) {
           return (
             <div className="text-sm text-red-500">
-              Object name is required for lookup fields
+              Object name is required for reference fields
             </div>
           )
         }
@@ -272,7 +271,7 @@ export function GenericDetailInputFormatter({
             apiEndpoint={apiEndpoint}
             placeholder={`Search ${objectName.toLowerCase()}...`}
             disabled={disabled}
-            className={className}
+            className={cn('w-full', className)}
           />
         )
 
@@ -298,7 +297,7 @@ export function GenericDetailInputFormatter({
             placeholder={`Select ${label.toLowerCase()}...`}
             searchPlaceholder={`Search ${label.toLowerCase()}...`}
             disabled={disabled}
-            className={className}
+            className={cn('w-full', className)}
           />
         )
 
@@ -324,7 +323,7 @@ export function GenericDetailInputFormatter({
             placeholder={`Select ${label.toLowerCase()}...`}
             searchPlaceholder={`Search ${label.toLowerCase()}...`}
             disabled={disabled}
-            className={className}
+            className={cn('w-full', className)}
           />
         )
 

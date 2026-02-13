@@ -159,12 +159,4 @@ window.testWithFreshToken = async function() {
   return result;
 };
 
-console.log('🔧 Debug utilities loaded! Available functions:');
-console.log('- viewApiErrors() - View all API error logs');
-console.log('- clearApiErrors() - Clear API error logs');
-console.log('- viewTokenInfo() - View JWT token information (including expiration)');
-console.log('- testApiEndpoint(endpoint) - Test a specific API endpoint');
-console.log('- compareEndpoints() - Compare auth/me vs customers endpoints');
-console.log('- getFreshToken() - Get a fresh JWT token from backend');
-console.log('- testWithFreshToken() - Test customers endpoint with fresh token');
-console.log('- decodeJWT(token) - Decode JWT token payload');
+// Available in console: viewApiErrors(), clearApiErrors(), viewTokenInfo(), testApiEndpoint(), compareEndpoints(), getFreshToken(), testWithFreshToken(), decodeJWT()

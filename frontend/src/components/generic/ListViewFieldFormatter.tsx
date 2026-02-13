@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
 
 export interface FieldFormatterProps {
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'select' | 'multiselect' | 'lookup' | 'reference'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'select' | 'multiselect' | 'reference'
   value: any
   format?: string // For date formatting, etc.
   options?: { value: string; label: string }[] // For select fields
@@ -111,10 +111,9 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
         return <span className="text-sm text-gray-500">{value}</span>
       }
 
-    case 'lookup':
     case 'reference':
       if (!value) return <span className="text-gray-400">—</span>
-      // For lookup fields, value might be an object with name or just an ID
+      // For reference fields, value might be an object with name or just an ID
       if (typeof value === 'object' && value.name) {
         return (
           <Badge variant="outline" className="text-xs">

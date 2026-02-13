@@ -1,1 +1,1 @@
-{"fields":["name","slug","location","isActive","createdAt"],"defaultSort":"createdAt","defaultSortOrder":"desc","pageSize":10}
+{"fields":["name","slug","location","capacity","isActive","createdAt"],"defaultSort":"createdAt","defaultSortOrder":"desc","pageSize":10}

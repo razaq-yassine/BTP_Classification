@@ -24,7 +24,6 @@ function DetailViewFormatterPage() {
     boolean: true,
     select: '',
     multiselect: ['option1', 'option3'],
-    lookup: '',
     reference: 2,
     importantField: '',
     anotherImportantField: 'This has a value',
@@ -119,14 +118,6 @@ function DetailViewFormatterPage() {
     },
     ...(lookupObjectName
       ? [
-          {
-            key: 'lookup',
-            label: 'Lookup Field (Search Records)',
-            type: 'lookup' as const,
-            required: false,
-            objectName: lookupObjectName,
-            additionalFields: ['email', 'company'],
-          },
           {
             key: 'reference',
             label: 'Reference Field (Link to Record)',

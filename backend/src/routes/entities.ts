@@ -225,20 +225,29 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
   })
 
   entityRoutes.get(`/${entityPath}/:id`, async (c) => {
-    const id = Number(c.req.param('id'))
-    if (join) {
-      const j = join as JoinConfig
-      const [row] = (await db
-        .select({ main: table, joined: j.joinTable as any })
-        .from(table)
-        .leftJoin(j.joinTable as any, eq(j.leftColumn as any, j.rightColumn as any))
-        .where(eq(idCol as any, id))) as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>
-      if (!row?.main) return c.json({ message: 'Not found' }, 404)
-      return c.json(toRecord(row.main, row.joined || null, config, null))
+    try {
+      const id = Number(c.req.param('id'))
+      if (Number.isNaN(id)) return c.json({ message: 'Invalid ID' }, 400)
+      if (join) {
+        const j = join as JoinConfig
+        const [row] = (await db
+          .select({ main: table, joined: j.joinTable as any })
+          .from(table)
+          .leftJoin(j.joinTable as any, eq(j.leftColumn as any, j.rightColumn as any))
+          .where(eq(idCol as any, id))) as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>
+        if (!row?.main) return c.json({ message: 'Not found' }, 404)
+        return c.json(toRecord(row.main, row.joined || null, config, null))
+      }
+      const [row] = await db.select().from(table).where(eq(idCol as any, id))
+      if (!row) return c.json({ message: 'Not found' }, 404)
+      return c.json(toRecord(row as Record<string, unknown>, null, config, null))
+    } catch (err) {
+      console.error(`GET ${entityPath}/:id error:`, err)
+      return c.json(
+        { message: (err as Error).message || 'Internal server error' },
+        500
+      )
     }
-    const [row] = await db.select().from(table).where(eq(idCol as any, id))
-    if (!row) return c.json({ message: 'Not found' }, 404)
-    return c.json(toRecord(row as Record<string, unknown>, null, config, null))
   })
 
   entityRoutes.post(`/${entityPath}`, async (c) => {

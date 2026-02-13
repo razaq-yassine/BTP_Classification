@@ -77,24 +77,44 @@
   width: 100%;
 }
 
-/* Individual stage styling - hexagon shape */
+/* Individual stage styling - outer has hexagon/arrow shape */
 .stage {
   position: relative;
-  padding: 0.25rem 0.75rem;
   color: #6b7280;
   cursor: default;
   transition: all 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
   min-width: 0;
   height: 28px;
-  text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
   clip-path: polygon(92% 0, 100% 50%, 92% 100%, 0% 100%, 8% 50%, 0% 0%);
   margin: 0 -6px;
   background-color: #f2f2f2;
   flex: 1 1 0%;
+}
+
+/* Inner rectangular container for content */
+.stage-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  margin: 0 0.25rem;
+}
+
+.stage-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+  text-align: center;
 }
 
 .stage-name {
@@ -104,12 +124,21 @@
   font-size: 0.75rem;
   font-weight: 500;
   flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.stage-name--with-check::before {
+  content: '✓';
+  margin-right: 0.2em;
+  animation: checkmarkAppear 0.3s ease;
 }
 
 @media (min-width: 640px) {
-  .stage {
+  .stage-inner {
     padding: 0.2rem 0.75rem;
-    min-width: 0;
   }
 
   .stage-name {
@@ -152,10 +181,18 @@
   overflow: hidden;
 }
 
+.stage--first .stage-inner {
+  margin-left: 0.25rem;
+}
+
 .stage--first.stage--last {
   clip-path: none;
   border-radius: 12px;
   margin: 0;
+}
+
+.stage--first.stage--last .stage-inner {
+  margin: 0 0.25rem;
 }
 
 .stage--home,
@@ -173,6 +210,10 @@
   border-top-right-radius: 12px;
   border-bottom-right-radius: 12px;
   overflow: hidden;
+}
+
+.stage--last .stage-inner {
+  margin-right: 0.25rem;
 }
 
 .stage--clickable {
@@ -253,23 +294,33 @@
   border-left-color: #0d2818;
 }
 
-/* Current stage (in DB) - outline only when user selected a different stage */
+/* Current stage (in DB) - outline + very light green when user selected a different stage */
 .stage--current-outline {
-  background-color: transparent;
+  background-color: #ecfdf5;
   color: #0a1612;
-  border: 1px solid #0a1612;
+  border: none;
+  box-shadow: inset 0 0 0 1px #0a1612;
 }
 
 .stage--current-outline::before {
-  border-left-color: #f2f2f2;
+  border-left-color: #ecfdf5;
 }
 
 .stage--current-outline::after {
-  border-left-color: #f2f2f2;
+  border-left-color: #ecfdf5;
 }
 
 .stage--current-outline.stage--hovered {
-  background-color: hsl(0 0% 0% / 0.04);
+  background-color: #d1fae5;
+  box-shadow: inset 0 0 0 1px #0d2818;
+}
+
+.stage--current-outline.stage--hovered::before {
+  border-left-color: #d1fae5;
+}
+
+.stage--current-outline.stage--hovered::after {
+  border-left-color: #d1fae5;
 }
 
 /* Selected by cursor (not yet current) - dark green, same as preselected */
@@ -340,14 +391,6 @@
 
 .stage--future.stage--hovered::after {
   border-left-color: #e5e7eb;
-}
-
-/* Checkmark styling */
-.stage-checkmark {
-  font-size: 0.875rem;
-  margin-right: 0.25rem;
-  animation: checkmarkAppear 0.3s ease;
-  display: inline-block;
 }
 
 @keyframes checkmarkAppear {

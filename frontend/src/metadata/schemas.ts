@@ -25,7 +25,7 @@ export const fieldSchema = z.object({
   label: z.string(),
   type: z.enum([
     'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text',
-    'select', 'multiselect', 'lookup', 'reference'
+    'select', 'multiselect', 'reference', 'lookup' // lookup maps to reference
   ]),
   required: z.boolean().optional(),
   editable: z.boolean().optional(),

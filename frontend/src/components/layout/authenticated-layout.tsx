@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import Cookies from 'js-cookie'
 import { Outlet } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
@@ -11,7 +11,7 @@ import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import SkipToMain from '@/components/skip-to-main'
-import { getAllObjectDefinitions } from '@/metadata/loader'
+import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
 
 interface Props {
   children?: React.ReactNode
@@ -23,17 +23,14 @@ const staticTopNav = [
 ]
 
 export function AuthenticatedLayout({ children }: Props) {
-  const [topNav, setTopNav] = useState(staticTopNav)
-
-  useEffect(() => {
-    getAllObjectDefinitions().then((defs) => {
-      const withNav = defs.filter((d) => d.basePath && (d.sidebar?.showInSidebar !== false))
-      if (withNav.length > 0) {
-        const dataNav = { title: withNav[0].labelPlural, href: withNav[0].basePath!, isActive: false }
-        setTopNav([staticTopNav[0], dataNav, ...staticTopNav.slice(1)])
-      }
-    })
-  }, [])
+  const { data: defs } = useObjectDefinitionsQuery()
+  const topNav = useMemo(() => {
+    if (!defs?.length) return staticTopNav
+    const withNav = defs.filter((d) => d.basePath && (d.sidebar?.showInSidebar !== false))
+    if (withNav.length === 0) return staticTopNav
+    const dataNav = { title: withNav[0].labelPlural, href: withNav[0].basePath!, isActive: false }
+    return [staticTopNav[0], dataNav, ...staticTopNav.slice(1)]
+  }, [defs])
 
   const defaultOpen = Cookies.get('sidebar_state') !== 'false'
   return (

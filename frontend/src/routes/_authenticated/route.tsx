@@ -1,9 +1,11 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { AuthenticatedLayout } from '@/components/layout/authenticated-layout'
+import { prefetchObjectDefinitions } from '@/hooks/useObjectDefinitionsQuery'
 import { useAuthStore } from '@/stores/authStore'
 
 export const Route = createFileRoute('/_authenticated')({
   component: AuthenticatedLayout,
+  loader: ({ context }) => prefetchObjectDefinitions(context.queryClient),
   beforeLoad: async () => {
     // Check authentication status
     const { checkAuth } = useAuthStore.getState()

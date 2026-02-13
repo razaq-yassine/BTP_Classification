@@ -229,11 +229,8 @@ export function GenericCreateDialog({
         ? objectDefinition.apiEndpoint.slice(0, -1) 
         : objectDefinition.apiEndpoint
       
-      console.log(`🔄 Creating ${objectDefinition.label} at endpoint: ${endpoint}`)
-      console.log(`📝 Create data:`, createData)
       
       const response = await api.post(endpoint, createData)
-      console.log(`✅ Create successful:`, response.data)
       
       // Show success toast
       toast.success(`${objectDefinition.label || objectDefinition.name} created successfully!`, {

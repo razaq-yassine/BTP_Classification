@@ -29,6 +29,20 @@
       "when": 1770973546678,
       "tag": "0003_powerful_redwing",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1770975623352,
+      "tag": "0004_brief_excalibur",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1770975837820,
+      "tag": "0005_free_yellowjacket",
+      "breakpoints": true
     }
   ]
 }

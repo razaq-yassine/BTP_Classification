@@ -26,7 +26,7 @@ export interface CalculatedDataDefinition {
 export interface FieldDefinition {
   key: string
   label: string
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'select' | 'multiselect' | 'lookup' | 'reference'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'select' | 'multiselect' | 'reference'
   required?: boolean
   isRequired?: boolean // Alternative to required for compatibility
   isImportant?: boolean // Important fields show popup if empty on submit
@@ -35,7 +35,7 @@ export interface FieldDefinition {
   searchable?: boolean
   format?: string // For date formatting, etc.
   options?: { value: string; label: string }[] // For select fields
-  objectName?: string // For lookup/reference fields
+  objectName?: string // For reference fields
   additionalFields?: string[] // Additional fields to display in lookup
   render?: (value: any, record: GenericRecord) => React.ReactNode // Custom render function
 }

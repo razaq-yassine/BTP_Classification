@@ -125,22 +125,7 @@ export function SalesforcePath({
     if (!stagesRef.current) return
     const needsScroll = stagesRef.current.scrollWidth > stagesRef.current.clientWidth
     setNeedsScrolling(needsScroll)
-    if (currentIndex >= 0) {
-      const stageElements = stagesRef.current.querySelectorAll('.path-stage')
-      const targetElement = stageElements[currentIndex] as HTMLElement
-      if (targetElement) {
-        const containerWidth = stagesRef.current.clientWidth
-        const stageLeft = targetElement.offsetLeft
-        const stageWidth = targetElement.offsetWidth
-        const newPosition = Math.max(
-          0,
-          stageLeft - containerWidth / 2 + stageWidth / 2
-        )
-        setScrollPosition(newPosition)
-        stagesRef.current.style.transform = `translateX(-${newPosition}px)`
-      }
-    }
-  }, [steps, currentStep, currentIndex])
+  }, [steps])
 
   return (
     <div className={`w-full ${className ?? ''}`}>
@@ -151,8 +136,8 @@ export function SalesforcePath({
           </label>
         </div>
       )}
-      <div className="flex items-center gap-2 w-full">
-        <div className="path-wrapper flex-1 min-w-0">
+      <div className="flex flex-col md:flex-row md:items-center gap-2 w-full">
+        <div className="path-wrapper flex-1 min-w-0 w-full md:w-auto">
           {needsScrolling && (
             <button
               className="scroll-button scroll-left"
@@ -208,7 +193,7 @@ export function SalesforcePath({
               <Button
                 onClick={handleMarkAsCurrent}
                 disabled={isUpdating}
-                className="h-8 whitespace-nowrap flex-shrink-0"
+                className="h-8 whitespace-nowrap w-full md:w-auto flex-shrink-0"
                 size="sm"
               >
                 {isUpdating ? 'Updating...' : 'Mark as current'}
@@ -217,7 +202,7 @@ export function SalesforcePath({
               <Button
                 onClick={handleMarkAsComplete}
                 disabled={!nextStageValue || isUpdating}
-                className="h-8 whitespace-nowrap flex-shrink-0"
+                className="h-8 whitespace-nowrap w-full md:w-auto flex-shrink-0"
                 size="sm"
               >
                 {isUpdating ? 'Updating...' : 'Mark stage as complete'}

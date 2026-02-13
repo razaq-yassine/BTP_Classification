@@ -174,7 +174,9 @@ async function loadFields(objectName: string): Promise<FieldDefinition[]> {
       const data = await fetchJson<Record<string, unknown>>(`${fieldsPath}/${name}.json`)
       fieldSchema.parse(data)
       const fd = data as unknown as FieldDefinition & { render?: string }
-      let resolvedFd: FieldDefinition = { ...fd, type: (fd.type || 'string') as FieldDefinition['type'] }
+      let fieldType = (fd.type || 'string') as FieldDefinition['type']
+      if ((fd.type as string) === 'lookup') fieldType = 'reference' // merge lookup into reference
+      let resolvedFd: FieldDefinition = { ...fd, type: fieldType }
       if (fd.render === 'booleanBadge') {
         resolvedFd = {
           ...resolvedFd,
@@ -233,6 +235,11 @@ export async function getObjectNameByPath(pathSegment: string): Promise<string |
 }
 
 const objectCache = new Map<string, ObjectDefinition>()
+
+/** Clear the in-memory object cache. Call when metadata has been regenerated. */
+export function clearObjectCache(): void {
+  objectCache.clear()
+}
 
 export async function getObjectDefinition(objectName: string): Promise<ObjectDefinition | undefined> {
   if (objectCache.has(objectName)) {

@@ -33,7 +33,6 @@ export const Route = createFileRoute('/login')({
         throw error
       }
       // Otherwise, user is not authenticated, allow access to login
-      console.log('User not authenticated, allowing access to login page')
     }
   },
 })

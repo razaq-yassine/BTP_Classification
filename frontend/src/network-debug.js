@@ -1,5 +1,5 @@
 // Network debugging utilities to compare frontend vs curl requests
-console.log('🔧 Network Debug Utilities Loaded!')
+// Available in console: debugNetworkRequest(), compareCurlToken(), debugAxiosInterceptor()
 
 // Function to capture and log actual request headers
 window.debugNetworkRequest = function() {
@@ -96,8 +96,3 @@ window.debugAxiosInterceptor = function() {
       })
   })
 }
-
-console.log('🔧 Available debug functions:')
-console.log('- debugNetworkRequest() - Test direct fetch with current token')
-console.log('- compareCurlToken() - Compare frontend token with fresh curl-style token')
-console.log('- debugAxiosInterceptor() - Debug axios interceptor behavior')

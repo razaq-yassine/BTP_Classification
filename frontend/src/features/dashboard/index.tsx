@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -16,7 +16,7 @@ import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import { Overview } from './components/overview'
 import { RecentSales } from './components/recent-sales'
-import { getAllObjectDefinitions } from '@/metadata/loader'
+import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
 
 const staticTopNav = [
   { title: 'Overview', href: 'dashboard/overview', isActive: true, disabled: false },
@@ -24,24 +24,18 @@ const staticTopNav = [
 ]
 
 export default function Dashboard() {
-  const [topNav, setTopNav] = useState(staticTopNav)
-
-  useEffect(() => {
-    getAllObjectDefinitions().then((defs) => {
-      const withNav = defs.filter((d) => d.basePath && (d.sidebar?.showInSidebar !== false))
-      const dataLinks = withNav.slice(0, 2).map((d) => ({
-        title: d.labelPlural,
-        href: d.basePath!,
-        isActive: false,
-        disabled: true,
-      }))
-      setTopNav([
-        staticTopNav[0],
-        ...dataLinks,
-        staticTopNav[1],
-      ])
-    })
-  }, [])
+  const { data: defs } = useObjectDefinitionsQuery()
+  const topNav = useMemo(() => {
+    if (!defs?.length) return staticTopNav
+    const withNav = defs.filter((d) => d.basePath && (d.sidebar?.showInSidebar !== false))
+    const dataLinks = withNav.slice(0, 2).map((d) => ({
+      title: d.labelPlural,
+      href: d.basePath!,
+      isActive: false,
+      disabled: true,
+    }))
+    return [staticTopNav[0], ...dataLinks, staticTopNav[1]]
+  }, [defs])
 
   return (
     <>

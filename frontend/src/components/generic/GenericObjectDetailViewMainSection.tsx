@@ -65,7 +65,11 @@ function FieldDisplay({
     if (val === null || val === undefined || val === '') {
       return '(Empty)' // Important fields should also show as empty, not required
     }
-    
+    // Reference fields (e.g. customer) come as objects - format for display
+    if (field.type === 'reference' && typeof val === 'object') {
+      const name = val.fullName ?? [val.firstName, val.lastName].filter(Boolean).join(' ').trim()
+      return name || val.name || val.email || `#${val.id ?? '(Unknown)'}`
+    }
     switch (field.type) {
       case 'boolean':
         return val ? 'Yes' : 'No'
@@ -78,7 +82,7 @@ function FieldDisplay({
       case 'email':
       case 'phone':
       default:
-        return val
+        return typeof val === 'object' ? JSON.stringify(val) : val
     }
   }
 
@@ -306,11 +310,8 @@ function DetailsTabContent({
         : objectDefinition.apiEndpoint
       
       const endpoint = `${baseEndpoint}/${record.id}`
-      console.log(`🔄 Updating ${objectDefinition.label} at endpoint: ${endpoint}`)
-      console.log(`📝 Update data:`, updateData)
       
       const response = await api.put(endpoint, updateData)
-      console.log(`✅ Update successful:`, response.data)
       
       // Call the onRecordUpdate callback to refresh the data
       onRecordUpdate(response.data)
@@ -333,13 +334,6 @@ function DetailsTabContent({
         formData: {}
       }))
     } catch (err: any) {
-      console.error(`❌ Error updating ${objectDefinition.label}:`, {
-        message: err.response?.data?.message || err.message,
-        status: err.response?.status,
-        data: err.response?.data,
-        endpoint: err.config?.url
-      })
-      
       // Handle authentication errors specifically
       if (err.response?.status === 401) {
         setError('Authentication failed. Please try logging in again.')
@@ -429,13 +423,6 @@ function DetailsTabContent({
       // If no validation errors and no important field confirmation needed, proceed with save
       await performSave()
     } catch (err: any) {
-      console.error(`❌ Error updating ${objectDefinition.label}:`, {
-        message: err.response?.data?.message || err.message,
-        status: err.response?.status,
-        data: err.response?.data,
-        endpoint: err.config?.url
-      })
-      
       // Handle authentication errors specifically
       if (err.response?.status === 401) {
         setError('Authentication failed. Please try logging in again.')
@@ -480,11 +467,8 @@ function DetailsTabContent({
         : objectDefinition.apiEndpoint
       
       const endpoint = `${baseEndpoint}/${previousRecordState.id}`
-      console.log(`↩️ Undoing changes for ${objectDefinition.label} at endpoint: ${endpoint}`)
-      console.log(`📝 Reverting to previous state:`, previousRecordState)
       
       const response = await api.put(endpoint, previousRecordState)
-      console.log(`✅ Undo successful:`, response.data)
       
       // Call the onRecordUpdate callback to refresh the data
       onRecordUpdate(response.data)
@@ -497,8 +481,7 @@ function DetailsTabContent({
       
       // Clear previous state after successful undo
       setPreviousRecordState(null)
-    } catch (err: any) {
-      console.error(`❌ Error undoing changes:`, err)
+    } catch {
       toast.error('Failed to undo changes', {
         description: 'Please try refreshing the page.',
         duration: 3000,

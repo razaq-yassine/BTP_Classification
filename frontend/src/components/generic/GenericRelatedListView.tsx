@@ -50,23 +50,15 @@ export function GenericRelatedListView({
       const processedRecords = Array.isArray(data) ? data : []
       
       setRecords(processedRecords)
-      console.log(`✅ Successfully loaded ${processedRecords.length} related ${relatedObjectDefinition.label.toLowerCase()}`)
     } catch (err: any) {
-      console.error(`❌ Error fetching related ${relatedObjectDefinition.label}:`, {
-        message: err.response?.data?.message || err.message,
-        status: err.response?.status,
-        data: err.response?.data
-      })
       setError(err.response?.data?.detail || err.response?.data?.message || `Failed to fetch related ${relatedObjectDefinition.label.toLowerCase()}`)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleRecordClick = (record: GenericRecord) => {
-    // Navigate to the related record's detail view
-    // For now, just log the click - navigation can be implemented later
-    console.log('Related record clicked:', record)
+  const handleRecordClick = (_record: GenericRecord) => {
+    // TODO: Navigate to the related record's detail view
   }
 
   const handleRefresh = () => {
@@ -74,9 +66,7 @@ export function GenericRelatedListView({
   }
 
   const handleAddNew = () => {
-    // Navigate to create new related record
-    // This would need to be implemented based on your routing structure
-    console.log('Add new', relatedObjectDefinition.label)
+    // TODO: Navigate to create new related record
   }
 
   // Filter records based on search term

@@ -49,7 +49,6 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
    * Login with username and password
    */
   login: async (username: string, password: string) => {
-    console.log('🔐 Starting login process for user:', username)
     
     set({ isLoading: true, error: null })
     
@@ -64,7 +63,6 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
       
       // Store JWT token
       localStorage.setItem('jwt_token', accessToken)
-      console.log('✅ JWT token stored successfully')
       
       // Create user object
       const user: AuthUser = {
@@ -83,11 +81,9 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
         error: null
       })
       
-      console.log('🎉 Login successful for user:', user.username)
       return { success: true }
       
     } catch (error: any) {
-      console.error('❌ Login failed:', error)
       
       // Clear any stored token on login failure
       localStorage.removeItem('jwt_token')
@@ -109,7 +105,6 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
    * Logout and clear authentication state
    */
   logout: () => {
-    console.log('🚺 Logging out user')
     
     // Clear all cached data to prevent cache issues
     localStorage.clear()
@@ -122,8 +117,6 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
       isLoading: false,
       error: null
     })
-    
-    console.log('✅ Logout completed - all cache cleared')
   },
 
   /**
@@ -133,7 +126,6 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
     const token = localStorage.getItem('jwt_token')
     
     if (!token) {
-      console.log('📭 No JWT token found - user not authenticated')
       set({
         user: null,
         isAuthenticated: false,
@@ -143,7 +135,6 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
       return
     }
     
-    console.log('🔍 Checking authentication with stored token')
     set({ isLoading: true, error: null })
     
     try {
@@ -168,10 +159,8 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
         error: null
       })
       
-      console.log('✅ Authentication check successful for user:', user.username)
       
-    } catch (error: any) {
-      console.warn('⚠️ Authentication check failed:', error.message)
+    } catch (_error: any) {
       
       // Clear invalid token
       localStorage.removeItem('jwt_token')

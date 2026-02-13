@@ -2,7 +2,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { SalesforcePath, type SalesforcePathStep } from '@/components/ui/salesforce-path'
-import { Button } from '@/components/ui/button'
 import { Main } from '@/components/layout/main'
 
 export const Route = createFileRoute('/_authenticated/dev-components/salesforce-path')({
@@ -19,7 +18,6 @@ const sampleSteps: SalesforcePathStep[] = [
 
 function SalesforcePathPage() {
   const [currentStep, setCurrentStep] = useState('qualification')
-  const [hasError, setHasError] = useState(false)
 
   return (
     <Main className="px-4">
@@ -38,24 +36,14 @@ function SalesforcePathPage() {
               Default: current stage preselected (dark green), &quot;Mark stage as complete&quot; advances to next. Click a different stage for outline, then &quot;Mark as current&quot;. Current: {currentStep}.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
             <SalesforcePath
               steps={sampleSteps}
               currentStep={currentStep}
               onStageChange={async (value) => {
                 setCurrentStep(value)
               }}
-              hasError={hasError}
             />
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setHasError(!hasError)}
-              >
-                {hasError ? 'Clear error' : 'Set error on current step'}
-              </Button>
-            </div>
           </CardContent>
         </Card>
 

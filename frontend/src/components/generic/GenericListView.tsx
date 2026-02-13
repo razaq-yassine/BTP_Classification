@@ -60,8 +60,6 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
         ? `${endpoint}?${queryParams.toString()}`
         : endpoint
       
-      console.log(`🔍 Fetching ${objectDefinition.labelPlural} from endpoint: ${fullEndpoint}`)
-      console.log(`📋 Requested fields: [${fieldsToFetch.join(', ')}]`)
       const response = await api.get(fullEndpoint)
       
       const responseKey = pluralize(objectDefinition.name)
@@ -69,14 +67,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
         ? response.data
         : response.data?.[responseKey] ?? response.data?.results ?? response.data ?? []
       setRecords(records)
-      
-      console.log(`✅ Successfully loaded ${records.length} ${objectDefinition.labelPlural.toLowerCase()}`)
     } catch (err: any) {
-      console.error(`❌ Error fetching ${objectDefinition.labelPlural}:`, {
-        message: err.response?.data?.message || err.message,
-        status: err.response?.status,
-        data: err.response?.data
-      })
       setError(err.response?.data?.message || err.response?.data?.error || `Failed to fetch ${objectDefinition.labelPlural.toLowerCase()}`)
     } finally {
       setLoading(false)
@@ -130,7 +121,6 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
                 variant="destructive" 
                 onClick={() => {
                   // TODO: Implement delete functionality
-                  console.log('Delete selected items:', selectedIds)
                 }}
               >
                 <Trash2 className="mr-2 h-4 w-4" />

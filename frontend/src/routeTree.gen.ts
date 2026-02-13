@@ -35,6 +35,7 @@ import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
+import { Route as AuthenticatedDevComponentsSalesforcePathRouteImport } from './routes/_authenticated/dev-components/salesforce-path'
 import { Route as AuthenticatedDevComponentsDetailViewFormatterRouteImport } from './routes/_authenticated/dev-components/detail-view-formatter'
 import { Route as AuthenticatedObjectNameRecordIdRouteImport } from './routes/_authenticated/$objectName/$recordId'
 
@@ -175,6 +176,12 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
+const AuthenticatedDevComponentsSalesforcePathRoute =
+  AuthenticatedDevComponentsSalesforcePathRouteImport.update({
+    id: '/dev-components/salesforce-path',
+    path: '/dev-components/salesforce-path',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDevComponentsDetailViewFormatterRoute =
   AuthenticatedDevComponentsDetailViewFormatterRouteImport.update({
     id: '/dev-components/detail-view-formatter',
@@ -205,6 +212,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/$objectName/$recordId': typeof AuthenticatedObjectNameRecordIdRoute
   '/dev-components/detail-view-formatter': typeof AuthenticatedDevComponentsDetailViewFormatterRoute
+  '/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -233,6 +241,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/$objectName/$recordId': typeof AuthenticatedObjectNameRecordIdRoute
   '/dev-components/detail-view-formatter': typeof AuthenticatedDevComponentsDetailViewFormatterRoute
+  '/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -264,6 +273,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/$objectName/$recordId': typeof AuthenticatedObjectNameRecordIdRoute
   '/_authenticated/dev-components/detail-view-formatter': typeof AuthenticatedDevComponentsDetailViewFormatterRoute
+  '/_authenticated/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/$objectName/$recordId'
     | '/dev-components/detail-view-formatter'
+    | '/dev-components/salesforce-path'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/$objectName/$recordId'
     | '/dev-components/detail-view-formatter'
+    | '/dev-components/salesforce-path'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
@@ -353,6 +365,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/$objectName/$recordId'
     | '/_authenticated/dev-components/detail-view-formatter'
+    | '/_authenticated/dev-components/salesforce-path'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
@@ -566,6 +579,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
+    '/_authenticated/dev-components/salesforce-path': {
+      id: '/_authenticated/dev-components/salesforce-path'
+      path: '/dev-components/salesforce-path'
+      fullPath: '/dev-components/salesforce-path'
+      preLoaderRoute: typeof AuthenticatedDevComponentsSalesforcePathRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dev-components/detail-view-formatter': {
       id: '/_authenticated/dev-components/detail-view-formatter'
       path: '/dev-components/detail-view-formatter'
@@ -611,6 +631,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedObjectNameRecordIdRoute: typeof AuthenticatedObjectNameRecordIdRoute
   AuthenticatedDevComponentsDetailViewFormatterRoute: typeof AuthenticatedDevComponentsDetailViewFormatterRoute
+  AuthenticatedDevComponentsSalesforcePathRoute: typeof AuthenticatedDevComponentsSalesforcePathRoute
   AuthenticatedObjectNameIndexRoute: typeof AuthenticatedObjectNameIndexRoute
   AuthenticatedAppsIndexRoute: typeof AuthenticatedAppsIndexRoute
   AuthenticatedChatsIndexRoute: typeof AuthenticatedChatsIndexRoute
@@ -625,6 +646,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedObjectNameRecordIdRoute: AuthenticatedObjectNameRecordIdRoute,
   AuthenticatedDevComponentsDetailViewFormatterRoute:
     AuthenticatedDevComponentsDetailViewFormatterRoute,
+  AuthenticatedDevComponentsSalesforcePathRoute:
+    AuthenticatedDevComponentsSalesforcePathRoute,
   AuthenticatedObjectNameIndexRoute: AuthenticatedObjectNameIndexRoute,
   AuthenticatedAppsIndexRoute: AuthenticatedAppsIndexRoute,
   AuthenticatedChatsIndexRoute: AuthenticatedChatsIndexRoute,

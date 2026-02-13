@@ -7,6 +7,7 @@ import { Check, ChevronsUpDown, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import api from '@/services/api'
 import { pluralize } from '@/metadata/utils'
+import { useObjectDefinition } from '@/hooks/useObjectDefinition'
 
 // Simple debounce implementation to avoid lodash dependency
 function debounce<T extends (...args: any[]) => any>(
@@ -66,6 +67,9 @@ export function RecordLookup({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRecord, setSelectedRecord] = useState<LookupRecord | null>(null)
 
+  const { definition } = useObjectDefinition(objectName)
+  const ObjectIcon = definition?.icon
+
   // Helper function to get display name from record
   const getRecordDisplayName = (record: LookupRecord): string => {
     return record.name || record.fullName || record.full_name || record.title || (record.id != null ? `Record ${record.id}` : 'Unknown')
@@ -82,19 +86,14 @@ export function RecordLookup({
   const fetchInitialRecords = useCallback(async () => {
     try {
       setLoading(true)
-      console.log('Fetching initial records from:', endpoint)
       
       const response = await api.get(endpoint)
-      console.log('API Response:', response.data)
       
       const responseKey = pluralize(objectName)
       let recordsData = response.data?.results ?? response.data?.[responseKey] ?? (Array.isArray(response.data) ? response.data : response.data?.data) ?? []
       
-      console.log('Processed records:', recordsData)
       setRecords(recordsData)
-    } catch (error) {
-      console.error('Failed to fetch initial records:', error)
-      console.error('Endpoint:', endpoint)
+    } catch {
       setRecords([])
     } finally {
       setLoading(false)
@@ -106,12 +105,10 @@ export function RecordLookup({
     debounce(async (query: string) => {
       try {
         setLoading(true)
-        console.log('Searching records with query:', query, 'by field:', searchBy)
         
         // Use search endpoint with query parameter
         const searchEndpoint = `${endpoint}?search=${encodeURIComponent(query)}`
         const response = await api.get(searchEndpoint)
-        console.log('Search API Response:', response.data)
         
         const responseKey = pluralize(objectName)
         let recordsData = response.data?.results ?? response.data?.[responseKey] ?? (Array.isArray(response.data) ? response.data : response.data?.data) ?? []
@@ -124,11 +121,8 @@ export function RecordLookup({
           })
         }
         
-        console.log('Processed search records:', recordsData)
         setRecords(recordsData)
-      } catch (error) {
-        console.error('Failed to search records:', error)
-        console.error('Search endpoint:', endpoint, 'Query:', query)
+      } catch {
         setRecords([])
       } finally {
         setLoading(false)
@@ -142,7 +136,6 @@ export function RecordLookup({
     if (value && !selectedRecord) {
       const fetchSelectedRecord = async () => {
         try {
-          console.log('Fetching record by ID:', value)
           // Try different endpoint formats for fetching by ID
           let response
           try {
@@ -153,16 +146,11 @@ export function RecordLookup({
             response = await api.get(`${endpoint}/${value}`)
           }
           
-          console.log('Fetched record by ID:', response.data)
           setSelectedRecord(response.data)
-        } catch (error) {
-          console.error('Failed to fetch selected record:', error)
-          console.error('Endpoint:', `${endpoint}/${value}`, 'Value:', value)
-          
+        } catch {
           // If fetching by ID fails, try to find it in the current records
           const existingRecord = records.find(r => r.id === value)
           if (existingRecord) {
-            console.log('Found record in existing records:', existingRecord)
             setSelectedRecord(existingRecord)
           }
         }
@@ -174,7 +162,6 @@ export function RecordLookup({
   // Load initial records when popover opens
   useEffect(() => {
     if (open) {
-      console.log('Popover opened, loading initial records')
       setSearchQuery('') // Clear any previous search
       fetchInitialRecords()
     }
@@ -184,11 +171,9 @@ export function RecordLookup({
   useEffect(() => {
     if (open) {
       if (searchQuery.trim()) {
-        console.log('Search query changed:', searchQuery)
         setRecords([]) // Clear current records while searching
         searchRecords(searchQuery)
       } else {
-        console.log('Search cleared, loading initial records')
         fetchInitialRecords()
       }
     }
@@ -207,38 +192,47 @@ export function RecordLookup({
     onValueChange(null)
   }
 
-  const renderRecordItem = (record: LookupRecord) => {
+  const renderRecordItem = (record: LookupRecord, showIcon = true) => {
     return (
-      <div className="flex flex-col">
-        <span className="font-medium">{getRecordDisplayName(record)}</span>
-        {additionalFields.length > 0 && (
-          <div className="flex gap-2 mt-1 flex-wrap">
-            {additionalFields.map((field) => (
-              record[field.key] && (
-                <span key={field.key} className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
-                  {field.label}: {String(record[field.key])}
-                </span>
-              )
-            ))}
-          </div>
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        {showIcon && ObjectIcon && (
+          <ObjectIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
         )}
+        <div className="flex flex-col min-w-0">
+          <span className="font-medium truncate">{getRecordDisplayName(record)}</span>
+          {additionalFields.length > 0 && (
+            <div className="flex gap-2 mt-1 flex-wrap">
+              {additionalFields.map((field) => (
+                record[field.key] && (
+                  <span key={field.key} className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
+                    {field.label}: {String(record[field.key])}
+                  </span>
+                )
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 w-full">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            className={cn("justify-between flex-1", className)}
+            className={cn("justify-between flex-1 w-full", className)}
             disabled={disabled}
           >
-            <div className="flex items-center gap-2 flex-1 text-left">
-              <Search className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-2 flex-1 text-left min-w-0">
+              {selectedRecord && ObjectIcon ? (
+                <ObjectIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+              ) : (
+                <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+              )}
               {selectedRecord ? (
                 <span className="truncate">{getRecordDisplayName(selectedRecord)}</span>
               ) : (
@@ -248,7 +242,7 @@ export function RecordLookup({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-[16rem] p-0" align="start">
           <Command shouldFilter={false}>
             <CommandInput 
               placeholder={dynamicSearchPlaceholder}
@@ -273,7 +267,7 @@ export function RecordLookup({
                     >
                       <Check
                         className={cn(
-                          "mr-2 h-4 w-4",
+                          "mr-2 h-4 w-4 shrink-0",
                           value === record.id ? "opacity-100" : "opacity-0"
                         )}
                       />

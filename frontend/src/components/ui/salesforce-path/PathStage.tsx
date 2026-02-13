@@ -111,8 +111,11 @@ export function PathStage({
       onKeyDown={handleKeyDown}
       title={name}
     >
-      {status === 'done' && <span className="stage-checkmark">✓</span>}
-      <span className="stage-name">{name}</span>
+      <div className="stage-inner">
+        <span className="stage-content">
+          <span className={`stage-name ${status === 'done' ? 'stage-name--with-check' : ''}`}>{name}</span>
+        </span>
+      </div>
     </div>
   )
 }
