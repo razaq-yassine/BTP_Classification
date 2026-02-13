@@ -1,28 +1,30 @@
 # Generic SaaS Application
 
-A full-stack SaaS application with React frontend (based on shadcn-admin) and Django backend.
+A full-stack SaaS application with React frontend (based on shadcn-admin) and Hono backend.
 
 ## Project Structure
 
 ```
 generic_saas/
 ├── frontend/          # React + TypeScript frontend (Vite)
-├── backend/           # Django REST API backend
+├── backend/           # Hono REST API backend (Node.js)
+├── triggers/          # Object triggers (beforeInsert, afterUpdate, etc.)
+├── metadata/          # Object metadata (symlink to frontend/public/metadata)
 ├── .devrules          # Development rules and guidelines
 └── README.md          # This file
 ```
 
 ## Features
 
-- **Authentication**: Django session-based authentication (Clerk removed)
+- **Authentication**: JWT-based authentication
 - **Frontend**: React with TanStack Router, Zustand state management, shadcn/ui components
-- **Backend**: Django REST Framework with SQLite database
-- **Pre-populated Data**: Default users and sample customers
-- **Dashboard**: Customer data display in JSON format
+- **Backend**: Hono + Drizzle ORM with SQLite database
+- **Pre-populated Data**: Admin user and sample customers/orders
+- **Triggers**: Extensible before/after hooks for entity operations
 
 ## Quick Start
 
-### Backend (Django)
+### Backend (Hono)
 
 1. Navigate to backend directory:
    ```bash
@@ -31,18 +33,12 @@ generic_saas/
 
 2. Install dependencies:
    ```bash
-   pip install -r requirements.txt
+   pnpm install
    ```
 
-3. Run migrations and populate data:
+3. Start the development server (auto-seeds admin + sample data on first run):
    ```bash
-   python manage.py migrate
-   python manage.py populate_data
-   ```
-
-4. Start Django development server:
-   ```bash
-   python manage.py runserver 8000
+   pnpm run dev
    ```
 
 The backend will be available at `http://localhost:8000`
@@ -68,36 +64,55 @@ The frontend will be available at `http://localhost:5173`
 
 ## Default Login Credentials
 
-The application comes with pre-populated user accounts:
-
 - **Admin User**: 
   - Username: `admin`
   - Password: `admin123`
 
-- **Demo User**: 
-  - Username: `demo` 
-  - Password: `demo123`
-
 ## API Endpoints
 
-- `POST /api/auth/login/` - User login
-- `POST /api/auth/logout/` - User logout
-- `GET /api/auth/user/` - Get current user info
-- `GET /api/customers/` - Get customers list (requires authentication)
+- `POST /api/auth/login` - User login (returns JWT)
+- `GET /api/auth/me` - Get current user (requires Bearer token)
+- `GET /api/customers` - List customers (paginated)
+- `GET /api/customers/:id` - Get customer by ID
+- `POST /api/customers` - Create customer
+- `PUT /api/customers/:id` - Update customer
+- `DELETE /api/customers/:id` - Soft delete customer
+- `GET /api/orders` - List orders
+- `GET /api/orders/:id` - Get order by ID
+- `GET /api/orders/customer/:customerId` - List orders for a customer
+- `POST /api/orders` - Create order
+- `PUT /api/orders/:id` - Update order
+- `DELETE /api/orders/:id` - Soft delete order
 
 ## Application Flow
 
-1. **Landing Page**: Redirects to login if not authenticated, dashboard if authenticated
-2. **Login Page**: Pre-populated with default credentials for easy testing
-3. **Dashboard**: Displays customer data in JSON format with a simple table view
+1. **Landing Page**: Redirects to login if not authenticated
+2. **Login Page**: JWT login with admin/admin123
+3. **Dashboard**: Customer and order management with list/detail views
+
+## Database (Metadata-Driven + Migrations)
+
+The schema is generated from metadata. Workflow:
+
+1. **Edit metadata** in `metadata/objects/{name}/` (fields, types, etc.)
+2. **Generate schema** from metadata:
+   ```bash
+   cd backend && pnpm run db:generate-from-metadata
+   ```
+3. **Generate migration** from schema:
+   ```bash
+   pnpm run db:generate
+   ```
+4. **Apply migrations** (runs automatically on `pnpm run dev`)
+
+To add a new object: create metadata folder, run `db:generate-from-metadata`, add entity routes in `entities.ts`, then `db:generate`.
 
 ## Development Notes
 
-- Backend uses SQLite for simplicity (easy to configure)
-- Frontend uses session-based authentication with Django
-- CORS is configured for localhost development
-- Customer data is displayed in JSON format as requested
-- Authentication state is managed with Zustand
+- Backend uses SQLite (better-sqlite3) for simplicity
+- JWT tokens stored in localStorage
+- CORS configured for localhost:5173 and 5174
+- Triggers in `triggers/` run before/after insert/update/delete
 
 ## Technologies Used
 
@@ -110,22 +125,11 @@ The application comes with pre-populated user accounts:
 - Axios for API calls
 
 ### Backend
-- Django 4.2.7
-- Django REST Framework
-- django-cors-headers
-- SQLite database
-
-## Database Schema
-
-### User Model (Custom)
-- username, email, first_name, last_name
-- is_active, date_joined
-- Extends Django's AbstractUser
-
-### Customer Model
-- first_name, last_name, email, phone
-- company, address
-- created_at, updated_at, is_active
+- Hono (Node.js)
+- Drizzle ORM
+- better-sqlite3
+- jose (JWT)
+- bcrypt
 
 ## Troubleshooting
 
