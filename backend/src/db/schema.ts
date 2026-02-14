@@ -58,6 +58,10 @@ export const orders = sqliteTable('orders', {
 export const orderitems = sqliteTable('orderitems', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull().unique(),
+  orderId: integer('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
+  productId: integer('product_id').notNull().references(() => products.id),
+  quantity: real('quantity').notNull(),
+  unitPrice: real('unit_price').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 })

@@ -259,15 +259,110 @@ function validateListViewFile(
   errors: ValidationError[]
 ): void {
   const pathPrefix = `${objectName}/listView.json`
-  const fields = data.fields as string[] | undefined
-  if (!Array.isArray(fields)) {
-    addError(errors, pathPrefix, 'fields must be an array', 'LISTVIEW_INVALID_FIELDS')
-    return
-  }
   const keySet = new Set(fieldKeys)
-  for (const key of fields) {
-    if (keySet.has(key) || SYSTEM_FIELDS_SET.has(key)) continue
-    addError(errors, pathPrefix, `Field "${key}" does not exist in fields.json`, 'LISTVIEW_UNKNOWN_FIELD')
+  
+  // Helper to validate statistics
+  const validateStatistics = (statistics: Array<Record<string, unknown>>, statPathPrefix: string) => {
+    const validTypes = ['count', 'sum', 'avg', 'min', 'max']
+    for (let i = 0; i < statistics.length; i++) {
+      const stat = statistics[i]
+      const statPath = `${statPathPrefix}.statistics[${i}]`
+      if (!stat.key || typeof stat.key !== 'string') {
+        addError(errors, statPath, 'Missing required: key', 'STATISTICS_MISSING_KEY')
+      }
+      if (!stat.label || typeof stat.label !== 'string') {
+        addError(errors, statPath, 'Missing required: label', 'STATISTICS_MISSING_LABEL')
+      }
+      const type = stat.type as string | undefined
+      const formula = stat.formula as string | undefined
+      if (!type && !formula) {
+        // If neither type nor formula, default to count (which doesn't need a field)
+        // This is valid, so we don't error
+      } else if (type && !validTypes.includes(type)) {
+        addError(errors, statPath, `Invalid type "${type}". Must be one of: ${validTypes.join(', ')}`, 'STATISTICS_INVALID_TYPE')
+      }
+      // For sum, avg, min, max, field is required (unless using custom formula)
+      if (type && ['sum', 'avg', 'min', 'max'].includes(type)) {
+        const field = stat.field as string | undefined
+        if (!field || typeof field !== 'string') {
+          addError(errors, statPath, `Field is required for type "${type}"`, 'STATISTICS_MISSING_FIELD')
+        } else if (!keySet.has(field) && !SYSTEM_FIELDS_SET.has(field)) {
+          addError(errors, statPath, `Field "${field}" does not exist in fields.json`, 'STATISTICS_UNKNOWN_FIELD')
+        }
+      }
+    }
+  }
+
+  // Check if we have multiple views or legacy single view
+  const views = data.views as Array<Record<string, unknown>> | undefined
+  if (views && Array.isArray(views) && views.length > 0) {
+    // Multiple views format
+    const defaultView = data.defaultView as string | undefined
+    if (defaultView) {
+      const defaultViewExists = views.some((v) => v.key === defaultView)
+      if (!defaultViewExists) {
+        addError(errors, pathPrefix, `defaultView "${defaultView}" does not exist in views array`, 'LISTVIEW_INVALID_DEFAULT_VIEW')
+      }
+    }
+    
+    for (let i = 0; i < views.length; i++) {
+      const view = views[i]
+      const viewPath = `${pathPrefix}.views[${i}]`
+      
+      if (!view.key || typeof view.key !== 'string') {
+        addError(errors, viewPath, 'Missing required: key', 'VIEW_MISSING_KEY')
+      }
+      if (!view.label || typeof view.label !== 'string') {
+        addError(errors, viewPath, 'Missing required: label', 'VIEW_MISSING_LABEL')
+      }
+      
+      const fields = view.fields as string[] | undefined
+      if (!Array.isArray(fields)) {
+        addError(errors, viewPath, 'fields must be an array', 'VIEW_INVALID_FIELDS')
+      } else {
+        for (const key of fields) {
+          if (keySet.has(key) || SYSTEM_FIELDS_SET.has(key)) continue
+          addError(errors, viewPath, `Field "${key}" does not exist in fields.json`, 'VIEW_UNKNOWN_FIELD')
+        }
+      }
+      
+      // Validate statistics if present
+      const statistics = view.statistics as Array<Record<string, unknown>> | undefined
+      if (statistics !== undefined) {
+        if (!Array.isArray(statistics)) {
+          addError(errors, viewPath, 'statistics must be an array', 'VIEW_INVALID_STATISTICS')
+        } else {
+          validateStatistics(statistics, viewPath)
+        }
+      }
+      
+      // Validate type if present
+      const type = view.type as string | undefined
+      if (type && type !== 'standard' && type !== 'recentlyViewed') {
+        addError(errors, viewPath, `Invalid type "${type}". Must be "standard" or "recentlyViewed"`, 'VIEW_INVALID_TYPE')
+      }
+    }
+  } else {
+    // Legacy single view format (backward compatibility)
+    const fields = data.fields as string[] | undefined
+    if (!Array.isArray(fields)) {
+      addError(errors, pathPrefix, 'fields must be an array', 'LISTVIEW_INVALID_FIELDS')
+      return
+    }
+    for (const key of fields) {
+      if (keySet.has(key) || SYSTEM_FIELDS_SET.has(key)) continue
+      addError(errors, pathPrefix, `Field "${key}" does not exist in fields.json`, 'LISTVIEW_UNKNOWN_FIELD')
+    }
+
+    // Validate statistics if present
+    const statistics = data.statistics as Array<Record<string, unknown>> | undefined
+    if (statistics !== undefined) {
+      if (!Array.isArray(statistics)) {
+        addError(errors, pathPrefix, 'statistics must be an array', 'LISTVIEW_INVALID_STATISTICS')
+      } else {
+        validateStatistics(statistics, pathPrefix)
+      }
+    }
   }
 }
 

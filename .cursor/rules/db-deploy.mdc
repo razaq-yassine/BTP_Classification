@@ -1,0 +1,24 @@
+---
+description: Database deployment and schema migration guidance
+globs: backend/drizzle/**, backend/drizzle-temp/**, backend/scripts/generate-schema*.ts, backend/scripts/verify-schema.ts, backend/src/db/migrate.ts, frontend/public/metadata/objects/**
+alwaysApply: false
+---
+
+# Database Deployment Checklist
+
+When adding or changing metadata (objects, fields) that affect the database schema:
+
+1. **Run full deploy** — After metadata changes, always run:
+   ```bash
+   cd backend && pnpm run db:deploy
+   ```
+
+2. **Migration path** — Migrations are stored in `backend/drizzle/`. Both the schema generator (`drizzle-temp/drizzle.config.ts`) and migrate script use this folder. Do not create a `drizzle/` folder at the project root.
+
+3. **Fix pending migrations** — `db:fix-pending-migrations` runs before migrate. For any migration that only adds columns, if those columns already exist, it marks the migration as applied so `db:migrate` won't fail with "duplicate column name".
+
+4. **Verify schema** — The deploy runs `db:verify-schema` after migrations. If it fails with "missing columns", migrations did not apply. Run `pnpm run db:migrate` and check `sqlite3 data.db ".schema <table>"`.
+
+5. **"no such column" errors** — If the app returns 500 with "no such column: X", the database is out of sync. Run `db:deploy` and restart the backend. See `docs/USAGE.md#troubleshooting`.
+
+6. **Restart backend** — After deploy, restart the backend server to pick up the new schema and entity registry.

@@ -1,0 +1,10 @@
+{
+  "key": "unitPrice",
+  "label": "Unit Price",
+  "type": "number",
+  "required": true,
+  "editable": true,
+  "sortable": true,
+  "searchable": true,
+  "render": "currency"
+}

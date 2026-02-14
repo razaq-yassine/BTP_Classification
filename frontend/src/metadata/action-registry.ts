@@ -1,7 +1,7 @@
 import React from 'react'
 import { DynamicIcon, dynamicIconImports } from 'lucide-react/dynamic'
 import type { IconName } from 'lucide-react/dynamic'
-import type { ActionDefinition, CalculatedDataDefinition, GenericRecord } from '@/types/object-definition'
+import type { ActionDefinition, CalculatedDataDefinition, StatisticsCardDefinition, GenericRecord } from '@/types/object-definition'
 
 /** Convert metadata icon name (PascalCase or IconXxx) to Lucide kebab-case key */
 function toLucideKey(name: string): string {
@@ -65,6 +65,59 @@ export const calculatorHandlers: Record<string, CalculatorHandler> = {
   },
 }
 
+export type StatisticsHandler = (records: GenericRecord[], config: Record<string, unknown>) => string | number
+
+export const statisticsHandlers: Record<string, StatisticsHandler> = {
+  count: (records) => {
+    return records.length
+  },
+  sum: (records, config) => {
+    const field = (config.field as string) || ''
+    if (!field) return 0
+    return records.reduce((acc, record) => {
+      const value = parseFloat(record[field]?.toString() || '0')
+      return acc + (isNaN(value) ? 0 : value)
+    }, 0)
+  },
+  avg: (records, config) => {
+    const field = (config.field as string) || ''
+    if (!field || records.length === 0) return 0
+    const sum = records.reduce((acc, record) => {
+      const value = parseFloat(record[field]?.toString() || '0')
+      return acc + (isNaN(value) ? 0 : value)
+    }, 0)
+    return sum / records.length
+  },
+  min: (records, config) => {
+    const field = (config.field as string) || ''
+    if (!field || records.length === 0) return 0
+    const values = records
+      .map((record) => parseFloat(record[field]?.toString() || '0'))
+      .filter((v) => !isNaN(v))
+    return values.length > 0 ? Math.min(...values) : 0
+  },
+  max: (records, config) => {
+    const field = (config.field as string) || ''
+    if (!field || records.length === 0) return 0
+    const values = records
+      .map((record) => parseFloat(record[field]?.toString() || '0'))
+      .filter((v) => !isNaN(v))
+    return values.length > 0 ? Math.max(...values) : 0
+  },
+  // Sum of quantity * unitPrice (for order items / line totals)
+  lineTotalSum: (records) => {
+    return records.reduce((acc, record) => {
+      const qty = parseFloat(record.quantity?.toString() || '0')
+      const price = parseFloat(record.unitPrice?.toString() || '0')
+      return acc + (isNaN(qty) || isNaN(price) ? 0 : qty * price)
+    }, 0)
+  },
+  fallback: (records, config) => {
+    const fallback = (config.fallbackValue as string) || '0'
+    return fallback
+  },
+}
+
 export function resolveAction(
   config: { key: string; label: string; type?: string; targetField?: string; icon?: string; variant?: string }
 ): ActionDefinition {
@@ -89,6 +142,28 @@ export function resolveCalculatedData(
     label: config.label,
     calculator: (r) => (handler || calculatorHandlers.fallback)(r, config),
     format: (config.format as CalculatedDataDefinition['format']) || 'text',
+    icon: Icon,
+  }
+}
+
+export function resolveStatisticsCard(
+  config: { key: string; label: string; type?: string; field?: string; formula?: string; sourceField?: string; fallbackValue?: string; icon?: string; format?: string }
+): StatisticsCardDefinition {
+  // If formula is provided, use it (custom handler)
+  // Otherwise, use type (built-in aggregation)
+  // If neither, default to count
+  const handlerType = config.formula || config.type || 'count'
+  const handler = statisticsHandlers[handlerType] || statisticsHandlers.fallback
+  const Icon = config.icon ? getIcon(config.icon) : undefined
+  
+  return {
+    key: config.key,
+    label: config.label,
+    calculator: (records) => {
+      const result = (handler || statisticsHandlers.fallback)(records, config)
+      return result
+    },
+    format: (config.format as StatisticsCardDefinition['format']) || 'text',
     icon: Icon,
   }
 }

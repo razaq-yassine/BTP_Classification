@@ -23,6 +23,26 @@ export interface CalculatedDataDefinition {
   icon?: React.ComponentType<any>
 }
 
+export interface StatisticsCardDefinition {
+  key: string
+  label: string
+  calculator: (records: GenericRecord[]) => string | number
+  format?: 'currency' | 'percentage' | 'number' | 'text'
+  icon?: React.ComponentType<any>
+}
+
+export interface ListViewDefinition {
+  key: string
+  label: string
+  fields: string[] | FieldDefinition[]
+  defaultSort?: string
+  defaultSortOrder?: 'asc' | 'desc'
+  pageSize?: number
+  statistics?: StatisticsCardDefinition[]
+  filters?: Record<string, any> // Filter criteria (e.g., { status: { $in: ['Open', 'Pending'] } })
+  type?: 'standard' | 'recentlyViewed' // Special view types
+}
+
 export interface FieldDefinition {
   key: string
   label: string
@@ -112,11 +132,17 @@ export interface ObjectDefinition {
   
   // View configurations
   listView: {
-    fields: string[] | FieldDefinition[] // Field keys or field definitions to show in list view
+    // Legacy single view support (for backward compatibility)
+    fields?: string[] | FieldDefinition[] // Field keys or field definitions to show in list view
     defaultSort?: string // Default sort field
     defaultSortOrder?: 'asc' | 'desc'
     searchFields?: string[] // Fields to search in
     pageSize?: number
+    statistics?: StatisticsCardDefinition[] // Statistics cards to display above the table
+    
+    // Multiple views support
+    defaultView?: string // Key of the default view (first view if not specified)
+    views?: ListViewDefinition[] // Array of list view definitions
   }
   
   detailView: {

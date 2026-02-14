@@ -1,0 +1,10 @@
+{
+  "key": "quantity",
+  "label": "Quantity",
+  "type": "number",
+  "required": true,
+  "editable": true,
+  "sortable": true,
+  "searchable": true,
+  "defaultValue": 1
+}

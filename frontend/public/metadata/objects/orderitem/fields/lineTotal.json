@@ -1,0 +1,9 @@
+{
+  "key": "lineTotal",
+  "label": "Line Total",
+  "type": "formula",
+  "editable": false,
+  "sortable": false,
+  "formulaExpression": "quantity * unitPrice",
+  "render": "currency"
+}

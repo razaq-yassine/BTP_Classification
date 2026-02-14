@@ -59,12 +59,56 @@ export const fieldSchema = z.object({
   formulaExpression: z.string().optional(),
 })
 
-export const listViewSchema = z.object({
+export const statisticsCardSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  type: z.enum(['count', 'sum', 'avg', 'min', 'max']).optional(), // Built-in aggregation type
+  field: z.string().optional(), // Field to aggregate (required for sum, avg, min, max)
+  formula: z.string().optional(), // Custom formula handler (overrides type)
+  sourceField: z.string().optional(), // Source field for custom formulas
+  fallbackValue: z.string().optional(), // Fallback value if calculation fails
+  icon: z.string().optional(), // Icon name (PascalCase)
+  format: z.enum(['currency', 'percentage', 'number', 'text']).optional().default('text'),
+})
+
+export const listViewDefinitionSchema = z.object({
+  key: z.string(),
+  label: z.string(),
   fields: z.array(z.string()),
   defaultSort: z.string().optional(),
   defaultSortOrder: z.enum(['asc', 'desc']).optional(),
   pageSize: z.number().optional(),
+  statistics: z.array(statisticsCardSchema).optional(),
+  filters: z.record(z.any()).optional(), // Filter criteria (e.g., { status: { $in: ['Open'] } })
+  type: z.enum(['standard', 'recentlyViewed']).optional().default('standard'),
 })
+
+export const listViewSchema = z.object({
+  // Legacy single view support (backward compatible)
+  fields: z.array(z.string()).optional(),
+  defaultSort: z.string().optional(),
+  defaultSortOrder: z.enum(['asc', 'desc']).optional(),
+  pageSize: z.number().optional(),
+  statistics: z.array(statisticsCardSchema).optional(),
+  
+  // Multiple views support
+  defaultView: z.string().optional(),
+  views: z.array(listViewDefinitionSchema).optional(),
+}).refine(
+  (data) => {
+    // Either have legacy fields OR views array, but not both
+    if (data.views && data.views.length > 0) {
+      return true // views takes precedence
+    }
+    if (data.fields && data.fields.length > 0) {
+      return true // legacy format is valid
+    }
+    return false // Must have either views or fields
+  },
+  {
+    message: 'Must have either "views" array or legacy "fields" array',
+  }
+)
 
 export const detailViewSectionSchema = z.object({
   title: z.string(),

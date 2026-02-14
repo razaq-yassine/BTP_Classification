@@ -1,0 +1,40 @@
+---
+description: Update usage documentation when metadata changes
+globs: backend/src/metadata/**, shared/protected-metadata.ts, frontend/src/metadata/schemas.ts, frontend/public/metadata/**, frontend/src/components/generic/ListViewFieldFormatter.tsx, frontend/src/components/generic/GenericDetailInputFormatter.tsx, frontend/src/metadata/action-registry.ts
+alwaysApply: false
+---
+
+# Metadata Usage Documentation Rule
+
+When you add or change metadata-driven features, **you MUST update `docs/USAGE.md`** so the usage guide stays accurate.
+
+## When to Update USAGE.md
+
+Update `docs/USAGE.md` when you:
+
+1. **Add a new field type** → Add it to the [Field Types Reference](#field-types-reference) table and document any special properties (e.g. `formulaExpression` for formula, `options` for select).
+
+2. **Add a new field property** (e.g. `defaultValue`, `useInPath`, `relationshipType`) → Add it to the [Field Properties](#field-properties) table and add an example if it changes how to configure a field.
+
+3. **Add a new metadata file type** (e.g. `header.json`, `relatedObjects.json`) → Add a section explaining the file structure, required/optional properties, and examples.
+
+4. **Change validation rules** → Update the [Validation & Deployment](#validation--deployment) section and any affected examples.
+
+5. **Add a new metadata feature** (e.g. statistics cards, Path, calculated data) → Document the configuration format, supported values, and where it applies (list view, detail view, header).
+
+6. **Change object.json, listView.json, or detailView.json schema** → Update the relevant sections and property tables.
+
+## What to Update
+
+- **Field Types Reference**: Add new types with DB column and notes.
+- **Field Properties**: Add new properties with type and description.
+- **Examples**: Add or update JSON examples so they reflect current schema.
+- **Validation rules**: Keep the validation summary in sync with `backend/src/metadata/validate.ts`.
+
+## Checklist
+
+Before considering a metadata change complete:
+
+- [ ] Code changes are done (schemas, validation, formatters, etc.)
+- [ ] `docs/USAGE.md` has been updated to document the new or changed behavior
+- [ ] Examples in USAGE.md are valid and match the current schema

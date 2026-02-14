@@ -67,7 +67,7 @@ function toRecord(
     if (refKey) {
       base[refKey] =
         joinedRow.id != null
-          ? { id: joinedRow.id, firstName: joinedRow.firstName, lastName: joinedRow.lastName, email: joinedRow.email }
+          ? { id: joinedRow.id, ...joinedRow }
           : null
     }
   }
@@ -145,6 +145,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     for (const [subPath, { filterColumn }] of Object.entries(relatedListPaths)) {
       const filterCol = (table as any)[filterColumn]
       entityRoutes.get(`/${entityPath}/${subPath}/:parentId`, async (c) => {
+        try {
         const parentId = Number(c.req.param('parentId'))
         const page = Math.max(0, Number(c.req.query('page')) || 0)
         const size = Math.min(100, Math.max(1, Number(c.req.query('size')) || 10))
@@ -198,54 +199,66 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
           : (slice as Record<string, unknown>[]).map((r) => toRecord(r, null, config, requestedFields))
 
         return c.json({ [entityPath]: result, count: total, totalPages, currentPage: page })
+        } catch (err) {
+          console.error(`GET ${entityPath}/${subPath}/:parentId error:`, err)
+          return c.json({ message: (err as Error).message || 'Internal server error' }, 500)
+        }
       })
     }
   }
 
   entityRoutes.get(`/${entityPath}`, async (c) => {
-    const page = Math.max(0, Number(c.req.query('page')) || 0)
-    const size = Math.min(100, Math.max(1, Number(c.req.query('size')) || 10))
-    const search = c.req.query('search')?.trim()
-    const fieldsParam = c.req.query('fields')
-    const requestedFields = fieldsParam ? fieldsParam.split(',').map((f) => f.trim().toLowerCase()) : null
+    try {
+      const page = Math.max(0, Number(c.req.query('page')) || 0)
+      const size = Math.min(100, Math.max(1, Number(c.req.query('size')) || 10))
+      const search = c.req.query('search')?.trim()
+      const fieldsParam = c.req.query('fields')
+      const requestedFields = fieldsParam ? fieldsParam.split(',').map((f) => f.trim().toLowerCase()) : null
 
-    let rows: unknown[]
+      let rows: unknown[]
 
-    if (join) {
-      const j = join as JoinConfig
-      const result = await db
-        .select({ main: table, joined: j.joinTable as any })
-        .from(table)
-        .leftJoin(j.joinTable as any, eq(j.leftColumn as any, j.rightColumn as any))
-        .orderBy(desc(orderCol as any))
-      rows = result as any
-    } else {
-      const whereCond = search && searchFields.length > 0 ? or(...searchFields.map((f: any) => like(f, `%${search}%`)))! : undefined
-      const q = db.select().from(table).orderBy(desc(orderCol as any))
-      rows = (await (whereCond ? q.where(whereCond) : q)) as any
-    }
+      if (join) {
+        const j = join as JoinConfig
+        const result = await db
+          .select({ main: table, joined: j.joinTable as any })
+          .from(table)
+          .leftJoin(j.joinTable as any, eq(j.leftColumn as any, j.rightColumn as any))
+          .orderBy(desc(orderCol as any))
+        rows = result as any
+      } else {
+        const whereCond = search && searchFields.length > 0 ? or(...searchFields.map((f: any) => like(f, `%${search}%`)))! : undefined
+        const q = db.select().from(table).orderBy(desc(orderCol as any))
+        rows = (await (whereCond ? q.where(whereCond) : q)) as any
+      }
 
-    let filtered = rows
-    if (search && join) {
-      const s = search.toLowerCase()
-      filtered = (rows as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>).filter(
-        (r) =>
-          Object.values(r.main || r).some((v) => String(v ?? '').toLowerCase().includes(s)) ||
-          (r.joined && Object.values(r.joined).some((v) => String(v ?? '').toLowerCase().includes(s)))
+      let filtered = rows
+      if (search && join) {
+        const s = search.toLowerCase()
+        filtered = (rows as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>).filter(
+          (r) =>
+            Object.values(r.main || r).some((v) => String(v ?? '').toLowerCase().includes(s)) ||
+            (r.joined && Object.values(r.joined).some((v) => String(v ?? '').toLowerCase().includes(s)))
+        )
+      }
+
+      const total = filtered.length
+      const totalPages = Math.ceil(total / size)
+      const slice = filtered.slice(page * size, page * size + size)
+
+      const result = join
+        ? (slice as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>).map((r) =>
+            toRecord(r.main || (r as Record<string, unknown>), r.joined || null, config, requestedFields)
+          )
+        : (slice as Record<string, unknown>[]).map((r) => toRecord(r, null, config, requestedFields))
+
+      return c.json({ [entityPath]: result, count: total, totalPages, currentPage: page })
+    } catch (err) {
+      console.error(`GET ${entityPath} error:`, err)
+      return c.json(
+        { message: (err as Error).message || 'Internal server error' },
+        500
       )
     }
-
-    const total = filtered.length
-    const totalPages = Math.ceil(total / size)
-    const slice = filtered.slice(page * size, page * size + size)
-
-    const result = join
-      ? (slice as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>).map((r) =>
-          toRecord(r.main || (r as Record<string, unknown>), r.joined || null, config, requestedFields)
-        )
-      : (slice as Record<string, unknown>[]).map((r) => toRecord(r, null, config, requestedFields))
-
-    return c.json({ [entityPath]: result, count: total, totalPages, currentPage: page })
   })
 
   entityRoutes.get(`/${entityPath}/:id`, async (c) => {

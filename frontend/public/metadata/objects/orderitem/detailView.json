@@ -2,22 +2,16 @@
   "layout": "two-column",
   "sections": [
     {
-      "title": "Basic Information",
+      "title": "Line Item Details",
       "columns": 2,
       "defaultOpen": true,
-      "fields": [
-        "name"
-      ]
+      "fields": ["name", "order", "product", "quantity", "unitPrice", "lineTotal"]
     },
     {
       "title": "System Information",
       "columns": 2,
       "defaultOpen": false,
-      "fields": [
-        "id",
-        "createdAt",
-        "updatedAt"
-      ]
+      "fields": ["id", "createdAt", "updatedAt"]
     }
   ]
 }

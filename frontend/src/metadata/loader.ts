@@ -5,9 +5,11 @@ import type {
   RelatedObjectDefinition,
   ActionDefinition,
   CalculatedDataDefinition,
+  StatisticsCardDefinition,
+  ListViewDefinition,
   PathDefinition,
 } from '@/types/object-definition'
-import { getIcon, resolveAction, resolveCalculatedData } from './action-registry'
+import { getIcon, resolveAction, resolveCalculatedData, resolveStatisticsCard } from './action-registry'
 import { objectSchema, fieldSchema } from './schemas'
 import { SYSTEM_FIELD_LABELS } from '@shared/protected-metadata'
 
@@ -39,17 +41,59 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
   objectSchema.parse(objectData)
   const fieldsMap = new Map<string, FieldDefinition>(fieldsData.map((f) => [f.key, f]))
 
-  const listViewFields = (listViewData.fields as string[]) || []
-  const resolvedListViewFields = listViewFields.map((key) => {
-    const field = fieldsMap.get(key)
-    if (field) return field
-    const fallbackType =
-      key === 'createdAt' || key === 'updatedAt'
-          ? ('datetime' as const)
-          : ('string' as const)
-    const label = getSystemFieldLabel(key)
-    return { key, label, type: fallbackType }
-  })
+  // Helper function to resolve field keys to FieldDefinitions
+  const resolveFieldKeys = (fieldKeys: string[]): FieldDefinition[] => {
+    return fieldKeys.map((key) => {
+      const field = fieldsMap.get(key)
+      if (field) return field
+      const fallbackType =
+        key === 'createdAt' || key === 'updatedAt'
+            ? ('datetime' as const)
+            : ('string' as const)
+      const label = getSystemFieldLabel(key)
+      return { key, label, type: fallbackType }
+    })
+  }
+
+  // Helper function to resolve statistics cards
+  const resolveStatistics = (statisticsData: Array<Record<string, unknown>>): StatisticsCardDefinition[] => {
+    return statisticsData.map((config) =>
+      resolveStatisticsCard(config as Parameters<typeof resolveStatisticsCard>[0])
+    )
+  }
+
+  // Check if we have multiple views or legacy single view
+  const viewsData = listViewData.views as Array<Record<string, unknown>> | undefined
+  let resolvedViews: ListViewDefinition[] | undefined
+  let defaultView: string | undefined
+  let resolvedListViewFields: FieldDefinition[] = []
+  let resolvedStatistics: StatisticsCardDefinition[] = []
+
+  if (viewsData && viewsData.length > 0) {
+    // Multiple views format
+    resolvedViews = viewsData.map((viewConfig) => {
+      const viewFields = (viewConfig.fields as string[]) || []
+      const viewStatistics = (viewConfig.statistics as Array<Record<string, unknown>>) || []
+      return {
+        key: viewConfig.key as string,
+        label: viewConfig.label as string,
+        fields: resolveFieldKeys(viewFields),
+        defaultSort: viewConfig.defaultSort as string | undefined,
+        defaultSortOrder: viewConfig.defaultSortOrder as 'asc' | 'desc' | undefined,
+        pageSize: viewConfig.pageSize as number | undefined,
+        statistics: resolveStatistics(viewStatistics).length > 0 ? resolveStatistics(viewStatistics) : undefined,
+        filters: viewConfig.filters as Record<string, any> | undefined,
+        type: (viewConfig.type as 'standard' | 'recentlyViewed') || 'standard',
+      }
+    })
+    defaultView = (listViewData.defaultView as string) || resolvedViews[0]?.key
+  } else {
+    // Legacy single view format (backward compatibility)
+    const listViewFields = (listViewData.fields as string[]) || []
+    resolvedListViewFields = resolveFieldKeys(listViewFields)
+    const statisticsData = (listViewData.statistics as Array<Record<string, unknown>>) || []
+    resolvedStatistics = resolveStatistics(statisticsData)
+  }
 
   const detailSections = (detailViewData.sections as Array<{ title: string; columns?: number; defaultOpen?: boolean; fields: string[] }>) || []
   const resolvedDetailSections = detailSections.map((section) => ({
@@ -160,10 +204,15 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
     basePath: objectData.basePath as string | undefined,
     detailPath: objectData.detailPath as string | undefined,
     listView: {
-      fields: resolvedListViewFields,
+      // Legacy single view (backward compatibility)
+      fields: resolvedListViewFields.length > 0 ? resolvedListViewFields : undefined,
       defaultSort: listViewData.defaultSort as string | undefined,
       defaultSortOrder: listViewData.defaultSortOrder as 'asc' | 'desc' | undefined,
       pageSize: listViewData.pageSize as number | undefined,
+      statistics: resolvedStatistics.length > 0 ? resolvedStatistics : undefined,
+      // Multiple views
+      defaultView,
+      views: resolvedViews,
     },
     detailView: {
       layout: detailViewData.layout as ObjectDefinition['detailView']['layout'],

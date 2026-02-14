@@ -9,6 +9,7 @@ alwaysApply: false
 When adding or changing metadata-driven features:
 
 1. **New field type** → Add to `VALID_FIELD_TYPES` in `backend/src/metadata/validate.ts` AND to `fieldSchema` in `frontend/src/metadata/schemas.ts`. **Also ensure the field type is handled in both views:**
+
    - **List view**: Add a `case` in `ListViewFieldFormatter` (`frontend/src/components/generic/ListViewFieldFormatter.tsx`) for formatting and display
    - **Detail view**: Add a `case` in `GenericDetailInputFormatter` (`frontend/src/components/generic/GenericDetailInputFormatter.tsx`) for edit mode, and ensure `formatValue` in `GenericObjectDetailViewMainSection.tsx` handles read-only display
    - **Dev preview**: Add the new field type to the dev-components detail view formatter (`frontend/src/routes/_authenticated/dev-components/detail-view-formatter.tsx`) in both the edit-mode examples and the read-only preview section
@@ -25,3 +26,5 @@ When adding or changing metadata-driven features:
 6. **Computed fields** → Validate `computedExpression` is one of concat|join|lookup, `sourceFields` exist, `referenceField` valid for join
 
 7. **New object.json property** → Add check in `validateObjectFile()`
+
+8. **Documentation** → Update `docs/USAGE.md` when adding new field types, metadata files, or configuration options. See `.cursor/rules/metadata-usage-docs.mdc`.

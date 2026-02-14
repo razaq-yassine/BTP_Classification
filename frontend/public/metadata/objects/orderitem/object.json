@@ -1,8 +1,8 @@
 {
   "name": "orderitem",
   "label": "Order Item",
-  "labelPlural": "Orderitems",
-  "description": "",
+  "labelPlural": "Order Items",
+  "description": "Line items for orders - products, quantities, and prices",
   "apiEndpoint": "/api/orderitems",
   "basePath": "/orderitems",
   "detailPath": "/orderitems/$orderitemId",
@@ -10,6 +10,7 @@
   "color": "blue",
   "sidebar": {
     "showInSidebar": true,
-    "group": "Data"
+    "group": "Data",
+    "parent": "Sales"
   }
 }

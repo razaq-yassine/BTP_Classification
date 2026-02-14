@@ -1,0 +1,10 @@
+{
+  "key": "product",
+  "label": "Product",
+  "type": "reference",
+  "objectName": "product",
+  "required": true,
+  "editable": true,
+  "sortable": true,
+  "searchable": true
+}

@@ -69,7 +69,7 @@ function loadObjectMetadata(objectName: string): { object: Record<string, unknow
     const fieldPath = path.join(objPath, 'fields', `${key}.json`)
     if (!fs.existsSync(fieldPath)) continue
     const fd = JSON.parse(fs.readFileSync(fieldPath, 'utf-8')) as FieldDef
-    if (fd.computed) continue
+    if (fd.computed || fd.type === 'formula') continue
     fields.push(fd)
   }
 
@@ -257,7 +257,7 @@ function generateEntityRegistry(objectDirs: string[]) {
     const tableName = (object.tableName as string) || pluralize(objectName)
     imports.add(tableName)
 
-    const searchableFields = fields.filter((f) => f.type !== 'reference')
+    const searchableFields = fields.filter((f) => f.type !== 'reference' && f.type !== 'formula')
     const searchFieldRefs = searchableFields
       .filter((f) => (f as any).searchable !== false)
       .map((f) => `${tableName}.${f.key}`)

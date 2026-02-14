@@ -9,8 +9,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { GenericDataTable } from './GenericDataTable'
 import { GenericListViewSkeleton } from './GenericListViewSkeleton'
 import { GenericCreateDialog } from './GenericCreateDialog'
+import { StatisticsCards } from './StatisticsCards'
+import { ListViewSwitcher } from './ListViewSwitcher'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Plus, Trash2 } from 'lucide-react'
+import type { ListViewDefinition } from '@/types/object-definition'
 import api from '@/services/api'
 import { Main } from '@/components/layout/main'
 import { isNetworkError } from '@/utils/handle-server-error'
@@ -18,6 +21,58 @@ import { isNetworkError } from '@/utils/handle-server-error'
 interface GenericListViewProps {
   objectDefinition: ObjectDefinition
   basePath?: string
+}
+
+// Helper to get recently viewed record IDs from localStorage
+function getRecentlyViewedIds(objectName: string): string[] {
+  try {
+    const key = `recentlyViewed_${objectName}`
+    const stored = localStorage.getItem(key)
+    if (!stored) return []
+    const data = JSON.parse(stored)
+    // Return IDs in reverse order (most recent first), limit to last 50
+    return Array.isArray(data) ? data.slice(-50).reverse() : []
+  } catch {
+    return []
+  }
+}
+
+// Helper to get/set active view from localStorage
+function getStoredViewKey(objectName: string): string | null {
+  try {
+    return localStorage.getItem(`listView_${objectName}`)
+  } catch {
+    return null
+  }
+}
+
+function setStoredViewKey(objectName: string, viewKey: string): void {
+  try {
+    localStorage.setItem(`listView_${objectName}`, viewKey)
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
+// Helper to get/set pinned (default) view from localStorage
+function getPinnedViewKey(objectName: string): string | null {
+  try {
+    return localStorage.getItem(`listViewPinned_${objectName}`)
+  } catch {
+    return null
+  }
+}
+
+function setPinnedViewKey(objectName: string, viewKey: string | null): void {
+  try {
+    if (viewKey) {
+      localStorage.setItem(`listViewPinned_${objectName}`, viewKey)
+    } else {
+      localStorage.removeItem(`listViewPinned_${objectName}`)
+    }
+  } catch {
+    // Ignore localStorage errors
+  }
 }
 
 export function GenericListView({ objectDefinition, basePath }: GenericListViewProps) {
@@ -34,6 +89,28 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
   const [deleteCounter, setDeleteCounter] = useState(0)
   const initialLoadDone = useRef(false)
 
+  // Determine active view
+  const views = objectDefinition.listView?.views
+  const hasMultipleViews = views && views.length > 1
+  const metadataDefaultView = objectDefinition.listView?.defaultView || (views?.[0]?.key)
+  const pinnedViewKey = getPinnedViewKey(objectDefinition.name)
+  const storedViewKey = getStoredViewKey(objectDefinition.name)
+  const defaultViewKey = pinnedViewKey || metadataDefaultView || (views?.[0]?.key)
+  const [activeViewKey, setActiveViewKey] = useState<string>(
+    storedViewKey || defaultViewKey || ''
+  )
+  const [pinnedView, setPinnedView] = useState<string | null>(pinnedViewKey)
+
+  // Get active view configuration
+  const activeView: ListViewDefinition | undefined = views?.find((v) => v.key === activeViewKey)
+  const currentListView = activeView || {
+    fields: objectDefinition.listView?.fields || [],
+    defaultSort: objectDefinition.listView?.defaultSort,
+    defaultSortOrder: objectDefinition.listView?.defaultSortOrder,
+    pageSize: objectDefinition.listView?.pageSize,
+    statistics: objectDefinition.listView?.statistics,
+  } as ListViewDefinition
+
   // Debounce search to avoid refetch on every keystroke (prevents focus loss)
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300)
@@ -41,13 +118,25 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
   }, [searchTerm])
 
   const prevObjectName = useRef<string | null>(null)
+  const prevViewKey = useRef<string | null>(null)
+  
   useEffect(() => {
     if (prevObjectName.current !== objectDefinition.name) {
       initialLoadDone.current = false
       prevObjectName.current = objectDefinition.name
+      // Reset to stored/pinned/default view when switching objects
+      const stored = getStoredViewKey(objectDefinition.name)
+      const pinned = getPinnedViewKey(objectDefinition.name)
+      const defaultKey = pinned || objectDefinition.listView?.defaultView || (views?.[0]?.key)
+      setActiveViewKey(stored || defaultKey || '')
+      setPinnedView(pinned)
+    }
+    if (prevViewKey.current !== activeViewKey) {
+      prevViewKey.current = activeViewKey
+      initialLoadDone.current = false
     }
     fetchRecords()
-  }, [objectDefinition, debouncedSearch])
+  }, [objectDefinition, debouncedSearch, activeViewKey])
 
   const fetchRecords = async () => {
     try {
@@ -56,16 +145,68 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
       }
       setError(null)
       
-      // Ensure the endpoint doesn't have a trailing slash
+      // Handle recently viewed view type
+      if (activeView?.type === 'recentlyViewed') {
+        const recentIds = getRecentlyViewedIds(objectDefinition.name)
+        if (recentIds.length === 0) {
+          setRecords([])
+          setLoading(false)
+          initialLoadDone.current = true
+          return
+        }
+        // Fetch records by IDs
+        const endpoint = objectDefinition.apiEndpoint.endsWith('/') 
+          ? objectDefinition.apiEndpoint.slice(0, -1) 
+          : objectDefinition.apiEndpoint
+        
+        const fieldsToFetch = ['id']
+        if (currentListView.fields) {
+          currentListView.fields.forEach(field => {
+            const fieldKey = typeof field === 'string' ? field : field.key
+            if (fieldKey && !fieldsToFetch.includes(fieldKey)) {
+              fieldsToFetch.push(fieldKey)
+            }
+          })
+        }
+        
+        const queryParams = new URLSearchParams()
+        queryParams.append('ids', recentIds.join(','))
+        if (fieldsToFetch.length > 1) {
+          queryParams.append('fields', fieldsToFetch.join(','))
+        }
+        
+        const fullEndpoint = `${endpoint}?${queryParams.toString()}`
+        const response = await api.get(fullEndpoint)
+        
+        const responseKey = pluralize(objectDefinition.name)
+        let fetchedRecords = Array.isArray(response.data)
+          ? response.data
+          : response.data?.[responseKey] ?? response.data?.results ?? response.data ?? []
+        
+        // Sort by recently viewed order
+        const idOrder = new Map(recentIds.map((id, idx) => [id, idx]))
+        fetchedRecords.sort((a, b) => {
+          const aIdx = idOrder.get(String(a.id)) ?? Infinity
+          const bIdx = idOrder.get(String(b.id)) ?? Infinity
+          return aIdx - bIdx
+        })
+        
+        setRecords(fetchedRecords)
+        setLoading(false)
+        initialLoadDone.current = true
+        return
+      }
+      
+      // Standard fetch with filters
       const endpoint = objectDefinition.apiEndpoint.endsWith('/') 
         ? objectDefinition.apiEndpoint.slice(0, -1) 
         : objectDefinition.apiEndpoint
       
-      // Extract field keys from listView configuration to optimize API call
+      // Extract field keys from current view configuration
       const fieldsToFetch = ['id'] // Always include ID for navigation
       
-      if (objectDefinition.listView?.fields) {
-        objectDefinition.listView.fields.forEach(field => {
+      if (currentListView.fields) {
+        currentListView.fields.forEach(field => {
           const fieldKey = typeof field === 'string' ? field : field.key
           if (fieldKey && !fieldsToFetch.includes(fieldKey)) {
             fieldsToFetch.push(fieldKey)
@@ -73,15 +214,30 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
         })
       }
       
-      // Build query parameters to only fetch required fields
+      // Build query parameters
       const queryParams = new URLSearchParams()
       if (fieldsToFetch.length > 1) { // More than just 'id'
         queryParams.append('fields', fieldsToFetch.join(','))
       }
-      const pageSize = Math.max(objectDefinition.listView?.pageSize ?? 50, 50)
+      const pageSize = Math.max(currentListView.pageSize ?? objectDefinition.listView?.pageSize ?? 50, 50)
       queryParams.append('size', String(pageSize))
       if (debouncedSearch.trim()) {
         queryParams.append('search', debouncedSearch.trim())
+      }
+      
+      // Apply filters from view configuration
+      if (activeView?.filters) {
+        queryParams.append('filters', JSON.stringify(activeView.filters))
+      }
+      
+      // Apply default sort from view
+      const sortField = currentListView.defaultSort || objectDefinition.listView?.defaultSort
+      const sortOrder = currentListView.defaultSortOrder || objectDefinition.listView?.defaultSortOrder
+      if (sortField) {
+        queryParams.append('sort', sortField)
+        if (sortOrder) {
+          queryParams.append('order', sortOrder)
+        }
       }
       
       const fullEndpoint = `${endpoint}?${queryParams.toString()}`
@@ -89,9 +245,15 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
       const response = await api.get(fullEndpoint)
       
       const responseKey = pluralize(objectDefinition.name)
-      const records = Array.isArray(response.data)
+      let records = Array.isArray(response.data)
         ? response.data
         : response.data?.[responseKey] ?? response.data?.results ?? response.data ?? []
+      
+      // Apply client-side filtering (backend doesn't support filters query param)
+      if (activeView?.filters) {
+        records = applyClientSideFilters(records, activeView.filters)
+      }
+      
       setRecords(records)
     } catch (err: any) {
       const msg = isNetworkError(err)
@@ -104,7 +266,65 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
     }
   }
 
+  // Helper to apply client-side filters (fallback when server doesn't support filters)
+  const applyClientSideFilters = (records: GenericRecord[], filters: Record<string, any>): GenericRecord[] => {
+    return records.filter((record) => {
+      for (const [field, condition] of Object.entries(filters)) {
+        const value = record[field]
+        const valueStr = String(value ?? '').toUpperCase()
+        
+        if (condition && typeof condition === 'object') {
+          if (condition.$in && Array.isArray(condition.$in)) {
+            // Case-insensitive comparison for $in
+            const conditionValues = condition.$in.map((v: any) => String(v).toUpperCase())
+            if (!conditionValues.includes(valueStr)) return false
+          } else if (condition.$eq !== undefined) {
+            // Case-insensitive comparison for $eq
+            if (valueStr !== String(condition.$eq).toUpperCase()) return false
+          } else if (condition.$ne !== undefined) {
+            // Case-insensitive comparison for $ne
+            if (valueStr === String(condition.$ne).toUpperCase()) return false
+          }
+        } else {
+          // Case-insensitive comparison for direct value
+          if (valueStr !== String(condition).toUpperCase()) return false
+        }
+      }
+      return true
+    })
+  }
+
+  const handleViewChange = (viewKey: string) => {
+    setActiveViewKey(viewKey)
+    setStoredViewKey(objectDefinition.name, viewKey)
+  }
+
+  const handlePinChange = (viewKey: string | null) => {
+    setPinnedView(viewKey)
+    setPinnedViewKey(objectDefinition.name, viewKey)
+    if (viewKey) {
+      setActiveViewKey(viewKey)
+      setStoredViewKey(objectDefinition.name, viewKey)
+    }
+  }
+
   const handleViewRecord = (record: GenericRecord) => {
+    // Track recently viewed
+    try {
+      const key = `recentlyViewed_${objectDefinition.name}`
+      const stored = localStorage.getItem(key)
+      const recentIds = stored ? JSON.parse(stored) : []
+      const recordId = String(record.id)
+      // Remove if already exists, then add to end
+      const filtered = recentIds.filter((id: string) => id !== recordId)
+      filtered.push(recordId)
+      // Keep only last 50
+      const trimmed = filtered.slice(-50)
+      localStorage.setItem(key, JSON.stringify(trimmed))
+    } catch {
+      // Ignore localStorage errors
+    }
+
     if (objectDefinition.detailPath) {
       const idPlaceholder = `$${objectDefinition.name}Id`
       const detailPath = objectDefinition.detailPath.replace(idPlaceholder, record.id.toString())
@@ -170,12 +390,44 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
     <>
       <Main className="px-4">
         <div className="flex items-center gap-4 mb-6">
-          <h1 className="text-2xl font-bold tracking-tight shrink-0">
-            {objectDefinition.labelPlural}
-            <span className="text-muted-foreground font-normal ml-2">
-              ({records.length})
-            </span>
-          </h1>
+          <div className="flex-1 min-w-0">
+            {hasMultipleViews ? (
+              <ListViewSwitcher
+                objectLabelPlural={objectDefinition.labelPlural}
+                objectIcon={objectDefinition.icon}
+                views={views!}
+                activeViewKey={activeViewKey}
+                recordCount={records.length}
+                onViewChange={handleViewChange}
+                pinnedViewKey={pinnedView}
+                onPinChange={handlePinChange}
+              />
+            ) : (
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-muted-foreground">{objectDefinition.labelPlural}</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    {(() => {
+                      const Icon = objectDefinition.icon
+                      return Icon ? (
+                        <Icon className="h-5 w-5" />
+                      ) : (
+                        <div className="h-5 w-5 rounded bg-primary-foreground/30" />
+                      )
+                    })()}
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold tracking-tight">
+                      {views?.[0]?.label ?? objectDefinition.labelPlural}
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                      {records.length === 1 ? '1 item' : `${records.length} items`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           <Input
             placeholder={`Search ${objectDefinition.labelPlural.toLowerCase()}...`}
             value={searchTerm}
@@ -199,6 +451,14 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
           </div>
         </div>
 
+        {/* Statistics Cards */}
+        {(currentListView.statistics || objectDefinition.listView?.statistics) && (
+          <StatisticsCards
+            statistics={currentListView.statistics || objectDefinition.listView?.statistics || []}
+            records={records}
+          />
+        )}
+
         <div className='flex-1 overflow-auto'>
           {error ? (
             <Alert variant="destructive">
@@ -213,9 +473,18 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
             </Alert>
           ) : (
             <GenericDataTable
-              key={`${objectDefinition.name}-${deleteCounter}`}
+              key={`${objectDefinition.name}-${activeViewKey}-${deleteCounter}`}
               data={records}
-              objectDefinition={objectDefinition}
+              objectDefinition={{
+                ...objectDefinition,
+                listView: {
+                  ...objectDefinition.listView,
+                  fields: currentListView.fields,
+                  defaultSort: currentListView.defaultSort,
+                  defaultSortOrder: currentListView.defaultSortOrder,
+                  pageSize: currentListView.pageSize,
+                },
+              }}
               isLoading={loading}
               onRowClick={handleViewRecord}
               onSelectionChange={handleTableSelectionChange}
