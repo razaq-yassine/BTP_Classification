@@ -53,6 +53,8 @@ export const fieldSchema = z.object({
   computed: z.boolean().optional(),
   autoNumberPattern: z.string().optional(),
   autoNumberStart: z.number().optional(),
+  /** Pre-fill value when creating new records. Type should match field type (string, number, boolean, or array for multiselect). */
+  defaultValue: z.union([z.string(), z.number(), z.boolean(), z.array(z.string())]).optional(),
 })
 
 export const listViewSchema = z.object({

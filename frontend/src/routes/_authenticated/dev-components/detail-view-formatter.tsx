@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { GenericDetailInputFormatter } from '@/components/generic/GenericDetailInputFormatter'
 import { FieldDefinition } from '@/types/object-definition'
+import { formatDetailValue } from '@/utils/formatDetailValue'
 import { AlertTriangle } from 'lucide-react'
 
 export const Route = createFileRoute('/_authenticated/dev-components/detail-view-formatter')({
@@ -16,15 +17,17 @@ function DetailViewFormatterPage() {
   // Sample data for each field type
   const [formData, setFormData] = useState({
     text: 'Sample text value',
-    email: '',
-    phone: '+212 ',
+    email: 'test@example.com',
+    phone: '+212 612345678',
     number: 42,
+    numberPercent: 0.85,
     date: '2024-01-15',
-    datetime: '2024-01-15T14:30',
+    datetime: '2024-01-15T14:30:00',
     boolean: true,
-    select: '',
+    select: 'option2',
     multiselect: ['option1', 'option3'],
-    reference: 2,
+    url: 'https://example.com',
+    reference: { id: 2, name: 'Sample Record', fullName: 'Sample Record' },
     importantField: '',
     anotherImportantField: 'This has a value',
   })
@@ -65,6 +68,13 @@ function DetailViewFormatterPage() {
       isRequired: true,
     },
     {
+      key: 'numberPercent',
+      label: 'Number (Percent)',
+      type: 'number',
+      required: false,
+      renderType: 'percent',
+    },
+    {
       key: 'date',
       label: 'Date Field (Can be cleared)',
       type: 'date',
@@ -80,6 +90,12 @@ function DetailViewFormatterPage() {
       key: 'boolean',
       label: 'Boolean Field',
       type: 'boolean',
+      required: false,
+    },
+    {
+      key: 'url',
+      label: 'URL Field',
+      type: 'url',
       required: false,
     },
     {
@@ -217,6 +233,28 @@ function DetailViewFormatterPage() {
               Submit Form (Test Important Fields Popup)
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Read-only Preview (formatDetailValue)</CardTitle>
+          <p className="text-sm text-muted-foreground font-normal">
+            How each field type displays in read-only detail view. Add new field types here when implementing.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {fieldDefinitions.map((fieldDef) => (
+            <div key={fieldDef.key} className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">{fieldDef.label}</span>
+                <span className="text-xs text-muted-foreground">({fieldDef.type})</span>
+              </div>
+              <div className="text-sm text-foreground rounded-md border bg-muted/30 px-3 py-2">
+                {formatDetailValue(fieldDef, formData[fieldDef.key as keyof typeof formData])}
+              </div>
+            </div>
+          ))}
         </CardContent>
       </Card>
 

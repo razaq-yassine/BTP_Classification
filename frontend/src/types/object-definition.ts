@@ -46,6 +46,8 @@ export interface FieldDefinition {
   renderType?: string // Preserved string from metadata (e.g. 'currency', 'statusBadge') for list formatting
   autoNumberPattern?: string // e.g. MSG-{00000} for autoNumber type
   autoNumberStart?: number // Starting number for autoNumber
+  /** Pre-fill value when creating new records */
+  defaultValue?: string | number | boolean | string[]
 }
 
 export interface RelatedObjectDefinition {

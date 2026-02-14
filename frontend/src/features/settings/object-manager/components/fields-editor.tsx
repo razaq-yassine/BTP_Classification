@@ -49,6 +49,7 @@ interface FieldDef {
   render?: string
   relationshipType?: 'reference' | 'masterDetail'
   deleteOnCascade?: boolean
+  defaultValue?: string | number | boolean | string[]
 }
 
 /** Reserved field keys that cannot be created (name is created with object) */
@@ -581,6 +582,73 @@ function FieldEditor({
                   value={form.maxLength ?? ''}
                   onChange={(e) => update({ maxLength: e.target.value ? parseInt(e.target.value, 10) : undefined })}
                   placeholder='e.g. 255'
+                />
+              </div>
+            )}
+            {form.type === 'boolean' && (
+              <div className='flex items-center gap-2'>
+                <Switch
+                  checked={form.defaultValue === true}
+                  onCheckedChange={(v) => update({ defaultValue: v ? true : undefined })}
+                />
+                <Label className='text-xs'>Default to true</Label>
+              </div>
+            )}
+            {(form.type === 'string' || form.type === 'text' || form.type === 'email' || form.type === 'phone' || form.type === 'url' || form.type === 'date' || form.type === 'datetime') && (
+              <div>
+                <Label className='text-xs'>Default value (optional)</Label>
+                <Input
+                  value={typeof form.defaultValue === 'string' ? form.defaultValue : ''}
+                  onChange={(e) => update({ defaultValue: e.target.value || undefined })}
+                  placeholder='Pre-fill when creating'
+                  className='mt-1'
+                />
+              </div>
+            )}
+            {form.type === 'number' && (
+              <div>
+                <Label className='text-xs'>Default value (optional)</Label>
+                <Input
+                  type='number'
+                  value={form.defaultValue !== undefined && form.defaultValue !== null && typeof form.defaultValue === 'number' ? form.defaultValue : ''}
+                  onChange={(e) => update({ defaultValue: e.target.value ? parseFloat(e.target.value) : undefined })}
+                  placeholder='e.g. 0 or 1'
+                  className='mt-1'
+                />
+              </div>
+            )}
+            {form.type === 'select' && form.options?.length && (
+              <div>
+                <Label className='text-xs'>Default value (optional)</Label>
+                <Select
+                  value={typeof form.defaultValue === 'string' ? form.defaultValue : '__none__'}
+                  onValueChange={(v) => update({ defaultValue: v === '__none__' ? undefined : v })}
+                >
+                  <SelectTrigger className='mt-1'>
+                    <SelectValue placeholder='None' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value='__none__'>None</SelectItem>
+                    {form.options.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {form.type === 'multiselect' && (
+              <div>
+                <Label className='text-xs'>Default values (optional)</Label>
+                <Input
+                  value={Array.isArray(form.defaultValue) ? form.defaultValue.join(', ') : ''}
+                  onChange={(e) => {
+                    const raw = e.target.value.trim()
+                    update({ defaultValue: raw ? raw.split(',').map((s) => s.trim()).filter(Boolean) : undefined })
+                  }}
+                  placeholder='value1, value2'
+                  className='mt-1'
                 />
               </div>
             )}

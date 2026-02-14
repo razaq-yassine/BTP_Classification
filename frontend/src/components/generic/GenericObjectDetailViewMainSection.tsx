@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ObjectDefinition, GenericRecord, FieldDefinition } from '@/types/object-definition'
+import { formatDetailValue } from '@/utils/formatDetailValue'
 import { GenericRelatedListView } from './GenericRelatedListView'
 import { GenericDetailInputFormatter } from './GenericDetailInputFormatter'
 import { GenericDetailsTabSkeleton } from './GenericDetailsTabSkeleton'
@@ -61,51 +62,6 @@ function FieldDisplay({
   const value = record[field.key]
   const formValue = formData[field.key] !== undefined ? formData[field.key] : value
 
-  // Format display value for read-only mode
-  const formatValue = (val: any) => {
-    if (val === null || val === undefined || val === '') {
-      return '(Empty)' // Important fields should also show as empty, not required
-    }
-    // Reference fields (e.g. customer) come as objects - format for display
-    if (field.type === 'reference' && typeof val === 'object') {
-      const name = val.fullName ?? [val.firstName, val.lastName].filter(Boolean).join(' ').trim()
-      return name || val.name || val.email || `#${val.id ?? '(Unknown)'}`
-    }
-    switch (field.type) {
-      case 'boolean':
-        return val ? 'Yes' : 'No'
-      case 'date':
-        if (val) {
-          const date = new Date(val)
-          return date.toLocaleDateString()
-        }
-        return '(Empty)'
-      case 'url':
-        return (
-          <a
-            href={/^https?:\/\//i.test(val) ? val : `https://${val}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {val}
-          </a>
-        )
-      case 'number':
-        const numVal = typeof val === 'number' ? val : parseFloat(val)
-        if (isNaN(numVal)) return typeof val === 'object' ? JSON.stringify(val) : String(val)
-        if (field.renderType === 'percent') {
-          return `${(numVal * 100).toFixed(1)}%`
-        }
-        return numVal.toLocaleString()
-      case 'email':
-      case 'phone':
-      default:
-        return typeof val === 'object' ? JSON.stringify(val) : val
-    }
-  }
-
   if (isEditing) {
     const hasChanged = formValue !== value
     
@@ -165,7 +121,7 @@ function FieldDisplay({
         isEmpty ? "text-gray-400 italic" : "text-gray-900",
         isImportant && "text-orange-600 font-medium"
       )}>
-        {formatValue(value)}
+        {formatDetailValue(field, value)}
       </div>
     </div>
   )

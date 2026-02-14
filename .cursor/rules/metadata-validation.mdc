@@ -1,6 +1,6 @@
 ---
 description: Update metadata validation when adding new metadata features
-globs: backend/src/metadata/**, shared/protected-metadata.ts, frontend/src/metadata/schemas.ts, frontend/public/metadata/**, frontend/src/components/generic/ListViewFieldFormatter.tsx, frontend/src/components/generic/GenericDetailInputFormatter.tsx, frontend/src/components/generic/GenericObjectDetailViewMainSection.tsx
+globs: backend/src/metadata/**, shared/protected-metadata.ts, frontend/src/metadata/schemas.ts, frontend/public/metadata/**, frontend/src/components/generic/ListViewFieldFormatter.tsx, frontend/src/components/generic/GenericDetailInputFormatter.tsx, frontend/src/components/generic/GenericObjectDetailViewMainSection.tsx, frontend/src/routes/_authenticated/dev-components/detail-view-formatter.tsx, frontend/src/utils/formatDetailValue.tsx
 alwaysApply: false
 ---
 
@@ -11,10 +11,11 @@ When adding or changing metadata-driven features:
 1. **New field type** → Add to `VALID_FIELD_TYPES` in `backend/src/metadata/validate.ts` AND to `fieldSchema` in `frontend/src/metadata/schemas.ts`. **Also ensure the field type is handled in both views:**
    - **List view**: Add a `case` in `ListViewFieldFormatter` (`frontend/src/components/generic/ListViewFieldFormatter.tsx`) for formatting and display
    - **Detail view**: Add a `case` in `GenericDetailInputFormatter` (`frontend/src/components/generic/GenericDetailInputFormatter.tsx`) for edit mode, and ensure `formatValue` in `GenericObjectDetailViewMainSection.tsx` handles read-only display
+   - **Dev preview**: Add the new field type to the dev-components detail view formatter (`frontend/src/routes/_authenticated/dev-components/detail-view-formatter.tsx`) in both the edit-mode examples and the read-only preview section
 
 2. **Reference relationship type** → For junction/detail objects (e.g. order items, opportunity line items), use `relationshipType: "masterDetail"` on the parent reference field. This implies `required: true` and `deleteOnCascade: true`. Validation enforces required when masterDetail.
 
-3. **New field property** (e.g. `formula`, `computedExpression`) → Add validation in `validateFieldFile()` for required/optional rules
+3. **New field property** (e.g. `formula`, `computedExpression`, `defaultValue`) → Add validation in `validateFieldFile()` for required/optional rules. `defaultValue` pre-fills create form; type should match field (string, number, boolean, or string[] for multiselect).
 
 4. **New metadata file** (e.g. `header.json`) → Add `validate*File()` and call it from `validateMetadataFull()`
 

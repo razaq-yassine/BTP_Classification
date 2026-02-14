@@ -92,17 +92,21 @@ export function GenericCreateDialog({
             ? objectDefinition.fields?.find(f => f.key === fieldKey)
             : field
           
-          // Set default values based on field type
+          // Set default values: use field.defaultValue if set, else type-based fallback
           if (fieldDefinition) {
-            switch (fieldDefinition.type) {
-              case 'boolean':
-                initialFormData[fieldKey] = false
-                break
-              case 'number':
-                initialFormData[fieldKey] = 0
-                break
-              default:
-                initialFormData[fieldKey] = ''
+            if (fieldDefinition.defaultValue !== undefined && fieldDefinition.defaultValue !== null) {
+              initialFormData[fieldKey] = fieldDefinition.defaultValue
+            } else {
+              switch (fieldDefinition.type) {
+                case 'boolean':
+                  initialFormData[fieldKey] = false
+                  break
+                case 'number':
+                  initialFormData[fieldKey] = ''
+                  break
+                default:
+                  initialFormData[fieldKey] = ''
+              }
             }
           }
         })
