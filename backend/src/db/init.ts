@@ -33,13 +33,13 @@ export async function initDb() {
     const orderNow = new Date()
     const orderPast = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
     await db.insert(orders).values([
-      { orderNumber: 'ORD-001', customerId: custs[0].id!, status: 'CONFIRMED', totalAmount: 299.99, description: 'Software License - Premium Package', orderDate: orderPast, createdAt: orderNow, updatedAt: orderNow },
-      { orderNumber: 'ORD-002', customerId: custs[0].id!, status: 'SHIPPED', totalAmount: 149.5, description: 'Hardware Accessories', orderDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), createdAt: orderNow, updatedAt: orderNow },
-      { orderNumber: 'ORD-003', customerId: custs[1].id!, status: 'PENDING', totalAmount: 599, description: 'Enterprise Solution Setup', orderDate: new Date(Date.now() - 24 * 60 * 60 * 1000), createdAt: orderNow, updatedAt: orderNow },
-      { orderNumber: 'ORD-004', customerId: custs[1].id!, status: 'DELIVERED', totalAmount: 89.99, description: 'Monthly Subscription', orderDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), createdAt: orderNow, updatedAt: orderNow },
-      { orderNumber: 'ORD-005', customerId: custs[2].id!, status: 'CONFIRMED', totalAmount: 1299.99, description: 'Custom Development Package', orderDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), createdAt: orderNow, updatedAt: orderNow },
-      { orderNumber: 'ORD-006', customerId: custs[3].id!, status: 'CANCELLED', totalAmount: 199.99, description: 'Training Package - Cancelled', orderDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), createdAt: orderNow, updatedAt: orderNow },
-    ])
+      { name: 'ORD-001', customerId: custs[0].id!, status: 'CONFIRMED', totalAmount: 299.99, description: 'Software License - Premium Package', orderDate: orderPast, createdAt: orderNow, updatedAt: orderNow },
+      { name: 'ORD-002', customerId: custs[0].id!, status: 'SHIPPED', totalAmount: 149.5, description: 'Hardware Accessories', orderDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), createdAt: orderNow, updatedAt: orderNow },
+      { name: 'ORD-003', customerId: custs[1].id!, status: 'PENDING', totalAmount: 599, description: 'Enterprise Solution Setup', orderDate: new Date(Date.now() - 24 * 60 * 60 * 1000), createdAt: orderNow, updatedAt: orderNow },
+      { name: 'ORD-004', customerId: custs[1].id!, status: 'DELIVERED', totalAmount: 89.99, description: 'Monthly Subscription', orderDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), createdAt: orderNow, updatedAt: orderNow },
+      { name: 'ORD-005', customerId: custs[2].id!, status: 'CONFIRMED', totalAmount: 1299.99, description: 'Custom Development Package', orderDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), createdAt: orderNow, updatedAt: orderNow },
+      { name: 'ORD-006', customerId: custs[3].id!, status: 'CANCELLED', totalAmount: 199.99, description: 'Training Package - Cancelled', orderDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), createdAt: orderNow, updatedAt: orderNow },
+    ] as any)
     console.log('Created sample customers and orders')
   }
 
@@ -50,7 +50,7 @@ export async function initDb() {
       { name: 'Widget Pro', sku: 'SKU-001', price: 29.99, description: 'Premium widget', createdAt: now, updatedAt: now },
       { name: 'Gadget X', sku: 'SKU-002', price: 49.99, description: 'Advanced gadget', createdAt: now, updatedAt: now },
       { name: 'Tool Kit', sku: 'SKU-003', price: 79.99, description: 'Complete tool set', createdAt: now, updatedAt: now },
-    ])
+    ] as any)
     console.log('Created sample products')
   }
 

@@ -27,22 +27,22 @@ export function StatisticsCards({ statistics, records }: StatisticsCardsProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+    <div className="grid grid-cols-2 sm:flex sm:flex-row gap-1.5 sm:gap-2 mb-4">
       {statistics.map((stat) => {
         const StatIcon = stat.icon
         const value = stat.calculator(records)
         const formattedValue = formatValue(value, stat.format)
 
         return (
-          <Card key={stat.key}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
+          <Card key={stat.key} className="flex-1 min-w-0 py-2 gap-1 rounded-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2 pb-0">
+              <CardTitle className="text-[10px] sm:text-xs font-medium truncate leading-tight">{stat.label}</CardTitle>
               {StatIcon && (
-                <StatIcon className="h-4 w-4 text-muted-foreground" />
+                <StatIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" />
               )}
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formattedValue}</div>
+            <CardContent className="px-2 pb-2 pt-0">
+              <div className="text-xs sm:text-sm md:text-base font-bold truncate leading-tight">{formattedValue}</div>
             </CardContent>
           </Card>
         )

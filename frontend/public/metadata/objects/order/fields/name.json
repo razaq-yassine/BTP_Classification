@@ -1,14 +1,1 @@
-{
-  "key": "name",
-  "label": "Name",
-  "type": "string",
-  "required": true,
-  "editable": false,
-  "sortable": true,
-  "searchable": true,
-  "computed": true,
-  "computedExpression": "lookup",
-  "sourceFields": [
-    "orderNumber"
-  ]
-}
+{"key":"name","label":"Order Number","type":"autoNumber","required":true,"editable":false,"sortable":true,"searchable":true,"autoNumberPattern":"ORD-{0000}","autoNumberStart":1}

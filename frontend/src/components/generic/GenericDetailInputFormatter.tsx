@@ -16,6 +16,7 @@ import { SearchableSelect, SearchableSelectOption } from '@/components/ui/search
 import { MultiSelect, MultiSelectOption } from '@/components/ui/multi-select'
 import { DateTimePicker } from '@/components/ui/datetime-picker'
 import { RecordLookup } from '@/components/ui/record-lookup'
+import { useAuthStore, selectUser } from '@/stores/authStore'
 
 interface GenericDetailInputFormatterProps {
   fieldDefinition: FieldDefinition
@@ -34,6 +35,7 @@ export function GenericDetailInputFormatter({
   className,
   showLabel = true
 }: GenericDetailInputFormatterProps) {
+  const user = useAuthStore(selectUser)
   const { type, label, required, isRequired, isImportant, options } = fieldDefinition
   const [selectedCountry, setSelectedCountry] = useState<Country>(() => {
     // Find country from existing phone value or use default
@@ -301,10 +303,16 @@ export function GenericDetailInputFormatter({
           label: fieldKey.charAt(0).toUpperCase() + fieldKey.slice(1).replace('_', ' ')
         }))
 
+        // Extract ID from value if it's an object (backend returns { id: ..., name: ... })
+        // RecordLookup expects a primitive value (string | number)
+        const referenceValue = value != null && typeof value === 'object' && 'id' in value
+          ? value.id
+          : value
+
         return (
           <RecordLookup
             objectName={objectName}
-            value={value}
+            value={referenceValue}
             onValueChange={(newValue) => onChange(newValue)}
             additionalFields={formattedAdditionalFields}
             searchBy={searchBy ?? 'name'}
@@ -312,6 +320,7 @@ export function GenericDetailInputFormatter({
             placeholder={`Search ${objectName.toLowerCase()}...`}
             disabled={disabled}
             className={cn('w-full', className)}
+            userId={user?.id}
           />
         )
 

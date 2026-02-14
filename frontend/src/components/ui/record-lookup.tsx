@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import api from '@/services/api'
 import { pluralize } from '@/metadata/utils'
 import { useObjectDefinition } from '@/hooks/useObjectDefinition'
+import { sortByRecentlyViewed } from '@/utils/recently-viewed'
 
 // Simple debounce implementation to avoid lodash dependency
 function debounce<T extends (...args: any[]) => any>(
@@ -46,6 +47,7 @@ interface RecordLookupProps {
   className?: string
   emptyMessage?: string
   apiEndpoint?: string // Optional custom endpoint
+  userId?: number | null // Current user ID for user-specific recently viewed sorting
 }
 
 export function RecordLookup({
@@ -59,7 +61,8 @@ export function RecordLookup({
   disabled = false,
   className,
   emptyMessage = "No records found.",
-  apiEndpoint
+  apiEndpoint,
+  userId
 }: RecordLookupProps) {
   const [open, setOpen] = useState(false)
   const [records, setRecords] = useState<LookupRecord[]>([])
@@ -92,6 +95,9 @@ export function RecordLookup({
       const responseKey = pluralize(objectName)
       let recordsData = response.data?.results ?? response.data?.[responseKey] ?? (Array.isArray(response.data) ? response.data : response.data?.data) ?? []
       
+      // Sort by recently viewed (most recent first)
+      recordsData = sortByRecentlyViewed(recordsData, objectName, userId)
+      
       setRecords(recordsData)
     } catch {
       setRecords([])
@@ -120,6 +126,9 @@ export function RecordLookup({
             return fieldValue && String(fieldValue).toLowerCase().includes(query.toLowerCase())
           })
         }
+        
+        // Sort by recently viewed (most recent first)
+        recordsData = sortByRecentlyViewed(recordsData, objectName, userId)
         
         setRecords(recordsData)
       } catch {

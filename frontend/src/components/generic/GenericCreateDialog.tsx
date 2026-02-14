@@ -37,15 +37,18 @@ function CreateFieldDisplay({
   error?: string
 }) {
   const value = formData[field.key] || ''
-  const isAutoNumber = field.type === 'autoNumber' || field.type === 'autonumber'
-  
+  const isReadOnly =
+    field.type === 'autoNumber' ||
+    field.type === 'autonumber' ||
+    field.editable === false
+
   return (
     <div className="space-y-2">
       <GenericDetailInputFormatter
         fieldDefinition={field}
         value={value}
-        onChange={(newValue) => !isAutoNumber && onChange(field.key, newValue)}
-        disabled={isAutoNumber}
+        onChange={(newValue) => !isReadOnly && onChange(field.key, newValue)}
+        disabled={isReadOnly}
         showLabel={true}
         className={error ? 'border-red-500' : ''}
       />
@@ -233,6 +236,15 @@ export function GenericCreateDialog({
           const isAutoNumber = fieldDefinition?.type === 'autoNumber' || fieldDefinition?.type === 'autonumber'
           if (isAutoNumber) {
             delete createData[fieldKey]
+          } else if (fieldDefinition?.type === 'reference' && createData[fieldKey] != null) {
+            // Transform reference fields to the format expected by backend: { id: <value> }
+            // Backend expects either body[ref.key]?.id or body[ref.idField]
+            const refValue = createData[fieldKey]
+            if (refValue !== null && refValue !== undefined && refValue !== '') {
+              createData[fieldKey] = { id: refValue }
+            } else {
+              delete createData[fieldKey]
+            }
           } else if (fieldDefinition?.required && (createData[fieldKey] === null || createData[fieldKey] === undefined || createData[fieldKey] === '')) {
             delete createData[fieldKey]
           }

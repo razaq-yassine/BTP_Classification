@@ -11,6 +11,8 @@ import { GenericDetailViewSkeleton } from './GenericDetailViewSkeleton'
 import { SalesforcePath, type SalesforcePathStep } from '@/components/ui/salesforce-path'
 import api from '@/services/api'
 import { isNetworkError } from '@/utils/handle-server-error'
+import { trackRecentlyViewed } from '@/utils/recently-viewed'
+import { useAuthStore, selectUser } from '@/stores/authStore'
 
 interface GenericDetailViewProps {
   objectDefinition: ObjectDefinition
@@ -20,6 +22,7 @@ interface GenericDetailViewProps {
 
 export function GenericDetailView({ objectDefinition, recordId, basePath }: GenericDetailViewProps) {
   const navigate = useNavigate()
+  const user = useAuthStore(selectUser)
   const [record, setRecord] = useState<GenericRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -33,7 +36,13 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
       setLoading(true)
       setError('')
       const response = await api.get(`${objectDefinition.apiEndpoint}/${recordId}`)
-      setRecord(response.data)
+      const fetchedRecord = response.data
+      setRecord(fetchedRecord)
+      
+      // Track this record as recently viewed
+      if (fetchedRecord?.id) {
+        trackRecentlyViewed(objectDefinition.name, fetchedRecord.id, user?.id)
+      }
     } catch (err: any) {
       const msg = isNetworkError(err)
         ? 'Connection lost. Please wait and try again.'

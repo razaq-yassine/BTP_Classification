@@ -1,0 +1,23 @@
+---
+description: Ensure name field exists and follows conventions when creating or modifying objects
+globs: frontend/public/metadata/objects/**/fields.json, frontend/public/metadata/objects/**/fields/*.json
+alwaysApply: false
+---
+
+# Name Field Requirement
+
+When creating or modifying object metadata:
+
+1. **Every object MUST have a `name` field** in `fields.json` and `fields/name.json`.
+
+2. **Field key is always `name`** — reference components (RecordLookup, ListViewFieldFormatter) use `record.name` for display.
+
+3. **Label can vary** — use "Order Number", "SKU", "Product Name", etc. as appropriate for the object.
+
+4. **Type options for name**:
+   - `autoNumber` — for generated identifiers (Order, Order Item, Opportunity). Requires `editable: false`, `autoNumberPattern`, `autoNumberStart`.
+   - `string` — for user-entered names (Product, Category, Supplier). May have `editable: true` or `false`.
+
+5. **autoNumber is ONLY allowed for the name field** — no other field may use `type: "autoNumber"`.
+
+6. **Validation** — `db:validate-metadata` will fail if name is missing from fields.json or if autoNumber is used on a non-name field.

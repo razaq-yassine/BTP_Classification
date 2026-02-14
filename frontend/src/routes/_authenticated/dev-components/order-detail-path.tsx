@@ -15,7 +15,7 @@ export const Route = createFileRoute('/_authenticated/dev-components/order-detai
 /** Mock order for demo - Path uses status field with useInPath */
 const MOCK_ORDER = {
   id: 1,
-  orderNumber: 'ORD-001',
+  name: 'ORD-001',
   status: 'CONFIRMED',
   totalAmount: 299.99,
   orderDate: '2025-02-10',
@@ -112,7 +112,7 @@ function OrderDetailDemo({ definition }: { definition: ObjectDefinition }) {
       {/* Mock header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Order #{record.orderNumber}</h2>
+          <h2 className="text-xl font-semibold">Order #{record.name}</h2>
           <p className="text-sm text-muted-foreground">Status: {record.status}</p>
         </div>
       </div>

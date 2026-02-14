@@ -179,10 +179,19 @@ Each object has its own folder with these files:
 | `multiselect` | Multiple choices | text (JSON array) | Requires `options` array |
 | `reference` | Link to another object | `{key}Id` integer | Requires `objectName` |
 | `lookup` | Alias for `reference` | same as reference | |
-| `autoNumber` | Auto-incrementing ID | text | Requires `autoNumberPattern`, `autoNumberStart` |
+| `autoNumber` | Auto-incrementing ID | text | **Only allowed for the name field.** Requires `autoNumberPattern`, `autoNumberStart`, `editable: false` |
 | `formula` | Computed from expression | (no DB column) | Requires `formulaExpression`, `editable: false` |
 
 **Computed fields** (`computed: true`) are not stored in the database. Use `computedExpression`: `concat`, `join`, or `lookup` with `sourceFields`.
+
+### Name field (required)
+
+Every object must have a `name` field. It serves as the primary identifier for reference display (RecordLookup, list views).
+
+- **Type**: `string` or `autoNumber` only. No other field may use `autoNumber`.
+- **When `autoNumber`**: Use for generated identifiers (e.g. Order ORD-001, Order Item OI-0001). Requires `editable: false`, `autoNumberPattern`, `autoNumberStart`. Stored as string.
+- **When `string`**: Use for user-entered names (e.g. Product, Category). May have `editable: true` or `false`.
+- **Label**: Can vary (e.g. "Order Number", "Product Name") — the key is always `name`.
 
 ---
 
@@ -289,7 +298,7 @@ For **master-detail** (e.g. order items under order):
 
 ```json
 {
-  "fields": ["orderNumber", "customer", "status", "totalAmount", "orderDate"],
+  "fields": ["name", "customer", "status", "totalAmount", "orderDate"],
   "defaultSort": "orderDate",
   "defaultSortOrder": "desc",
   "pageSize": 10,
@@ -411,7 +420,7 @@ For **master-detail** (e.g. order items under order):
     "foreignKey": "customer.id",
     "apiEndpoint": "/api/orders/customer",
     "fields": [
-      {"key": "orderNumber", "label": "Order Number", "type": "string"},
+      {"key": "name", "label": "Order Number", "type": "string"},
       {"key": "status", "label": "Status", "type": "string", "render": "statusBadge"},
       {"key": "totalAmount", "label": "Total Amount", "type": "number", "render": "currency"}
     ],
@@ -505,40 +514,47 @@ You can add `"trigger": "customer"` to `object.json` for reference. The backend 
 
 `db:deploy` runs these steps in order:
 
-1. **Validate metadata** — Checks all JSON files for schema compliance
+1. **Validate metadata** — Checks all JSON files for schema compliance (fails if `name` missing or invalid)
 2. **Generate schema from metadata** — Writes `drizzle-temp/db/schema.ts` from your metadata
-3. **Generate migrations** — Drizzle-kit compares schema to DB, writes new migrations to `backend/drizzle/`
-4. **Fix pending migrations** — For any migration that adds columns, if those columns already exist (e.g. from ensure-tables or manual changes), marks it as applied to avoid "duplicate column" errors
-5. **Run migrations** — Applies `backend/drizzle/*.sql` to `backend/data.db`
+3. **Generate migrations** — Drizzle-kit compares schema to DB, writes migration SQL to `backend/drizzle/`
+4. **Fix pending migrations** — For migrations that add columns, if columns already exist, marks as applied
+5. **Run migrations** — Applies `backend/drizzle/*.sql` to the MySQL database
 6. **Verify schema** — Confirms DB columns match metadata expectations
 7. **Sync drops** — Removes tables/columns that no longer exist in metadata
 8. **Copy generated files** — Updates `schema.ts` and `entity-registry.generated.ts`
 9. **Ensure tables** — Creates any missing tables from metadata
 
+**Never create schema or migrations manually.** All artifacts flow from metadata. See `.cursor/rules/metadata-driven.mdc`.
+
 **Important**: Migrations are stored in `backend/drizzle/`. Both the schema generator and the migrate script use this folder. Do not create a separate `drizzle/` folder at the project root.
+
+**DATABASE_URL**: Set to a MySQL connection string, e.g. `mysql://user:password@localhost:3306/database_name`. Create the database before running deploy (e.g. `CREATE DATABASE generic_saas`).
 
 ### Verifying Deployment
 
 After `db:deploy`, verify the database schema matches your metadata:
 
 ```bash
-cd backend && sqlite3 data.db ".schema <table_name>"
+mysql -u user -p -e "DESCRIBE dbname.table_name"
 ```
 
-Replace `<table_name>` with any table from your metadata (e.g. `customers`, `orders`). You should see the columns defined in your metadata.
+Replace `dbname` with your database name and `table_name` with any table from your metadata (e.g. `customers`, `orders`). You should see the columns defined in your metadata.
 
 ### Troubleshooting
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `no such column: X` | Migrations not applied to database | Run `cd backend && pnpm run db:migrate`. If migrations exist in `backend/drizzle/`, they should apply. Verify with `sqlite3 data.db ".schema <table>"`. |
+| `no such column: X` | Migrations not applied to database | Run `cd backend && pnpm run db:migrate`. If migrations exist in `backend/drizzle/`, they should apply. Verify with `mysql -e "DESCRIBE dbname.table"`. |
 | `table X already exists` | Wrong migration folder or conflicting migration history | Ensure only `backend/drizzle/` exists. Do not use a project-root `drizzle/` folder. |
 | `duplicate column name: X` | A migration tries to add columns that already exist (e.g. from ensure-tables or manual changes) | Run `pnpm run db:fix-pending-migrations` before `db:migrate`, or run full `db:deploy` (which includes the fix). |
 | `Metadata validation failed` | Invalid JSON or schema violation | Run `pnpm run db:validate-metadata` for details. Check `.cursor/rules/metadata-validation.mdc` for the full checklist. |
 | `500 Internal Server Error` on list/detail | Schema mismatch (code expects columns not in DB) | Run `db:deploy` and restart the backend. Check backend logs for the specific error message. |
+| `ECONNREFUSED` / `Connection refused` | MySQL not running or wrong host/port | Ensure MySQL is running. Check `DATABASE_URL` (host, port, credentials). |
+| `ER_ACCESS_DENIED_ERROR` | Wrong MySQL credentials | Verify username and password in `DATABASE_URL`. |
 
 **Key validation rules**:
-- `name` field must exist and have `required: true`, `editable: false`
+- `name` field must exist and have `required: true`. When `type` is `autoNumber`, `editable` must be `false`; when `type` is `string`, `editable` may be `true` or `false`
+- `autoNumber` type is only allowed for the `name` field
 - Reference fields require `objectName` pointing to an existing object
 - Select/multiselect require `options` array
 - Formula fields require `formulaExpression` and `editable: false`

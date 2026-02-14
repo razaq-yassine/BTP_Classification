@@ -1,8 +1,8 @@
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
-import * as schema from './schema'
+import mysql from "mysql2/promise";
+import { drizzle } from "drizzle-orm/mysql2";
+import * as schema from "./schema";
 
-const dbPath = process.env.DATABASE_URL || './data.db'
-export const sqlite = new Database(dbPath)
-sqlite.pragma('foreign_keys = ON')
-export const db = drizzle(sqlite, { schema })
+const connectionString =
+  process.env.DATABASE_URL || "mysql://root:root@localhost:3306/generic_saas";
+const pool = mysql.createPool(connectionString);
+export const db = drizzle(pool, { schema, mode: "default" });

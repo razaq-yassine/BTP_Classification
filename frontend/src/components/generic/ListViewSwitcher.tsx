@@ -15,7 +15,6 @@ import { ChevronDown, Pin, Search, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ListViewSwitcherProps {
-  objectLabelPlural: string
   objectIcon?: React.ComponentType<{ className?: string }>
   views: ListViewDefinition[]
   activeViewKey: string
@@ -26,7 +25,6 @@ interface ListViewSwitcherProps {
 }
 
 export function ListViewSwitcher({
-  objectLabelPlural,
   objectIcon: ObjectIcon,
   views,
   activeViewKey,
@@ -65,36 +63,33 @@ export function ListViewSwitcher({
   const itemCountLabel = recordCount === 1 ? '1 item' : `${recordCount} items`
 
   return (
-    <div className="flex flex-col gap-1">
-      {/* Object type label */}
-      <p className="text-sm text-muted-foreground">{objectLabelPlural}</p>
-
-      {/* Main heading: icon + name + arrow + pin */}
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-0.5 min-w-0">
+      {/* Main heading: icon + name + count + arrow + pin */}
+      <div className="flex items-center gap-2 sm:gap-3">
         {/* Icon */}
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+        <div className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
           {ObjectIcon ? (
-            <ObjectIcon className="h-5 w-5" />
+            <ObjectIcon className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (
-            <div className="h-5 w-5 rounded bg-primary-foreground/30" />
+            <div className="h-4 w-4 sm:h-5 sm:w-5 rounded bg-primary-foreground/30" />
           )}
         </div>
 
         {/* View name + dropdown + pin */}
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
           <DropdownMenu open={open} onOpenChange={setOpen}>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex items-center gap-1.5 rounded-md hover:bg-muted/50 px-1 py-0.5 -ml-1 transition-colors group data-[state=open]:bg-muted/50 border-b-2 border-transparent hover:border-muted-foreground/20 data-[state=open]:border-muted-foreground/30"
+                className="flex items-center gap-1 sm:gap-1.5 rounded-md hover:bg-muted/50 px-1 py-0.5 -ml-1 transition-colors group data-[state=open]:bg-muted/50 border-b-2 border-transparent hover:border-muted-foreground/20 data-[state=open]:border-muted-foreground/30 min-w-0"
               >
-                <span className="text-2xl font-bold tracking-tight truncate">
+                <span className="text-lg sm:text-2xl font-bold tracking-tight truncate">
                   {activeView?.label ?? 'All'}
                 </span>
-                <span className="text-sm text-muted-foreground shrink-0">
+                <span className="text-xs sm:text-sm text-muted-foreground shrink-0">
                   {itemCountLabel}
                 </span>
-                <ChevronDown className={cn("h-5 w-5 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
+                <ChevronDown className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-64" sideOffset={8}>
@@ -142,11 +137,11 @@ export function ListViewSwitcher({
           <Button
             variant="outline"
             size="icon"
-            className="h-9 w-9 shrink-0 rounded-full"
+            className="h-7 w-7 sm:h-9 sm:w-9 shrink-0 rounded-full"
             onClick={handlePinClick}
             title={isPinned ? 'Unpin as default view' : 'Pin as default view'}
           >
-              <Pin className={cn("h-4 w-4", isPinned && "fill-current")} />
+            <Pin className={cn("h-3 w-3 sm:h-4 sm:w-4", isPinned && "fill-current")} />
           </Button>
         </div>
       </div>

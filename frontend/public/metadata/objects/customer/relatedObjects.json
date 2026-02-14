@@ -9,7 +9,7 @@
     "apiEndpoint": "/api/orders/customer",
     "fields": [
       {
-        "key": "orderNumber",
+        "key": "name",
         "label": "Order Number",
         "type": "string",
         "sortable": true,

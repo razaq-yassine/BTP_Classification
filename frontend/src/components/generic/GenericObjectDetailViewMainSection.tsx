@@ -270,13 +270,28 @@ function DetailsTabContent({
         ...tabState.formData
       }
       
-      // Remove any null/undefined values for required fields to prevent backend issues
+      // Transform reference fields and handle required fields
       objectDefinition.detailView?.sections?.forEach(section => {
         section.fields.forEach(field => {
           const fieldKey = typeof field === 'string' ? field : field.key
           const fieldDefinition = typeof field === 'string' 
             ? objectDefinition.fields?.find(f => f.key === fieldKey)
             : field
+          
+          // Transform reference fields to the format expected by backend: { id: <value> }
+          if (fieldDefinition?.type === 'reference') {
+            const refValue = updateData[fieldKey]
+            // If it's already an object with id, keep it; otherwise transform it
+            if (refValue != null && typeof refValue === 'object' && 'id' in refValue) {
+              // Already in correct format from backend
+            } else if (refValue !== null && refValue !== undefined && refValue !== '') {
+              // Transform primitive ID value to object format
+              updateData[fieldKey] = { id: refValue }
+            } else if (refValue === null || refValue === undefined || refValue === '') {
+              // If cleared, keep null/undefined
+              updateData[fieldKey] = refValue
+            }
+          }
           
           // Only preserve values for required fields, not just important ones
           if (fieldDefinition?.required && (updateData[fieldKey] === null || updateData[fieldKey] === undefined)) {

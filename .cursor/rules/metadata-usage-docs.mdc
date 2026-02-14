@@ -18,7 +18,7 @@ Update `docs/USAGE.md` when you:
 
 3. **Add a new metadata file type** (e.g. `header.json`, `relatedObjects.json`) → Add a section explaining the file structure, required/optional properties, and examples.
 
-4. **Change validation rules** → Update the [Validation & Deployment](#validation--deployment) section and any affected examples.
+4. **Change validation rules** → Update the [Validation & Deployment](#validation--deployment) section and any affected examples. Deployment uses MySQL; verification commands use `mysql` client.
 
 5. **Add a new metadata feature** (e.g. statistics cards, Path, calculated data) → Document the configuration format, supported values, and where it applies (list view, detail view, header).
 

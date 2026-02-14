@@ -4,7 +4,7 @@
     {
       "key": "all",
       "label": "All Orders",
-      "fields": ["orderNumber", "customer", "status", "totalAmount", "orderDate"],
+      "fields": ["name", "customer", "status", "totalAmount", "orderDate"],
       "defaultSort": "orderDate",
       "defaultSortOrder": "desc",
       "pageSize": 10,
@@ -45,7 +45,7 @@
       "key": "recentlyViewed",
       "label": "Recently Viewed",
       "type": "recentlyViewed",
-      "fields": ["orderNumber", "customer", "status", "totalAmount", "orderDate"],
+      "fields": ["name", "customer", "status", "totalAmount", "orderDate"],
       "defaultSort": "orderDate",
       "defaultSortOrder": "desc",
       "pageSize": 10
@@ -53,7 +53,7 @@
     {
       "key": "openOrders",
       "label": "Open Orders",
-      "fields": ["orderNumber", "customer", "status", "totalAmount", "orderDate"],
+      "fields": ["name", "customer", "status", "totalAmount", "orderDate"],
       "defaultSort": "orderDate",
       "defaultSortOrder": "desc",
       "pageSize": 10,

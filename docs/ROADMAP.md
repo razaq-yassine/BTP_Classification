@@ -11,7 +11,7 @@ These are prerequisites for everything else. Complete these before moving on.
 | Order | Feature | Priority | Why First |
 |-------|---------|----------|-----------|
 | 1 | **Metadata Deployment + checks** | HIGH | Validates metadata before it's used. Prevents bad config from breaking the app. |
-| 2 | **Generic List View** | HIGH | Core view. Must be solid before list-related features. |
+| 2 | **Generic List View** ✅ | HIGH | Core view. Must be solid before list-related features. |
 | 3 | **Generic Detail Views** | HIGH | Core view. Must be solid before detail-related features. |
 | 4 | **Generic Create** | HIGH | Core write path. Must be solid before validation, triggers, etc. |
 | 5 | **Field types rendering** | HIGH | Needed for list, detail, create. Finish all types before moving on. |
@@ -89,7 +89,7 @@ Higher complexity. Build after core is solid.
 Phase 1 (Foundation)          Phase 2 (Polish)              Phase 3 (Config)
 ┌─────────────────────┐       ┌─────────────────────┐       ┌─────────────────────┐
 │ 1. Metadata checks  │       │ 7. Detail formatter  │       │ 13. Icon selector   │
-│ 2. List View       │──────▶│ 8. Path              │──────▶│ 14. Text size       │
+│ 2. List View ✅    │──────▶│ 8. Path              │──────▶│ 14. Text size       │
 │ 3. Detail View     │       │ 9. General Layout   │       │ 15. Sidebar         │
 │ 4. Create          │       │ 10. owner/created/  │       │ 16. Default values  │
 │ 5. Field types     │       │     edited by       │       │ 17. Formulas        │
@@ -116,7 +116,7 @@ Phase 1 (Foundation)          Phase 2 (Polish)              Phase 3 (Config)
 **First milestone:** Phase 1 (items 1–6)
 
 - Metadata checks
-- List view
+- List view ✅
 - Detail view
 - Create
 - Field types

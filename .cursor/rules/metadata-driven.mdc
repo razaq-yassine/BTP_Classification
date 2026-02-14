@@ -1,0 +1,43 @@
+---
+description: Metadata is the single source of truth—never create schema, migrations, or entity config manually
+globs: backend/drizzle/**, backend/src/db/schema.ts, backend/src/routes/entity-registry.generated.ts, frontend/public/metadata/**
+alwaysApply: false
+---
+
+# Metadata-Driven: Never Create Manually
+
+**Metadata is the single source of truth.** Schema, migrations, and entity configuration must all flow from metadata through the tooling—never be created or edited manually.
+
+## What Must Come From Metadata
+
+| Artifact | Source | Tool |
+|----------|--------|------|
+| Drizzle schema (`schema.ts`) | Metadata | `db:generate-from-metadata` |
+| Entity registry | Metadata | `db:generate-from-metadata` |
+| Migration SQL | Schema diff | `db:generate-temp` (drizzle-kit) |
+| Tables/columns | Metadata | Migrations + `ensure-tables` |
+
+## Rules
+
+1. **Never edit** `backend/src/db/schema.ts` or `backend/src/routes/entity-registry.generated.ts` by hand—they are generated. Edit metadata instead.
+
+2. **Never create** migration `.sql` files or journal entries manually. Run `db:generate-temp` (or `db:deploy`) so drizzle-kit generates migrations from the schema diff.
+
+3. **Never work around** tooling limitations by creating manual artifacts. If the tooling can't do something (e.g. prompts for input, doesn't support a case), **enhance the approach** instead:
+   - Add a non-interactive wrapper (e.g. pipe input to drizzle-kit)
+   - Extend `generate-from-metadata` to output migration SQL for simple cases
+   - Use `drizzle-kit push --force` if it fits the workflow
+   - File an issue or contribute to the upstream tool
+
+4. **If something seems wrong**—metadata is invalid, deploy fails, or you're tempted to edit generated files—fix the metadata or improve the tooling. Do not bypass the pipeline with manual edits.
+
+## When the Tooling Falls Short
+
+If the tooling can't do something (e.g. drizzle-kit prompts for renames, no non-interactive mode):
+
+- **Do not** create manual SQL or edit generated files as a workaround.
+- **Do** suggest enhancing the approach, for example:
+  - Add a wrapper script that pipes input to drizzle-kit (e.g. `echo "1" | drizzle-kit generate`) so deploy stays non-interactive.
+  - Extend `generate-from-metadata` to output migration SQL by diffing previous vs current metadata, bypassing drizzle-kit for schema changes.
+  - Use `drizzle-kit push` with `--force` if it fits the workflow.
+  - Contribute or file an issue for non-interactive mode in drizzle-kit.

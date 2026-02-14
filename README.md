@@ -18,7 +18,7 @@ generic_saas/
 
 - **Authentication**: JWT-based authentication
 - **Frontend**: React with TanStack Router, Zustand state management, shadcn/ui components
-- **Backend**: Hono + Drizzle ORM with SQLite database
+- **Backend**: Hono + Drizzle ORM with MySQL database
 - **Pre-populated Data**: Admin user and sample customers/orders
 - **Triggers**: Extensible before/after hooks for entity operations
 
@@ -27,11 +27,13 @@ generic_saas/
 ### Backend (Hono)
 
 1. Navigate to backend directory:
+
    ```bash
    cd backend
    ```
 
 2. Install dependencies:
+
    ```bash
    pnpm install
    ```
@@ -46,11 +48,13 @@ The backend will be available at `http://localhost:8000`
 ### Frontend (React)
 
 1. Navigate to frontend directory:
+
    ```bash
    cd frontend
    ```
 
 2. Install dependencies:
+
    ```bash
    pnpm install
    ```
@@ -64,7 +68,7 @@ The frontend will be available at `http://localhost:5173`
 
 ## Default Login Credentials
 
-- **Admin User**: 
+- **Admin User**:
   - Username: `admin`
   - Password: `admin123`
 
@@ -109,7 +113,7 @@ To add a new object: create metadata folder, run `db:generate-from-metadata`, ad
 
 ## Development Notes
 
-- Backend uses SQLite (better-sqlite3) for simplicity
+- Backend uses MySQL (mysql2). Set `DATABASE_URL` in `.env` (e.g. `mysql://root:root@localhost:3306/generic_saas`). Create the database before first run.
 - JWT tokens stored in localStorage
 - CORS configured for localhost:5173 and 5174
 - Triggers in `triggers/` run before/after insert/update/delete
@@ -117,6 +121,7 @@ To add a new object: create metadata folder, run `db:generate-from-metadata`, ad
 ## Technologies Used
 
 ### Frontend
+
 - React 19 + TypeScript
 - TanStack Router for routing
 - Zustand for state management
@@ -125,15 +130,17 @@ To add a new object: create metadata folder, run `db:generate-from-metadata`, ad
 - Axios for API calls
 
 ### Backend
+
 - Hono (Node.js)
 - Drizzle ORM
-- better-sqlite3
+- mysql2
 - jose (JWT)
 - bcrypt
 
 ## Troubleshooting
 
 ### Route Tree Issues
+
 If you encounter TypeScript errors related to routes, the TanStack Router route tree may need regeneration:
 
 1. Stop the frontend dev server
@@ -141,7 +148,9 @@ If you encounter TypeScript errors related to routes, the TanStack Router route 
 3. Restart the dev server with `pnpm run dev`
 
 ### CORS Issues
+
 Ensure both servers are running on the correct ports:
+
 - Backend: `http://localhost:8000`
 - Frontend: `http://localhost:5173`
 

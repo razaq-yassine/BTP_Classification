@@ -17,24 +17,12 @@ import type { ListViewDefinition } from '@/types/object-definition'
 import api from '@/services/api'
 import { Main } from '@/components/layout/main'
 import { isNetworkError } from '@/utils/handle-server-error'
+import { trackRecentlyViewed, getRecentlyViewedIds } from '@/utils/recently-viewed'
+import { useAuthStore, selectUser } from '@/stores/authStore'
 
 interface GenericListViewProps {
   objectDefinition: ObjectDefinition
   basePath?: string
-}
-
-// Helper to get recently viewed record IDs from localStorage
-function getRecentlyViewedIds(objectName: string): string[] {
-  try {
-    const key = `recentlyViewed_${objectName}`
-    const stored = localStorage.getItem(key)
-    if (!stored) return []
-    const data = JSON.parse(stored)
-    // Return IDs in reverse order (most recent first), limit to last 50
-    return Array.isArray(data) ? data.slice(-50).reverse() : []
-  } catch {
-    return []
-  }
 }
 
 // Helper to get/set active view from localStorage
@@ -77,6 +65,7 @@ function setPinnedViewKey(objectName: string, viewKey: string | null): void {
 
 export function GenericListView({ objectDefinition, basePath }: GenericListViewProps) {
   const navigate = useNavigate()
+  const user = useAuthStore(selectUser)
   const [records, setRecords] = useState<GenericRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -147,7 +136,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
       
       // Handle recently viewed view type
       if (activeView?.type === 'recentlyViewed') {
-        const recentIds = getRecentlyViewedIds(objectDefinition.name)
+        const recentIds = getRecentlyViewedIds(objectDefinition.name, user?.id)
         if (recentIds.length === 0) {
           setRecords([])
           setLoading(false)
@@ -310,20 +299,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
 
   const handleViewRecord = (record: GenericRecord) => {
     // Track recently viewed
-    try {
-      const key = `recentlyViewed_${objectDefinition.name}`
-      const stored = localStorage.getItem(key)
-      const recentIds = stored ? JSON.parse(stored) : []
-      const recordId = String(record.id)
-      // Remove if already exists, then add to end
-      const filtered = recentIds.filter((id: string) => id !== recordId)
-      filtered.push(recordId)
-      // Keep only last 50
-      const trimmed = filtered.slice(-50)
-      localStorage.setItem(key, JSON.stringify(trimmed))
-    } catch {
-      // Ignore localStorage errors
-    }
+    trackRecentlyViewed(objectDefinition.name, record.id, user?.id)
 
     if (objectDefinition.detailPath) {
       const idPlaceholder = `$${objectDefinition.name}Id`
@@ -388,12 +364,11 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
 
   return (
     <>
-      <Main className="px-4">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="flex-1 min-w-0">
+      <Main className="px-2 sm:px-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="flex items-center justify-between sm:justify-start gap-2 sm:flex-1 sm:min-w-0">
             {hasMultipleViews ? (
               <ListViewSwitcher
-                objectLabelPlural={objectDefinition.labelPlural}
                 objectIcon={objectDefinition.icon}
                 views={views!}
                 activeViewKey={activeViewKey}
@@ -403,51 +378,68 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
                 onPinChange={handlePinChange}
               />
             ) : (
-              <div className="flex flex-col gap-1">
-                <p className="text-sm text-muted-foreground">{objectDefinition.labelPlural}</p>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <div className="flex flex-col gap-1 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     {(() => {
                       const Icon = objectDefinition.icon
                       return Icon ? (
-                        <Icon className="h-5 w-5" />
+                        <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                       ) : (
-                        <div className="h-5 w-5 rounded bg-primary-foreground/30" />
+                        <div className="h-4 w-4 sm:h-5 sm:w-5 rounded bg-primary-foreground/30" />
                       )
                     })()}
                   </div>
-                  <div>
-                    <h1 className="text-2xl font-bold tracking-tight">
+                  <div className="min-w-0">
+                    <h1 className="text-lg sm:text-2xl font-bold tracking-tight truncate">
                       {views?.[0]?.label ?? objectDefinition.labelPlural}
                     </h1>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       {records.length === 1 ? '1 item' : `${records.length} items`}
                     </p>
                   </div>
                 </div>
               </div>
             )}
-          </div>
-          <Input
-            placeholder={`Search ${objectDefinition.labelPlural.toLowerCase()}...`}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm flex-1"
-          />
-          <div className="flex items-center gap-2 shrink-0 ml-auto">
-            {selectedIds.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={() => setShowDeleteDialog(true)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete {selectedIds.length} item{selectedIds.length > 1 ? 's' : ''}
+            <div className="flex items-center gap-1.5 shrink-0 sm:hidden">
+              {selectedIds.length > 0 && (
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button size="icon" className="h-8 w-8" onClick={handleAddRecord}>
+                <Plus className="h-4 w-4" />
               </Button>
-            )}
-            <Button onClick={handleAddRecord}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add {objectDefinition.label}
-            </Button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto sm:flex-1 sm:max-w-sm">
+            <Input
+              placeholder={`Search...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="h-9 sm:h-10 min-w-0 flex-1"
+            />
+            <div className="hidden sm:flex items-center gap-2 shrink-0">
+              {selectedIds.length > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete {selectedIds.length} item{selectedIds.length > 1 ? 's' : ''}
+                </Button>
+              )}
+              <Button size="sm" onClick={handleAddRecord}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add {objectDefinition.label}
+              </Button>
+            </div>
           </div>
         </div>
 

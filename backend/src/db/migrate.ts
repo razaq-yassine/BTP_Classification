@@ -1,24 +1,30 @@
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
-import path from 'path'
-import { fileURLToPath } from 'url'
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
+import { migrate } from "drizzle-orm/mysql2/migrator";
+import path from "path";
+import { fileURLToPath } from "url";
+import mysql from "mysql2/promise";
+import { drizzle } from "drizzle-orm/mysql2";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export async function runMigrations() {
-  const dbPath = process.env.DATABASE_URL || path.join(process.cwd(), 'data.db')
-  const sqlite = new Database(dbPath)
-  const db = drizzle(sqlite)
-  const migrationsFolder = path.join(process.cwd(), 'drizzle')
-  migrate(db, { migrationsFolder })
-  sqlite.close()
+  const connectionString =
+    process.env.DATABASE_URL || "mysql://root:root@localhost:3306/generic_saas";
+  const connection = await mysql.createConnection(connectionString);
+  const db = drizzle(connection);
+  const migrationsFolder = path.join(process.cwd(), "drizzle");
+  await migrate(db, { migrationsFolder });
+  await connection.end();
 }
 
 // CLI: tsx src/db/migrate.ts
-if (process.argv[1]?.endsWith('migrate.ts')) {
-  runMigrations().then(() => {
-    console.log('Migrations complete')
-    process.exit(0)
-  })
+if (process.argv[1]?.endsWith("migrate.ts")) {
+  runMigrations()
+    .then(() => {
+      console.log("Migrations complete");
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error("Migration failed:", err);
+      process.exit(1);
+    });
 }

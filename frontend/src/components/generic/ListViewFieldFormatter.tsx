@@ -140,7 +140,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
       const refId = typeof value === 'object' ? value?.id : value
       const displayName =
         typeof value === 'object'
-          ? (value.fullName ?? value.name ?? value.orderNumber ?? [value.firstName, value.lastName].filter(Boolean).join(' ')) || value.id
+          ? (value.fullName ?? value.name ?? [value.firstName, value.lastName].filter(Boolean).join(' ')) || value.id
           : value
       const canNavigate = objectName && refId != null && onReferenceClick
       if (canNavigate) {

@@ -1,11 +1,1 @@
-[
-  "name",
-  "orderNumber",
-  "status",
-  "totalAmount",
-  "description",
-  "orderDate",
-  "deliveryDate",
-  "customer",
-  "customerName"
-]
+["name","status","totalAmount","description","orderDate","deliveryDate","customer","customerName"]

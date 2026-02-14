@@ -13,12 +13,12 @@ type EntityConfig = (typeof entityRegistry)[EntityPath]
 type JoinConfig = { joinTable: { id: unknown }; leftColumn: unknown; rightColumn: unknown }
 
 /** Generate next autoNumber value: pattern e.g. "OP-{0000}", start e.g. 1 */
-function generateNextAutoNumber(
+async function generateNextAutoNumber(
   table: { [k: string]: unknown },
   columnName: string,
   pattern: string,
   start: number
-): string {
+): Promise<string> {
   const match = pattern.match(/\{0+}/)
   const padLength = match ? match[0].length - 1 : 4 // {0000} -> 4 digits
   const prefix = pattern.split(/\{0+\}/)[0] || ''
@@ -28,7 +28,7 @@ function generateNextAutoNumber(
   const col = (table as Record<string, unknown>)[columnName]
   if (!col) return `${prefix}${String(start).padStart(padLength, '0')}${suffix}`
 
-  const rows = db.select({ val: col }).from(table as any).all() as { val: string }[]
+  const rows = (await db.select({ val: col as any }).from(table as any)) as { val: string }[]
   let maxNum = start - 1
   for (const row of rows) {
     const m = String(row?.val ?? '').match(regex)
@@ -296,28 +296,29 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     }
 
     const autoNumberFields = (config as { autoNumberFields?: Record<string, { pattern: string; start: number }> }).autoNumberFields
-    const requiredIdFields = ['name', 'orderNumber'].filter(
-      (f) => config.insertFields.includes(f) && !(autoNumberFields && f in autoNumberFields)
+    const requiredIdFields = ['name'].filter(
+      (f) => (config.insertFields as readonly string[]).includes(f) && !(autoNumberFields && f in autoNumberFields)
     )
     for (const field of requiredIdFields) {
       const val = body[field]
       if (val == null || String(val).trim() === '') {
-        const label = field === 'orderNumber' ? 'Order number' : 'Name'
-        return c.json({ message: `${label} is required` }, 400)
+        return c.json({ message: 'Name is required' }, 400)
       }
     }
 
     let insertBody = { ...body }
     if (autoNumberFields) {
       for (const [fieldKey, { pattern, start }] of Object.entries(autoNumberFields)) {
-        const generated = generateNextAutoNumber(table as any, fieldKey, pattern, start)
+        const generated = await generateNextAutoNumber(table as any, fieldKey, pattern, start)
         insertBody = { ...insertBody, [fieldKey]: generated }
       }
     }
 
     const payload = buildInsertPayload(insertBody, config, {})
     const modified = (await runTrigger(objectName, 'beforeInsert', undefined, payload)) ?? payload
-    const [inserted] = await db.insert(table).values(modified).returning()
+    const [insertResult] = await db.insert(table).values(modified as any)
+    const insertId = (insertResult as { insertId?: number })?.insertId
+    const [inserted] = insertId != null ? await db.select().from(table).where(eq(idCol as any, insertId)) : [null]
     await runTrigger(objectName, 'afterInsert', undefined, inserted as Record<string, unknown>)
     if (join && inserted) {
       const ref = config.referenceFields?.[0]
@@ -337,7 +338,8 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     const body = (await c.req.json()) as Record<string, unknown>
     const newPayload = buildUpdatePayload(body, oldRow as Record<string, unknown>, config)
     const modified = (await runTrigger(objectName, 'beforeUpdate', oldRow as Record<string, unknown>, newPayload)) ?? newPayload
-    const [updated] = await db.update(table).set(modified).where(eq(idCol as any, id)).returning()
+    await db.update(table).set(modified as any).where(eq(idCol as any, id))
+    const [updated] = await db.select().from(table).where(eq(idCol as any, id))
     await runTrigger(objectName, 'afterUpdate', oldRow as Record<string, unknown>, updated as Record<string, unknown>)
     if (join && updated) {
       const ref = config.referenceFields?.[0]

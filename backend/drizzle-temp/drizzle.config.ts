@@ -1,10 +1,12 @@
-import { defineConfig } from 'drizzle-kit'
+import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-  schema: './drizzle-temp/db/schema.ts',
-  out: './drizzle',
-  dialect: 'sqlite',
+  schema: "./drizzle-temp/db/schema.ts",
+  out: "./drizzle",
+  dialect: "mysql",
   dbCredentials: {
-    url: process.env.DATABASE_URL || '../data.db',
-  },
-})
+    url:
+      process.env.DATABASE_URL ||
+      "mysql://root:root@localhost:3306/generic_saas"
+  }
+});

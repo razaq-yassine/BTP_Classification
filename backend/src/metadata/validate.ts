@@ -191,6 +191,9 @@ function validateFieldFile(
   if (!VALID_FIELD_TYPES.has(type) && type !== 'autonumber') {
     addError(errors, pathPrefix, `Invalid field type: ${data.type}`, 'FIELD_INVALID_TYPE')
   }
+  if (type === 'autonumber' && fieldKey !== 'name') {
+    addError(errors, pathPrefix, 'autoNumber type is only allowed for the name field', 'AUTONUMBER_ONLY_FOR_NAME')
+  }
   if (data.computed === true && context) {
     validateComputedField(objectName, fieldKey, data, context.fieldKeys, objectNames, context.objectsPath, errors)
   }
@@ -198,14 +201,14 @@ function validateFieldFile(
     if (data.required !== true) {
       addError(errors, pathPrefix, 'Name field must have required: true', 'NAME_FIELD_REQUIRED')
     }
-    if (data.editable !== false) {
-      addError(errors, pathPrefix, 'Name field must have editable: false', 'NAME_FIELD_NOT_EDITABLE')
-    }
-    if (type === 'autonumber' || type === 'autoNumber') {
+    if (type === 'autonumber') {
+      if (data.editable !== false) {
+        addError(errors, pathPrefix, 'autoNumber name field must have editable: false', 'AUTONUMBER_NAME_NOT_EDITABLE')
+      }
       const patternErr = validateAutoNumberPattern((data.autoNumberPattern as string) || '')
       if (patternErr) addError(errors, pathPrefix, patternErr, 'AUTONUMBER_INVALID_PATTERN')
       const start = data.autoNumberStart
-      if (start == null || !Number.isInteger(start) || start < 1) {
+      if (start == null || typeof start !== 'number' || !Number.isInteger(start) || start < 1) {
         addError(errors, pathPrefix, 'autoNumberStart must be a positive integer', 'AUTONUMBER_INVALID_START')
       }
     } else if (type !== 'string') {

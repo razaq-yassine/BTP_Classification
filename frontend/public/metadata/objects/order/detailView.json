@@ -5,7 +5,7 @@
       "title": "Order Information",
       "columns": 2,
       "defaultOpen": true,
-      "fields": ["orderNumber", "status", "totalAmount", "orderDate"]
+      "fields": ["name", "status", "totalAmount", "orderDate"]
     },
     {
       "title": "Customer & Delivery",

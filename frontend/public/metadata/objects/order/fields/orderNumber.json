@@ -1,1 +1,0 @@
-{"key":"orderNumber","label":"Order Number","type":"string","required":true,"unique":true,"editable":true,"sortable":true,"searchable":true,"maxLength":50}

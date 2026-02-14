@@ -1,0 +1,18 @@
+---
+description: MySQL-specific deployment and database guidance
+globs: backend/drizzle/**, backend/scripts/*.ts, backend/src/db/**
+alwaysApply: false
+---
+
+# MySQL Database Guidance
+
+When adding or modifying scripts that touch the database:
+
+1. **Connection** — Use `mysql2/promise`. Connection string format: `mysql://user:password@host:3306/database_name`.
+
+2. **Introspection** — Use `information_schema` for table/column checks:
+
+   - Tables: `SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE()`
+   - Columns: `SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ?`
+
+3. **Common errors** — `ECONNREFUSED` (MySQL not running), `ER_ACCESS_DENIED_ERROR` (wrong credentials), `ER_BAD_DB_ERROR` (database does not exist). Create the database before first deploy: `CREATE DATABASE generic_saas`.
