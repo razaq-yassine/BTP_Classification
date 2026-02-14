@@ -25,7 +25,7 @@ export const fieldSchema = z.object({
   label: z.string(),
   type: z.enum([
     'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text', 'url',
-    'select', 'multiselect', 'reference', 'lookup', 'autoNumber' // lookup maps to reference
+    'select', 'multiselect', 'reference', 'lookup', 'autoNumber', 'formula' // lookup maps to reference
   ]),
   required: z.boolean().optional(),
   editable: z.boolean().optional(),
@@ -55,6 +55,8 @@ export const fieldSchema = z.object({
   autoNumberStart: z.number().optional(),
   /** Pre-fill value when creating new records. Type should match field type (string, number, boolean, or array for multiselect). */
   defaultValue: z.union([z.string(), z.number(), z.boolean(), z.array(z.string())]).optional(),
+  /** For formula fields: expression to evaluate (e.g. "quantity * price", "daysSince(orderDate)") */
+  formulaExpression: z.string().optional(),
 })
 
 export const listViewSchema = z.object({

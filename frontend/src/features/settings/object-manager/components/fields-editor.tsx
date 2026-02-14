@@ -50,6 +50,7 @@ interface FieldDef {
   relationshipType?: 'reference' | 'masterDetail'
   deleteOnCascade?: boolean
   defaultValue?: string | number | boolean | string[]
+  formulaExpression?: string
 }
 
 /** Reserved field keys that cannot be created (name is created with object) */
@@ -186,6 +187,9 @@ export function FieldsEditor({ objectName }: FieldsEditorProps) {
       if (!data.options?.length) return 'At least one option is required for select fields'
       const empty = data.options.find((o) => !o.value?.trim() || !o.label?.trim())
       if (empty) return 'Each option must have a value and label'
+    }
+    if (data.type === 'formula') {
+      if (!data.formulaExpression?.trim()) return 'Formula expression is required'
     }
     return null
   }
@@ -478,7 +482,13 @@ function FieldEditor({
               <Label>Type</Label>
               <Select
                 value={form.type}
-                onValueChange={(v) => update({ type: v, options: v === 'select' || v === 'multiselect' ? form.options || [] : undefined })}
+                onValueChange={(v) => {
+                  update({ 
+                    type: v, 
+                    options: v === 'select' || v === 'multiselect' ? form.options || [] : undefined,
+                    editable: v === 'formula' ? false : form.editable, // Formula fields are read-only
+                  })
+                }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -496,9 +506,35 @@ function FieldEditor({
                   <SelectItem value='reference'>Reference</SelectItem>
                   <SelectItem value='select'>Select</SelectItem>
                   <SelectItem value='multiselect'>Multi-select</SelectItem>
+                  <SelectItem value='formula'>Formula (calculated)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {form.type === 'formula' && (
+              <div className='space-y-3 rounded-md border p-3'>
+                <Label className='text-sm font-medium'>Formula configuration</Label>
+                <div>
+                  <Label className='text-xs'>Formula expression *</Label>
+                  <Input
+                    value={form.formulaExpression || ''}
+                    onChange={(e) => update({ formulaExpression: e.target.value || undefined })}
+                    placeholder='e.g. quantity * price, daysSince(orderDate), currency(totalAmount)'
+                    className='mt-1 font-mono text-sm'
+                  />
+                  <p className='text-muted-foreground mt-1 text-xs'>
+                    Supports: field references (quantity, price), math (+, -, *, /), functions (daysSince(field), currency(field), fallback(field, "value"))
+                  </p>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <Switch
+                    checked={form.editable === false}
+                    onCheckedChange={(v) => update({ editable: !v })}
+                    disabled
+                  />
+                  <Label className='text-xs text-muted-foreground'>Formula fields are read-only</Label>
+                </div>
+              </div>
+            )}
             {form.type === 'reference' && (
               <div className='space-y-3 rounded-md border p-3'>
                 <Label className='text-sm font-medium'>Reference configuration</Label>

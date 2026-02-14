@@ -26,7 +26,7 @@ export interface CalculatedDataDefinition {
 export interface FieldDefinition {
   key: string
   label: string
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'autoNumber'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'autoNumber' | 'formula'
   required?: boolean
   isRequired?: boolean // Alternative to required for compatibility
   isImportant?: boolean // Important fields show popup if empty on submit
@@ -48,6 +48,8 @@ export interface FieldDefinition {
   autoNumberStart?: number // Starting number for autoNumber
   /** Pre-fill value when creating new records */
   defaultValue?: string | number | boolean | string[]
+  /** For formula fields: expression to evaluate (e.g. "quantity * price", "daysSince(orderDate)") */
+  formulaExpression?: string
 }
 
 export interface RelatedObjectDefinition {

@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { GenericDetailInputFormatter } from '@/components/generic/GenericDetailInputFormatter'
 import { FieldDefinition } from '@/types/object-definition'
 import { formatDetailValue } from '@/utils/formatDetailValue'
+import { evaluateFormula } from '@/utils/evaluateFormula'
 import { AlertTriangle } from 'lucide-react'
 
 export const Route = createFileRoute('/_authenticated/dev-components/detail-view-formatter')({
@@ -21,6 +22,8 @@ function DetailViewFormatterPage() {
     phone: '+212 612345678',
     number: 42,
     numberPercent: 0.85,
+    quantity: 5,
+    price: 29.99,
     date: '2024-01-15',
     datetime: '2024-01-15T14:30:00',
     boolean: true,
@@ -73,6 +76,34 @@ function DetailViewFormatterPage() {
       type: 'number',
       required: false,
       renderType: 'percent',
+    },
+    {
+      key: 'quantity',
+      label: 'Quantity',
+      type: 'number',
+      required: false,
+    },
+    {
+      key: 'price',
+      label: 'Price',
+      type: 'number',
+      required: false,
+    },
+    {
+      key: 'total',
+      label: 'Total (Formula: quantity * price)',
+      type: 'formula',
+      required: false,
+      editable: false,
+      formulaExpression: 'quantity * price',
+    },
+    {
+      key: 'orderAge',
+      label: 'Order Age (Formula: daysSince(date))',
+      type: 'formula',
+      required: false,
+      editable: false,
+      formulaExpression: 'daysSince(date)',
     },
     {
       key: 'date',
@@ -244,17 +275,27 @@ function DetailViewFormatterPage() {
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          {fieldDefinitions.map((fieldDef) => (
-            <div key={fieldDef.key} className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{fieldDef.label}</span>
-                <span className="text-xs text-muted-foreground">({fieldDef.type})</span>
+          {fieldDefinitions.map((fieldDef) => {
+            // For formula fields, evaluate the expression
+            let value = formData[fieldDef.key as keyof typeof formData]
+            if (fieldDef.type === 'formula' && fieldDef.formulaExpression) {
+              value = evaluateFormula(fieldDef.formulaExpression, formData as any)
+            }
+            return (
+              <div key={fieldDef.key} className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{fieldDef.label}</span>
+                  <span className="text-xs text-muted-foreground">({fieldDef.type})</span>
+                  {fieldDef.type === 'formula' && (
+                    <span className="text-xs text-muted-foreground font-mono">({fieldDef.formulaExpression})</span>
+                  )}
+                </div>
+                <div className="text-sm text-foreground rounded-md border bg-muted/30 px-3 py-2">
+                  {formatDetailValue(fieldDef, value, formData as any)}
+                </div>
               </div>
-              <div className="text-sm text-foreground rounded-md border bg-muted/30 px-3 py-2">
-                {formatDetailValue(fieldDef, formData[fieldDef.key as keyof typeof formData])}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </CardContent>
       </Card>
 

@@ -10,7 +10,7 @@ export interface SelectOption {
 }
 
 export interface FieldFormatterProps {
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'formula'
   value: any
   format?: string
   options?: SelectOption[]

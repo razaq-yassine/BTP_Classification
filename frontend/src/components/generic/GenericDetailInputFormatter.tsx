@@ -107,6 +107,17 @@ export function GenericDetailInputFormatter({
             className={cn(className, 'bg-muted cursor-not-allowed')}
           />
         )
+      case 'formula':
+        return (
+          <Input
+            type="text"
+            value={value || ''}
+            disabled
+            readOnly
+            placeholder="Calculated value"
+            className={cn(className, 'bg-muted cursor-not-allowed')}
+          />
+        )
 
       case 'string':
       case 'text':

@@ -11,7 +11,7 @@ import { SYSTEM_FIELDS_SET, SYSTEM_OBJECTS_SET } from '../../../shared/dist/prot
 
 const VALID_FIELD_TYPES = new Set([
   'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text', 'url',
-  'select', 'multiselect', 'reference', 'lookup', 'autoNumber'
+  'select', 'multiselect', 'reference', 'lookup', 'autoNumber', 'formula'
 ])
 
 function pluralize(name: string): string {
@@ -240,6 +240,14 @@ function validateFieldFile(
       if (empty) {
         addError(errors, pathPrefix, 'Each option must have a value and label', 'SELECT_INVALID_OPTION')
       }
+    }
+  }
+  if (type === 'formula') {
+    if (!data.formulaExpression || typeof data.formulaExpression !== 'string' || !(data.formulaExpression as string).trim()) {
+      addError(errors, pathPrefix, 'Formula fields require formulaExpression', 'FORMULA_MISSING_EXPRESSION')
+    }
+    if (data.editable !== false && data.editable !== undefined) {
+      addError(errors, pathPrefix, 'Formula fields must have editable: false', 'FORMULA_MUST_BE_READONLY')
     }
   }
 }

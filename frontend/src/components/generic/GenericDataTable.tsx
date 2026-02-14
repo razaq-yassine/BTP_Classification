@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ListViewFieldFormatter } from "@/components/generic/ListViewFieldFormatter"
+import { evaluateFormula } from "@/utils/evaluateFormula"
 
 // Generic interfaces
 interface GenericRecord {
@@ -250,7 +251,11 @@ export function GenericDataTable<TData extends GenericRecord>({
                     </TableCell>
                     {/* Data cells */}
                     {fields.map((field: any, fieldIndex: number) => {
-                      const value = row[field.key as keyof typeof row]
+                      // Evaluate formula fields on the fly
+                      let value = row[field.key as keyof typeof row]
+                      if (field.type === 'formula' && field.formulaExpression) {
+                        value = evaluateFormula(field.formulaExpression, row as any)
+                      }
                       const cellContent = (
                         <ListViewFieldFormatter
                           type={field.type}

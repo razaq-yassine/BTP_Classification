@@ -93,7 +93,8 @@ export function GenericCreateDialog({
             : field
           
           // Set default values: use field.defaultValue if set, else type-based fallback
-          if (fieldDefinition) {
+          // Skip formula and autoNumber fields (read-only)
+          if (fieldDefinition && fieldDefinition.type !== 'formula' && fieldDefinition.type !== 'autoNumber') {
             if (fieldDefinition.defaultValue !== undefined && fieldDefinition.defaultValue !== null) {
               initialFormData[fieldKey] = fieldDefinition.defaultValue
             } else {

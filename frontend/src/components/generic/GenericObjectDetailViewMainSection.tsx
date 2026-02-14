@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ObjectDefinition, GenericRecord, FieldDefinition } from '@/types/object-definition'
 import { formatDetailValue } from '@/utils/formatDetailValue'
+import { evaluateFormula } from '@/utils/evaluateFormula'
 import { GenericRelatedListView } from './GenericRelatedListView'
 import { GenericDetailInputFormatter } from './GenericDetailInputFormatter'
 import { GenericDetailsTabSkeleton } from './GenericDetailsTabSkeleton'
@@ -59,10 +60,15 @@ function FieldDisplay({
   onRevertField?: (fieldKey: string) => void
   error?: string
 }) {
-  const value = record[field.key]
+  // Formula fields: evaluate expression (read-only, not editable)
+  let value = record[field.key]
+  if (field.type === 'formula' && field.formulaExpression) {
+    value = evaluateFormula(field.formulaExpression, record)
+  }
   const formValue = formData[field.key] !== undefined ? formData[field.key] : value
 
-  if (isEditing) {
+  // Formula fields are always read-only
+  if (isEditing && field.type !== 'formula') {
     const hasChanged = formValue !== value
     
     return (
@@ -121,7 +127,7 @@ function FieldDisplay({
         isEmpty ? "text-gray-400 italic" : "text-gray-900",
         isImportant && "text-orange-600 font-medium"
       )}>
-        {formatDetailValue(field, value)}
+        {formatDetailValue(field, value, record)}
       </div>
     </div>
   )
@@ -663,12 +669,18 @@ function DetailsTabContent({
                       
                       if (!fieldDefinition) return null
 
-                      const value = record[fieldKey]
+                      // Formula fields: evaluate expression
+                      let value = record[fieldKey]
+                      if (fieldDefinition.type === 'formula' && fieldDefinition.formulaExpression) {
+                        value = evaluateFormula(fieldDefinition.formulaExpression, record)
+                      }
                       // Show field if: important, editing, has value, or is editable (to show all editable fields in read-only mode)
                       // Important fields should ALWAYS be visible, even when empty in read-only mode
                       // Editable fields should also be visible even when empty to maintain consistent UI
+                      // Formula fields should always be visible
                       const shouldShow = fieldDefinition.isImportant || 
                                        tabState.isEditing ||
+                                       fieldDefinition.type === 'formula' ||
                                        (value !== null && value !== undefined && value !== '') ||
                                        (fieldDefinition.editable !== false) // Show all editable fields
                       

@@ -1,11 +1,21 @@
 import React from 'react'
-import type { FieldDefinition } from '@/types/object-definition'
+import type { FieldDefinition, GenericRecord } from '@/types/object-definition'
+import { evaluateFormula } from './evaluateFormula'
 
 /**
  * Formats a field value for read-only display in the detail view.
  * Used by GenericObjectDetailViewMainSection and the dev-components detail-view-formatter.
  */
-export function formatDetailValue(field: FieldDefinition, val: any): React.ReactNode {
+export function formatDetailValue(field: FieldDefinition, val: any, record?: GenericRecord): React.ReactNode {
+  // Formula fields: evaluate expression
+  if (field.type === 'formula' && field.formulaExpression && record) {
+    const result = evaluateFormula(field.formulaExpression, record)
+    // Format result based on type
+    if (typeof result === 'number') {
+      return result.toLocaleString()
+    }
+    return String(result)
+  }
   if (val === null || val === undefined || val === '') {
     return '(Empty)'
   }
