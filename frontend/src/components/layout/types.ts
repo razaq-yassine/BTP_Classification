@@ -16,6 +16,8 @@ interface BaseNavItem {
   title: string
   badge?: string
   icon?: React.ElementType
+  /** If true, only visible to users with profile === 'admin' */
+  adminOnly?: boolean
 }
 
 type NavLink = BaseNavItem & {

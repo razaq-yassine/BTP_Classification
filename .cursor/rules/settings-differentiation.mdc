@@ -1,0 +1,34 @@
+---
+description: When adding new settings, always decide Personal vs Administration and add protection
+globs: frontend/src/components/layout/data/sidebar-data.ts, frontend/src/hooks/useSidebarData.ts, frontend/src/routes/_authenticated/settings/**
+alwaysApply: true
+---
+
+# Settings: Personal vs Administration
+
+When adding any new settings page, always consider this differentiation.
+
+## Categories
+
+| Category | Who | Examples |
+|----------|-----|----------|
+| **Personal** | All users | Profile, Account, Appearance, Notifications, Display |
+| **Administration** | Admin only (`profile === 'admin'`) | Object Manager, Profiles |
+
+## Checklist for New Settings
+
+1. **Decide category**: Is this a user preference (Personal) or platform config (Administration)?
+
+2. **Add to sidebar**: In [sidebar-data.ts](frontend/src/components/layout/data/sidebar-data.ts):
+   - Personal: add to the `Personal` group (no `adminOnly`)
+   - Administration: add to the `Administration` group with `adminOnly: true`
+
+3. **Route protection** (Administration only): Add `beforeLoad` to the route that checks `user?.profile === 'admin'` and redirects to `/settings` if not admin.
+
+4. **Backend** (Administration only): If the setting has an API, ensure the endpoint checks `user.profile === 'admin'` (metadata API already uses `adminOnlyMiddleware`).
+
+## References
+
+- [useSidebarData](frontend/src/hooks/useSidebarData.ts) filters `adminOnly` items for non-admin users
+- [object-manager.tsx](frontend/src/routes/_authenticated/settings/object-manager.tsx) and [profiles.tsx](frontend/src/routes/_authenticated/settings/profiles.tsx) show `beforeLoad` admin check pattern
+- [backend admin middleware](backend/src/middleware/admin.ts) for API protection

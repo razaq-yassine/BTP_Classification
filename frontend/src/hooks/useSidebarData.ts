@@ -4,6 +4,7 @@ import type { ObjectDefinition } from '@/types/object-definition'
 import type { SidebarData, NavGroup, NavItem, NavLink, NavCollapsible } from '@/components/layout/types'
 import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useAuthStore, selectUser } from '@/stores/authStore'
 import { sidebarData as staticSidebarData, settingsNavGroups } from '@/components/layout/data/sidebar-data'
 
 function buildDataNavGroup(defs: ObjectDefinition[], canRead: (objectName: string) => boolean): NavGroup | null {
@@ -53,20 +54,32 @@ function buildDataNavGroup(defs: ObjectDefinition[], canRead: (objectName: strin
   }
 }
 
+function filterSettingsNavForProfile(groups: NavGroup[], isAdmin: boolean): NavGroup[] {
+  if (isAdmin) return groups
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => !('adminOnly' in item) || !item.adminOnly),
+    }))
+    .filter((group) => group.items.length > 0)
+}
+
 export function useSidebarData(): SidebarData {
   const location = useLocation()
+  const user = useAuthStore(selectUser)
   const { data: defs } = useObjectDefinitionsQuery()
   const { canRead } = usePermissions()
   const isSettings = location.pathname.startsWith('/settings')
+  const isAdmin = user?.profile === 'admin'
 
   const navGroups = useMemo(() => {
-    if (isSettings) return settingsNavGroups
+    if (isSettings) return filterSettingsNavForProfile(settingsNavGroups, isAdmin)
     if (!defs) return staticSidebarData.navGroups
     const dataGroup = buildDataNavGroup(defs, canRead)
     if (!dataGroup) return staticSidebarData.navGroups
     const existing = staticSidebarData.navGroups.filter((g) => g.title !== dataGroup.title)
     return [dataGroup, ...existing]
-  }, [defs, isSettings, canRead])
+  }, [defs, isSettings, canRead, isAdmin])
 
   return {
     ...staticSidebarData,

@@ -93,7 +93,7 @@ Phase 1 (Foundation)          Phase 2 (Polish)              Phase 3 (Config)
 │ 3. Detail View     │       │ 9. General Layout   │       │ 15. Sidebar         │
 │ 4. Create          │       │ 10. owner/created/  │       │ 16. Default values  │
 │ 5. Field types     │       │     edited by       │       │ 17. Formulas        │
-│ 6. Page Layout     │       │ 11. Permissions     │       └─────────────────────┘
+│ 6. Page Layout     │       │ 11. Permissions ✅   │       └─────────────────────┘
 └─────────────────────┘       │ 12. Validation      │
                              └─────────────────────┘
                                         │

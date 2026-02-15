@@ -26,15 +26,20 @@ import { type SidebarData, type NavGroup } from '../types'
 
 export const settingsNavGroups: NavGroup[] = [
   {
-    title: 'Settings',
+    title: 'Personal',
     items: [
-      { title: 'Object Manager', url: '/settings/object-manager', icon: IconBox },
-      { title: 'Profiles', url: '/settings/profiles', icon: IconLockAccess },
       { title: 'Profile', url: '/settings', icon: IconUserCog },
       { title: 'Account', url: '/settings/account', icon: IconTool },
       { title: 'Appearance', url: '/settings/appearance', icon: IconPalette },
       { title: 'Notifications', url: '/settings/notifications', icon: IconNotification },
       { title: 'Display', url: '/settings/display', icon: IconBrowserCheck },
+    ],
+  },
+  {
+    title: 'Administration',
+    items: [
+      { title: 'Object Manager', url: '/settings/object-manager', icon: IconBox, adminOnly: true },
+      { title: 'Permission Profiles', url: '/settings/profiles', icon: IconLockAccess, adminOnly: true },
     ],
   },
 ]

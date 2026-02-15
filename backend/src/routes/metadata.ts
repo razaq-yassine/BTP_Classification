@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { authMiddleware } from '../middleware/auth.js'
+import { adminOnlyMiddleware } from '../middleware/admin.js'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -143,6 +144,7 @@ function triggerAutoDeploy() {
 export const metadataRoutes = new Hono()
 
 metadataRoutes.use('*', authMiddleware)
+metadataRoutes.use('*', adminOnlyMiddleware)
 
 metadataRoutes.get('/objects', (c) => {
   try {
