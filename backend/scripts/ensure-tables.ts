@@ -1,3 +1,4 @@
+import "dotenv/config";
 /**
  * Ensures all tables from metadata exist in the database.
  * Creates any missing tables (e.g. from UI-created objects) when drizzle-kit generate
@@ -44,6 +45,7 @@ function mapTypeToMySQL(field: FieldDef): string {
   if (t === "number") return "DECIMAL(10,2)";
   if (t === "boolean") return "TINYINT(1) DEFAULT 1";
   if (t === "date" || t === "datetime") return "DATETIME";
+  if (t === "text") return "TEXT";
   return "VARCHAR(255)";
 }
 
@@ -65,7 +67,7 @@ function loadObjectMetadata(objectName: string): {
     const fieldPath = path.join(objPath, "fields", `${key}.json`);
     if (!fs.existsSync(fieldPath)) continue;
     const fd = JSON.parse(fs.readFileSync(fieldPath, "utf-8")) as FieldDef;
-    if ((fd as { computed?: boolean }).computed) continue;
+    if ((fd as { computed?: boolean; type?: string }).computed || (fd as { type?: string }).type === "formula") continue;
     fields.push(fd);
   }
 
@@ -80,7 +82,8 @@ function generateCreateTableSql(tableName: string, fields: FieldDef[]): string {
     const sqlType = mapTypeToMySQL(field);
 
     if (field.type === "reference") {
-      cols.push(`\`${colName}_id\` INT NOT NULL`);
+      const refNotNull = field.required ? " NOT NULL" : "";
+      cols.push(`\`${colName}_id\` INT${refNotNull}`);
     } else {
       const notNull = field.required ? " NOT NULL" : "";
       const isAutoNum =
@@ -127,7 +130,7 @@ async function main() {
   const [tableRows] = await conn.execute<mysql.RowDataPacket[]>(
     "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'"
   );
-  const existingTables = new Set((tableRows || []).map((r) => r.table_name));
+  const existingTables = new Set((tableRows || []).map((r) => (r.table_name ?? r.TABLE_NAME) as string));
 
   let created = 0;
   for (const objectName of objectDirs) {

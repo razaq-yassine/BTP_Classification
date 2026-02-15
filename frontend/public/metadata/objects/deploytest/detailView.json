@@ -1,0 +1,1 @@
+{"layout":"two-column","sections":[{"title":"All Field Types","columns":2,"defaultOpen":true,"fields":["name","fString","fNumber","fBoolean","fDate","fDatetime","fEmail","fPhone","fText","fUrl","fSelect","fMultiselect","fReference","fFormula","fComputed"]},{"title":"System Information","columns":2,"defaultOpen":false,"fields":["id","createdAt","updatedAt"]}]}

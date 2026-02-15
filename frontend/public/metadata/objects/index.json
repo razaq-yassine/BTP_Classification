@@ -1,6 +1,7 @@
 [
   "category",
   "customer",
+  "deploytest",
   "opportunity",
   "order",
   "orderitem",

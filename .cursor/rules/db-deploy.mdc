@@ -28,3 +28,5 @@ When adding or changing metadata (objects, fields) that affect the database sche
 8. **Metadata-driven** — Schema and migrations come from metadata and tooling only. Never edit `schema.ts`, `entity-registry.generated.ts`, or create migration SQL manually. See `.cursor/rules/metadata-driven.mdc`.
 
 9. **Non-interactive migrations** — Deploy uses `db:generate-temp-noninteractive` to run drizzle-kit with piped input, avoiding prompts. If drizzle-kit still prompts or hangs, enhance `scripts/generate-migrations-noninteractive.ts` (e.g. pipe the correct selection). The migration `0001_rename_order_number_to_name.sql` was created during a transition; going forward, all migrations must come from the tooling.
+
+10. **tableName uniqueness** — Validation fails if two objects use the same `tableName` (or pluralized object name when `tableName` is omitted). Each object must map to a unique database table.

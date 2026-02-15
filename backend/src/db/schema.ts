@@ -1,4 +1,4 @@
-import { mysqlTable, int, varchar, decimal, boolean, datetime } from 'drizzle-orm/mysql-core'
+import { mysqlTable, int, varchar, text, decimal, boolean, datetime } from 'drizzle-orm/mysql-core'
 
 export const users = mysqlTable('users', {
   id: int('id').autoincrement().primaryKey(),
@@ -15,7 +15,7 @@ export const categories = mysqlTable('categories', {
   id: int('id').autoincrement().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 255 }).notNull().unique(),
-  description: varchar('description', { length: 255 }),
+  description: text('description'),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
 })
@@ -27,10 +27,29 @@ export const customers = mysqlTable('customers', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   phone: varchar('phone', { length: 255 }),
   company: varchar('company', { length: 255 }),
-  address: varchar('address', { length: 255 }),
+  address: text('address'),
   notes: varchar('notes', { length: 255 }),
   tags: varchar('tags', { length: 255 }),
   priority: varchar('priority', { length: 255 }),
+  createdAt: datetime('created_at'),
+  updatedAt: datetime('updated_at'),
+})
+
+export const deploytests = mysqlTable('deploytests', {
+  id: int('id').autoincrement().primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  fString: varchar('f_string', { length: 255 }),
+  fNumber: varchar('f_number', { length: 255 }),
+  fBoolean: boolean('f_boolean').default(true),
+  fDate: datetime('f_date'),
+  fDatetime: datetime('f_datetime'),
+  fEmail: varchar('f_email', { length: 255 }),
+  fPhone: varchar('f_phone', { length: 255 }),
+  fText: text('f_text'),
+  fUrl: varchar('f_url', { length: 255 }),
+  fSelect: varchar('f_select', { length: 255 }),
+  fMultiselect: varchar('f_multiselect', { length: 255 }),
+  fReferenceId: int('f_reference_id').references(() => customers.id),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
 })
@@ -47,10 +66,10 @@ export const orders = mysqlTable('orders', {
   name: varchar('name', { length: 255 }).notNull().unique(),
   status: varchar('status', { length: 255 }).notNull(),
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
-  description: varchar('description', { length: 255 }),
+  description: text('description'),
   orderDate: datetime('order_date').notNull(),
   deliveryDate: datetime('delivery_date'),
-  customerId: int('customer_id').notNull().references(() => customers.id),
+  customerId: int('customer_id').references(() => customers.id),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
 })
@@ -71,7 +90,7 @@ export const products = mysqlTable('products', {
   name: varchar('name', { length: 255 }).notNull(),
   sku: varchar('sku', { length: 255 }).notNull().unique(),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
-  description: varchar('description', { length: 255 }),
+  description: text('description'),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
 })
@@ -92,7 +111,7 @@ export const warehouses = mysqlTable('warehouses', {
   slug: varchar('slug', { length: 255 }).notNull().unique(),
   location: varchar('location', { length: 255 }),
   capacity: decimal('capacity', { precision: 10, scale: 2 }),
-  description: varchar('description', { length: 255 }).notNull(),
+  description: text('description').notNull(),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
 })
@@ -100,6 +119,7 @@ export const warehouses = mysqlTable('warehouses', {
 export type User = typeof users.$inferSelect
 export type Category = typeof categories.$inferSelect
 export type Customer = typeof customers.$inferSelect
+export type Deploytest = typeof deploytests.$inferSelect
 export type Opportunity = typeof opportunities.$inferSelect
 export type Order = typeof orders.$inferSelect
 export type Orderitem = typeof orderitems.$inferSelect

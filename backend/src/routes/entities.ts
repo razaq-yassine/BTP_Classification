@@ -96,13 +96,18 @@ function buildInsertPayload(
     const ref = config.referenceFields?.find((r) => r.idField === field)
     if (ref) {
       const val = (body[ref.key] as { id?: number })?.id ?? body[field]
-      payload[field] = val != null ? Number(val) : (defaults as Record<string, unknown>)?.[field]
+      const finalVal = val != null ? Number(val) : (defaults as Record<string, unknown>)?.[field]
+      if (finalVal !== undefined) payload[field] = finalVal
       continue
     }
     let val = body[field] ?? (defaults as Record<string, unknown>)?.[field]
-    if (['orderDate', 'deliveryDate', 'createdAt', 'updatedAt'].includes(field) && typeof val === 'string') {
+    const dateFields = (config as { dateFields?: string[] }).dateFields
+    if (dateFields?.includes(field) && typeof val === 'string') {
+      val = new Date(val)
+    } else if (['orderDate', 'deliveryDate', 'createdAt', 'updatedAt'].includes(field) && typeof val === 'string') {
       val = new Date(val)
     }
+    if (Array.isArray(val)) val = JSON.stringify(val)
     if (val !== undefined) payload[field] = val
   }
   return payload
@@ -124,7 +129,10 @@ function buildUpdatePayload(
     }
     let val = body[field]
     if (val === undefined) val = oldRow[field]
-    if (['orderDate', 'deliveryDate'].includes(field) && typeof val === 'string') val = new Date(val)
+    const dateFields = (config as { dateFields?: string[] }).dateFields
+    if (dateFields?.includes(field) && typeof val === 'string') val = new Date(val)
+    else if (['orderDate', 'deliveryDate'].includes(field) && typeof val === 'string') val = new Date(val)
+    if (Array.isArray(val)) val = JSON.stringify(val)
     if (val !== undefined) payload[field] = val
   }
   return payload
@@ -289,10 +297,16 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
 
   entityRoutes.post(`/${entityPath}`, async (c) => {
     const body = (await c.req.json()) as Record<string, unknown>
-    const hasRequiredRef = config.referenceFields?.every((ref) => body[ref.idField] ?? (body[ref.key] as { id?: number })?.id)
-    if (config.referenceFields?.length && !hasRequiredRef) {
-      const refLabel = config.referenceFields?.[0]?.key
-      return c.json({ message: `Required reference field${refLabel ? ` (${refLabel})` : ''} missing` }, 400)
+    const requiredRefIdFields = (config as { requiredRefIdFields?: string[] }).requiredRefIdFields
+    if (requiredRefIdFields?.length && config.referenceFields) {
+      for (const idField of requiredRefIdFields) {
+        const ref = config.referenceFields.find((r) => r.idField === idField)
+        if (!ref) continue
+        const val = body[idField] ?? (body[ref.key] as { id?: number })?.id
+        if (val == null) {
+          return c.json({ message: `Required reference field (${ref.key}) missing` }, 400)
+        }
+      }
     }
 
     const autoNumberFields = (config as { autoNumberFields?: Record<string, { pattern: string; start: number }> }).autoNumberFields
@@ -316,7 +330,12 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
 
     const payload = buildInsertPayload(insertBody, config, {})
     const modified = (await runTrigger(objectName, 'beforeInsert', undefined, payload)) ?? payload
-    const [insertResult] = await db.insert(table).values(modified as any)
+    const insertFieldsSet = new Set(config.insertFields as readonly string[])
+    const filteredPayload = Object.fromEntries(
+      Object.entries(modified as Record<string, unknown>).filter(([k]) => insertFieldsSet.has(k))
+    )
+    try {
+      const [insertResult] = await db.insert(table).values(filteredPayload as any)
     const insertId = (insertResult as { insertId?: number })?.insertId
     const [inserted] = insertId != null ? await db.select().from(table).where(eq(idCol as any, insertId)) : [null]
     await runTrigger(objectName, 'afterInsert', undefined, inserted as Record<string, unknown>)
@@ -329,6 +348,11 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       }
     }
     return c.json(toRecord(inserted as Record<string, unknown>, null, config, null), 201)
+    } catch (err) {
+      console.error(`POST /${entityPath} error:`, err)
+      const msg = (err as Error).message || 'Internal server error'
+      return c.json({ message: msg }, 500)
+    }
   })
 
   entityRoutes.put(`/${entityPath}/:id`, async (c) => {

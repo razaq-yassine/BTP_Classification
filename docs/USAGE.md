@@ -519,12 +519,14 @@ You can add `"trigger": "customer"` to `object.json` for reference. The backend 
 3. **Generate migrations** — Drizzle-kit compares schema to DB, writes migration SQL to `backend/drizzle/`
 4. **Fix pending migrations** — For migrations that add columns, if columns already exist, marks as applied
 5. **Run migrations** — Applies `backend/drizzle/*.sql` to the MySQL database
-6. **Verify schema** — Confirms DB columns match metadata expectations
-7. **Sync drops** — Removes tables/columns that no longer exist in metadata
-8. **Copy generated files** — Updates `schema.ts` and `entity-registry.generated.ts`
-9. **Ensure tables** — Creates any missing tables from metadata
+6. **Ensure tables** — Creates any missing tables from metadata (e.g. when migrations don't create them)
+7. **Verify schema** — Confirms DB columns match metadata expectations
+8. **Sync drops** — Removes tables/columns that no longer exist in metadata
+9. **Copy generated files** — Updates `schema.ts` and `entity-registry.generated.ts`
 
 **Never create schema or migrations manually.** All artifacts flow from metadata. See `.cursor/rules/metadata-driven.mdc`.
+
+**Formula and computed fields** do not create DB columns—they are evaluated at runtime. `sync-drops` and `ensure-tables` skip them when building expected columns, so they are never dropped or created as columns.
 
 **Important**: Migrations are stored in `backend/drizzle/`. Both the schema generator and the migrate script use this folder. Do not create a separate `drizzle/` folder at the project root.
 
@@ -559,5 +561,6 @@ Replace `dbname` with your database name and `table_name` with any table from yo
 - Select/multiselect require `options` array
 - Formula fields require `formulaExpression` and `editable: false`
 - `masterDetail` reference requires `required: true`
+- `tableName` must be unique across objects (validation fails if two objects use the same table)
 
 See `.cursor/rules/metadata-validation.mdc` for the full checklist when adding new metadata features.

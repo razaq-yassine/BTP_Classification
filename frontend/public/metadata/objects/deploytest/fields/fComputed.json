@@ -1,0 +1,1 @@
+{"key":"fComputed","label":"Computed","type":"string","computed":true,"computedExpression":"concat","sourceFields":["fString","fUrl"],"separator":" | ","editable":false}

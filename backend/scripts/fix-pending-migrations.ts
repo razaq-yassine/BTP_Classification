@@ -1,3 +1,4 @@
+import "dotenv/config";
 /**
  * Generic pre-migration fix: For any pending migration that only adds columns,
  * if those columns already exist in the DB (e.g. from ensure-tables or manual changes),
@@ -31,7 +32,7 @@ async function getTableColumns(
     "SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ?",
     [tableName]
   );
-  return new Set((rows || []).map((r) => r.column_name));
+  return new Set((rows || []).map((r) => (r.column_name ?? r.COLUMN_NAME) as string));
 }
 
 /** Check if table exists. */

@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { migrate } from "drizzle-orm/mysql2/migrator";
 import path from "path";
 import { fileURLToPath } from "url";

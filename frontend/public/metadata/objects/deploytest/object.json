@@ -1,0 +1,1 @@
+{"name":"deploytest","label":"Deploy Test","labelPlural":"Deploy Tests","description":"Test object with all field types for metadata deployment validation","apiEndpoint":"/api/deploytests","basePath":"/deploytests","detailPath":"/deploytests/$deploytestId","icon":"FlaskConical","color":"slate","sidebar":{"showInSidebar":true,"group":"Data","parent":"Testing"}}

@@ -1,3 +1,4 @@
+import "dotenv/config";
 /**
  * Compares metadata with database and drops tables/columns that no longer exist in metadata.
  * Run as part of db:deploy. Protects system tables (users, __drizzle_migrations).
@@ -100,7 +101,7 @@ function getExpectedColumnsFromMetadata(): Map<string, Set<string>> {
             type?: string;
             computed?: boolean;
           };
-          if (fd.computed) continue;
+          if (fd.computed || fd.type === "formula") continue;
           if (fd.type === "reference") {
             cols.add(toSnakeCase(key) + "_id");
           } else {
@@ -133,7 +134,7 @@ async function main() {
   const [tableRows] = await conn.execute<mysql.RowDataPacket[]>(
     "SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE'"
   );
-  const dbTables = (tableRows || []).map((r) => r.table_name);
+  const dbTables = (tableRows || []).map((r) => (r.table_name ?? r.TABLE_NAME) as string);
 
   let tablesDropped = 0;
   const toDropTables = dbTables.filter(
@@ -160,7 +161,7 @@ async function main() {
       "SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ?",
       [tableName]
     );
-    const actualColumns = (colRows || []).map((r) => r.column_name);
+    const actualColumns = (colRows || []).map((r) => (r.column_name ?? r.COLUMN_NAME) as string);
     const toDropCols = actualColumns.filter(
       (c) => !PROTECTED_COLUMNS_SET.has(c) && !expected.has(c)
     );

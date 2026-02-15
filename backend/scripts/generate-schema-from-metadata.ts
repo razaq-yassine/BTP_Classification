@@ -173,10 +173,11 @@ function generateTable(
     const unique = field.unique || isAutoNum ? ".unique()" : "";
 
     if (field.type === "reference") {
+      const refNotNull = field.required ? ".notNull()" : "";
       lines.push(
         `  ${field.key}Id: ${
           dialect === "mysql" ? "int" : "integer"
-        }('${colName}_id').notNull().${refCall},`
+        }('${colName}_id')${refNotNull}.${refCall},`
       );
     } else if (dialect === "mysql") {
       if (field.type === "boolean") {
@@ -189,6 +190,8 @@ function generateTable(
         lines.push(
           `  ${field.key}: decimal('${colName}', { precision: 10, scale: 2 })${notNull}${unique},`
         );
+      } else if (field.type === "text") {
+        lines.push(`  ${field.key}: text('${colName}')${notNull}${unique},`);
       } else {
         lines.push(
           `  ${field.key}: varchar('${colName}', { length: 255 })${notNull}${unique},`
@@ -326,7 +329,7 @@ function main() {
 
   const schemaImports =
     dialect === "mysql"
-      ? `import { mysqlTable, int, varchar, decimal, boolean, datetime } from 'drizzle-orm/mysql-core'`
+      ? `import { mysqlTable, int, varchar, text, decimal, boolean, datetime } from 'drizzle-orm/mysql-core'`
       : `import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core'`;
 
   const schemaContent = `${schemaImports}
@@ -483,6 +486,22 @@ function generateEntityRegistry(objectDirs: string[]) {
         ? `autoNumberFields: { ${autoNumberFields.join(", ")} }`
         : "";
 
+    const requiredRefIdFields = referenceFields
+      .filter((f) => f.required)
+      .map((f) => `${f.key}Id`);
+    const requiredRefsConfig =
+      requiredRefIdFields.length > 0
+        ? `requiredRefIdFields: [${requiredRefIdFields.map((s) => `'${s}'`).join(", ")}]`
+        : "";
+
+    const dateFields = fields
+      .filter((f) => f.type === "date" || f.type === "datetime")
+      .map((f) => f.key);
+    const dateFieldsConfig =
+      dateFields.length > 0
+        ? `dateFields: [${dateFields.map((s) => `'${s}'`).join(", ")}]`
+        : "";
+
     const configParts = [
       `table: ${tableName}`,
       `objectName: '${objectName}'`,
@@ -497,6 +516,8 @@ function generateEntityRegistry(objectDirs: string[]) {
             )}' }`
         )
         .join(", ")}]`,
+      requiredRefsConfig,
+      dateFieldsConfig,
       joinConfig,
       `computedFields: ${computedConfig}`,
       `relatedListPaths: ${relatedPathsStr}`,

@@ -1,6 +1,6 @@
 import { FieldDefinition } from '@/types/object-definition'
 import { Input } from '@/components/ui/input'
-
+import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 
 import { Label } from '@/components/ui/label'
@@ -122,7 +122,6 @@ export function GenericDetailInputFormatter({
         )
 
       case 'string':
-      case 'text':
         return (
           <Input
             type="text"
@@ -131,6 +130,17 @@ export function GenericDetailInputFormatter({
             disabled={disabled}
             placeholder={`Enter ${label.toLowerCase()}`}
             className={className}
+          />
+        )
+      case 'text':
+        return (
+          <Textarea
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={disabled}
+            placeholder={`Enter ${label.toLowerCase()}`}
+            className={cn(className, 'min-h-[80px]')}
+            rows={4}
           />
         )
 

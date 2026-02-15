@@ -459,6 +459,29 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
     const p = path.join(objectsPath, d)
     return fs.statSync(p).isDirectory()
   })
+
+  // Check tableName uniqueness across objects
+  const tableNameToObjects = new Map<string, string[]>()
+  for (const objectName of objectDirs) {
+    if (SYSTEM_OBJECTS_SET.has(objectName.toLowerCase())) continue
+    const objPath = path.join(objectsPath, objectName)
+    if (!fs.existsSync(path.join(objPath, 'object.json'))) continue
+    try {
+      const obj = JSON.parse(fs.readFileSync(path.join(objPath, 'object.json'), 'utf-8')) as Record<string, unknown>
+      const tableName = ((obj.tableName as string) || pluralize(objectName)) as string
+      const list = tableNameToObjects.get(tableName) || []
+      list.push(objectName)
+      tableNameToObjects.set(tableName, list)
+    } catch {
+      // Parse error handled in main loop
+    }
+  }
+  for (const [tableName, objects] of tableNameToObjects) {
+    if (objects.length > 1) {
+      addError(errors, 'objects', `Duplicate tableName '${tableName}' used by objects: ${objects.join(', ')}`, 'DUPLICATE_TABLE_NAME')
+    }
+  }
+
   for (const objectName of objectDirs) {
     if (SYSTEM_OBJECTS_SET.has(objectName.toLowerCase())) continue
     const objPath = path.join(objectsPath, objectName)

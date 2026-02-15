@@ -98,11 +98,20 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
         <SelectColoredDiv value={value} options={options ?? []} />
       )
 
-    case 'multiselect':
-      if (!Array.isArray(value) || value.length === 0) return EMPTY
+    case 'multiselect': {
+      let arr: string[] = Array.isArray(value) ? value : []
+      if (!Array.isArray(value) && typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value)
+          arr = Array.isArray(parsed) ? parsed : []
+        } catch {
+          arr = value ? [value] : []
+        }
+      }
+      if (arr.length === 0) return EMPTY
       return (
         <div className="flex flex-wrap gap-1">
-          {value.slice(0, 3).map((val, index) => {
+          {arr.slice(0, 3).map((val, index) => {
             const opt = options?.find((o) => o.value === val)
             const color = opt?.color
             const label = opt?.label || val
@@ -116,11 +125,12 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
               </span>
             )
           })}
-          {value.length > 3 && (
-            <span className="text-xs text-muted-foreground">+{value.length - 3} more</span>
+          {arr.length > 3 && (
+            <span className="text-xs text-muted-foreground">+{arr.length - 3} more</span>
           )}
         </div>
       )
+    }
 
     case 'datetime':
       try {

@@ -1,3 +1,4 @@
+import "dotenv/config";
 /**
  * Verifies that the database schema matches metadata expectations.
  * Run after db:migrate as part of db:deploy. Exits with code 1 if columns are missing.
@@ -93,7 +94,7 @@ async function getDbColumns(
     "SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ?",
     [tableName]
   );
-  return new Set((rows || []).map((r) => r.column_name));
+  return new Set((rows || []).map((r) => (r.column_name ?? r.COLUMN_NAME) as string));
 }
 
 async function main(): Promise<number> {
