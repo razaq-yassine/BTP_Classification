@@ -7,6 +7,7 @@ export const users = mysqlTable('users', {
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
   firstName: varchar('first_name', { length: 255 }),
   lastName: varchar('last_name', { length: 255 }),
+  profile: varchar('profile', { length: 255 }).default('standard-user'),
   isActive: boolean('is_active').default(true),
   dateJoined: datetime('date_joined'),
 })

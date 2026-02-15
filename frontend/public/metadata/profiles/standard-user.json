@@ -1,0 +1,6 @@
+{
+  "name": "standard-user",
+  "label": "Standard User",
+  "description": "No permissions by default",
+  "objectPermissions": {}
+}

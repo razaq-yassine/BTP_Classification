@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { ObjectDefinition, GenericRecord, FieldDefinition } from '@/types/object-definition'
 import { formatDetailValue } from '@/utils/formatDetailValue'
 import { evaluateFormula } from '@/utils/evaluateFormula'
+import { usePermissions } from '@/hooks/usePermissions'
 import { GenericRelatedListView } from './GenericRelatedListView'
 import { GenericDetailInputFormatter } from './GenericDetailInputFormatter'
 import { GenericDetailsTabSkeleton } from './GenericDetailsTabSkeleton'
@@ -49,7 +50,9 @@ function FieldDisplay({
   onChange,
   onStartEdit,
   onRevertField,
-  error
+  error,
+  objectName,
+  canEditField
 }: {
   field: FieldDefinition
   record: GenericRecord
@@ -59,6 +62,8 @@ function FieldDisplay({
   onStartEdit?: () => void
   onRevertField?: (fieldKey: string) => void
   error?: string
+  objectName: string
+  canEditField: (fieldKey: string) => boolean
 }) {
   // Formula fields: evaluate expression (read-only, not editable)
   let value = record[field.key]
@@ -70,6 +75,7 @@ function FieldDisplay({
   // Formula fields are always read-only
   if (isEditing && field.type !== 'formula') {
     const hasChanged = formValue !== value
+    const fieldEditable = canEditField(field.key)
     
     return (
       <div className="space-y-2">
@@ -92,6 +98,7 @@ function FieldDisplay({
           value={formValue}
           onChange={(newValue) => onChange(field.key, newValue)}
           showLabel={false}
+          disabled={!fieldEditable}
           className={error ? 'border-red-500' : ''}
         />
         {error && (
@@ -104,7 +111,8 @@ function FieldDisplay({
   // Read-only mode
   const isEmpty = value === null || value === undefined || value === ''
   const isImportant = field.isImportant && isEmpty
-  const canEdit = field.editable !== false
+  const fieldEditable = canEditField(field.key)
+  const canEdit = field.editable !== false && fieldEditable
 
   return (
     <div 
@@ -118,7 +126,7 @@ function FieldDisplay({
         <span className="text-sm font-medium text-gray-700">{field.label}</span>
         {field.required && <span className="text-red-500 text-sm">*</span>}
         {field.isImportant && <span className="text-orange-500 text-sm" title="Important field">!</span>}
-        {canEdit && (
+        {canEdit && onStartEdit && (
           <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
         )}
       </div>
@@ -145,6 +153,7 @@ function DetailsTabContent({
   onRecordUpdate: (updatedRecord: GenericRecord) => void
   isLoading?: boolean
 }) {
+  const { canUpdate, isFieldVisible, canEditField } = usePermissions()
   const tabKey = `details_${objectDefinition.name}_${record?.id}`
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -234,6 +243,12 @@ function DetailsTabContent({
 
   // Global edit mode handlers
   const handleStartEdit = () => {
+    // Check update permission
+    if (!canUpdate(objectDefinition.name)) {
+      setError('You do not have permission to edit this record')
+      return
+    }
+    
     // Capture the current state for undo functionality BEFORE any changes
     setPreviousRecordState({ ...record })
     
@@ -242,7 +257,10 @@ function DetailsTabContent({
     objectDefinition.detailView?.sections?.forEach(section => {
       section.fields.forEach(field => {
         const fieldKey = typeof field === 'string' ? field : field.key
-        formData[fieldKey] = record[fieldKey]
+        // Only include visible fields
+        if (isFieldVisible(objectDefinition.name, fieldKey)) {
+          formData[fieldKey] = record[fieldKey]
+        }
       })
     })
     
@@ -684,6 +702,11 @@ function DetailsTabContent({
                       
                       if (!fieldDefinition) return null
 
+                      // Check field visibility permission
+                      if (!isFieldVisible(objectDefinition.name, fieldKey)) {
+                        return null
+                      }
+
                       // Formula fields: evaluate expression
                       let value = record[fieldKey]
                       if (fieldDefinition.type === 'formula' && fieldDefinition.formulaExpression) {
@@ -712,6 +735,8 @@ function DetailsTabContent({
                           onStartEdit={handleStartEdit}
                           onRevertField={handleRevertField}
                           error={tabState.fieldErrors[fieldDefinition.key]}
+                          objectName={objectDefinition.name}
+                          canEditField={(fieldKey) => canEditField(objectDefinition.name, fieldKey)}
                         />
                       )
                     })}
@@ -760,9 +785,12 @@ function RelatedObjectTabContent({
 
 export function GenericObjectDetailViewMainSection({ objectDefinition, record, onRecordUpdate, isLoading = false }: GenericObjectDetailViewMainSectionProps) {
   const [activeTab, setActiveTab] = useState('details');
+  const { canRead } = usePermissions();
   
-  // Get related objects from the object definition configuration
-  const relatedObjects = objectDefinition.relatedObjects || [];
+  // Get related objects from the object definition configuration, filtered by read permission
+  const relatedObjects = (objectDefinition.relatedObjects || []).filter((relObj) =>
+    canRead(relObj.objectDefinition)
+  );
   
   if (!record) {
     return null;

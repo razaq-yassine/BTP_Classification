@@ -13,6 +13,7 @@ import {
   validateField,
   getObjectNamesForValidation,
   validateMetadataFull,
+  validateProfile,
 } from '../metadata/validate.js'
 import { SYSTEM_FIELDS_SET, SYSTEM_OBJECTS_SET, SYSTEM_INFO_SECTION_FIELDS } from '../../../shared/dist/protected-metadata.js'
 
@@ -21,6 +22,7 @@ const backendRoot = path.join(__dirname, '..', '..')
 const defaultMetadataPath = path.join(backendRoot, '../frontend/public/metadata')
 const METADATA_PATH = process.env.METADATA_PATH || defaultMetadataPath
 const OBJECTS_PATH = path.join(METADATA_PATH, 'objects')
+const PROFILES_PATH = path.join(METADATA_PATH, 'profiles')
 
 const ALLOWED_FILES = ['object.json', 'listView.json', 'detailView.json', 'fields.json', 'header.json', 'relatedObjects.json']
 
@@ -424,6 +426,105 @@ metadataRoutes.put('/objects/:name/fields/:fieldKey', async (c) => {
   } catch (err) {
     console.error('Metadata field write error:', err)
     return c.json({ message: 'Failed to write field' }, 500)
+  }
+})
+
+// ============ Profiles API ============
+metadataRoutes.get('/profiles', (c) => {
+  try {
+    if (!fs.existsSync(PROFILES_PATH)) {
+      return c.json([])
+    }
+    const files = fs.readdirSync(PROFILES_PATH)
+    const names = files
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => f.replace(/\.json$/, ''))
+      .sort()
+    return c.json(names)
+  } catch (err) {
+    console.error('Profiles list error:', err)
+    return c.json({ message: 'Failed to list profiles' }, 500)
+  }
+})
+
+metadataRoutes.get('/profiles/:name', (c) => {
+  const name = c.req.param('name')
+  const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '')
+  const filePath = path.join(PROFILES_PATH, `${safeName}.json`)
+  if (!path.resolve(filePath).startsWith(path.resolve(PROFILES_PATH))) {
+    return c.json({ message: 'Invalid path' }, 400)
+  }
+  try {
+    if (!fs.existsSync(filePath)) {
+      return c.json({ message: 'Profile not found' }, 404)
+    }
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'))
+    return c.json(data)
+  } catch (err) {
+    console.error('Profile read error:', err)
+    return c.json({ message: 'Failed to read profile' }, 500)
+  }
+})
+
+metadataRoutes.post('/profiles', async (c) => {
+  try {
+    const body = (await c.req.json()) as Record<string, unknown>
+    const name = typeof body?.name === 'string' ? body.name.trim().toLowerCase().replace(/\s+/g, '-') : ''
+    if (!name || !/^[a-z][a-z0-9-]*$/.test(name)) {
+      return c.json({ message: 'Invalid profile name. Use lowercase letters, numbers, and hyphens (e.g. sales-rep).' }, 400)
+    }
+    const filePath = path.join(PROFILES_PATH, `${name}.json`)
+    if (fs.existsSync(filePath)) {
+      return c.json({ message: `Profile "${name}" already exists.` }, 409)
+    }
+    fs.mkdirSync(PROFILES_PATH, { recursive: true })
+    const profileData = {
+      name,
+      label: body.label || name,
+      description: body.description || '',
+      objectPermissions: body.objectPermissions || {},
+    }
+    const result = validateProfile(name, profileData, OBJECTS_PATH)
+    if (!result.valid) {
+      const message = result.errors[0]?.message ?? 'Validation failed'
+      return c.json({ message, errors: result.errors }, 400)
+    }
+    fs.writeFileSync(filePath, JSON.stringify(profileData, null, 2))
+    bumpVersion()
+    return c.json(profileData, 201)
+  } catch (err) {
+    console.error('Profile create error:', err)
+    return c.json({ message: 'Failed to create profile' }, 500)
+  }
+})
+
+metadataRoutes.put('/profiles/:name', async (c) => {
+  const name = c.req.param('name')
+  const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '')
+  const filePath = path.join(PROFILES_PATH, `${safeName}.json`)
+  if (!path.resolve(filePath).startsWith(path.resolve(PROFILES_PATH))) {
+    return c.json({ message: 'Invalid path' }, 400)
+  }
+  try {
+    if (!fs.existsSync(filePath)) {
+      return c.json({ message: 'Profile not found' }, 404)
+    }
+    const body = (await c.req.json()) as Record<string, unknown>
+    if (body.name && body.name !== safeName) {
+      return c.json({ message: 'Profile name cannot be changed' }, 400)
+    }
+    const profileData = { ...body, name: safeName }
+    const result = validateProfile(safeName, profileData, OBJECTS_PATH)
+    if (!result.valid) {
+      const message = result.errors[0]?.message ?? 'Validation failed'
+      return c.json({ message, errors: result.errors }, 400)
+    }
+    fs.writeFileSync(filePath, JSON.stringify(profileData, null, 2))
+    bumpVersion()
+    return c.json({ success: true })
+  } catch (err) {
+    console.error('Profile update error:', err)
+    return c.json({ message: 'Failed to update profile' }, 500)
   }
 })
 

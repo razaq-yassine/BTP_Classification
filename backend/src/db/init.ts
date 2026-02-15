@@ -1,5 +1,6 @@
 import { db } from './index.js'
 import { users, customers, orders, products, categories } from './schema.js'
+import { eq } from 'drizzle-orm'
 import bcrypt from 'bcrypt'
 
 /** Seed data only - tables are created by Drizzle migrations */
@@ -13,10 +14,38 @@ export async function initDb() {
       passwordHash: hash,
       firstName: 'Admin',
       lastName: 'User',
+      profile: 'admin',
       isActive: true,
       dateJoined: new Date(),
     })
     console.log('Created admin user: admin/admin123')
+  } else {
+    // Ensure existing admin user has profile 'admin' (system admin)
+    const [adminUser] = await db.select().from(users).where(eq(users.username, 'admin'))
+    if (adminUser && adminUser.profile !== 'admin') {
+      await db.update(users).set({ profile: 'admin' }).where(eq(users.id, adminUser.id))
+      console.log('Updated admin user profile to admin')
+    }
+  }
+
+  // Create or update test user with sales-rep profile for permission testing
+  const [testUser] = await db.select().from(users).where(eq(users.username, 'testuser'))
+  if (!testUser) {
+    const hash = await bcrypt.hash('test123', 10)
+    await db.insert(users).values({
+      username: 'testuser',
+      email: 'testuser@example.com',
+      passwordHash: hash,
+      firstName: 'Test',
+      lastName: 'User',
+      profile: 'sales-rep',
+      isActive: true,
+      dateJoined: new Date(),
+    })
+    console.log('Created test user: testuser/test123 (profile: sales-rep)')
+  } else if (testUser.profile !== 'sales-rep') {
+    await db.update(users).set({ profile: 'sales-rep' }).where(eq(users.username, 'testuser'))
+    console.log('Updated testuser profile to sales-rep')
   }
 
   const customerCount = await db.select().from(customers)

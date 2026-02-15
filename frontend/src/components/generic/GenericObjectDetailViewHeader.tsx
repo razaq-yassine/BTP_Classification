@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent } from '@/components/ui/card'
 import { MoreHorizontal } from 'lucide-react'
+import { usePermissions } from '@/hooks/usePermissions'
 
 interface GenericObjectDetailViewHeaderProps {
   objectDefinition: ObjectDefinition
@@ -16,6 +17,7 @@ export function GenericObjectDetailViewHeader({
   objectDefinition, 
   record 
 }: GenericObjectDetailViewHeaderProps) {
+  const { canUpdate, canDelete } = usePermissions()
   const Icon = objectDefinition.icon
   const headerConfig = objectDefinition.header
   
@@ -59,8 +61,12 @@ export function GenericObjectDetailViewHeader({
             
             {/* Right side - Action Buttons */}
             <div className="flex items-center space-x-2">
-              {/* Primary Actions */}
-              {headerConfig?.primaryActions?.map((action) => {
+              {/* Primary Actions - filter by update permission for edit-type actions */}
+              {headerConfig?.primaryActions?.filter((action) => {
+                const actionKey = action.key
+                if (actionKey === 'edit') return canUpdate(objectDefinition.name)
+                return true
+              }).map((action) => {
                 const ActionIcon = action.icon
                 return (
                   <Button
@@ -75,31 +81,40 @@ export function GenericObjectDetailViewHeader({
                 )
               })}
               
-              {/* Secondary Actions Dropdown */}
-              {headerConfig?.secondaryActions && headerConfig.secondaryActions.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {headerConfig.secondaryActions.map((action) => {
-                      const ActionIcon = action.icon
-                      return (
-                        <DropdownMenuItem
-                          key={action.key}
-                          onClick={() => action.onClick(record)}
-                          className="flex items-center gap-2"
-                        >
-                          {ActionIcon && <ActionIcon className="h-4 w-4" />}
-                          {action.label}
-                        </DropdownMenuItem>
-                      )
-                    })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+              {/* Secondary Actions Dropdown - filter by permissions (e.g. hide delete if !canDelete) */}
+              {(() => {
+                const filteredSecondary = headerConfig?.secondaryActions?.filter((action) => {
+                  const actionKey = action.key
+                  if (actionKey === 'delete') return canDelete(objectDefinition.name)
+                  if (actionKey === 'edit') return canUpdate(objectDefinition.name)
+                  return true
+                }) || []
+                if (filteredSecondary.length === 0) return null
+                return (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {filteredSecondary.map((action) => {
+                        const ActionIcon = action.icon
+                        return (
+                          <DropdownMenuItem
+                            key={action.key}
+                            onClick={() => action.onClick(record)}
+                            className="flex items-center gap-2"
+                          >
+                            {ActionIcon && <ActionIcon className="h-4 w-4" />}
+                            {action.label}
+                          </DropdownMenuItem>
+                        )
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )
+              })()}
             </div>
           </div>
         </div>

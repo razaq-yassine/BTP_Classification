@@ -3,11 +3,12 @@ import { useLocation } from '@tanstack/react-router'
 import type { ObjectDefinition } from '@/types/object-definition'
 import type { SidebarData, NavGroup, NavItem, NavLink, NavCollapsible } from '@/components/layout/types'
 import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
+import { usePermissions } from '@/hooks/usePermissions'
 import { sidebarData as staticSidebarData, settingsNavGroups } from '@/components/layout/data/sidebar-data'
 
-function buildDataNavGroup(defs: ObjectDefinition[]): NavGroup | null {
+function buildDataNavGroup(defs: ObjectDefinition[], canRead: (objectName: string) => boolean): NavGroup | null {
   const withSidebar = defs.filter(
-    (d) => d.basePath && (d.sidebar?.showInSidebar !== false)
+    (d) => d.basePath && (d.sidebar?.showInSidebar !== false) && canRead(d.name)
   )
   if (withSidebar.length === 0) return null
 
@@ -55,16 +56,17 @@ function buildDataNavGroup(defs: ObjectDefinition[]): NavGroup | null {
 export function useSidebarData(): SidebarData {
   const location = useLocation()
   const { data: defs } = useObjectDefinitionsQuery()
+  const { canRead } = usePermissions()
   const isSettings = location.pathname.startsWith('/settings')
 
   const navGroups = useMemo(() => {
     if (isSettings) return settingsNavGroups
     if (!defs) return staticSidebarData.navGroups
-    const dataGroup = buildDataNavGroup(defs)
+    const dataGroup = buildDataNavGroup(defs, canRead)
     if (!dataGroup) return staticSidebarData.navGroups
     const existing = staticSidebarData.navGroups.filter((g) => g.title !== dataGroup.title)
     return [dataGroup, ...existing]
-  }, [defs, isSettings])
+  }, [defs, isSettings, canRead])
 
   return {
     ...staticSidebarData,

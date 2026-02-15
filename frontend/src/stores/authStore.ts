@@ -8,7 +8,7 @@ function decodeUserFromToken(token: string): AuthUser | null {
     const payload = JSON.parse(atob(token.split('.')[1] ?? ''))
     const id = typeof payload.id === 'number' ? payload.id : 0
     const username = typeof payload.sub === 'string' ? payload.sub : 'User'
-    return { id, username, email: '', firstName: '', lastName: '' }
+    return { id, username, email: '', firstName: '', lastName: '', profile: 'standard-user' }
   } catch {
     return null
   }
@@ -23,6 +23,7 @@ export interface AuthUser {
   email: string
   firstName: string
   lastName: string
+  profile: string
 }
 
 /**
@@ -82,7 +83,8 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
         username: userData.username,
         email: userData.email,
         firstName: userData.firstName,
-        lastName: userData.lastName
+        lastName: userData.lastName,
+        profile: userData.profile || 'standard-user'
       }
       
       // Update state
@@ -160,7 +162,8 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
         username: userData.username,
         email: userData.email,
         firstName: userData.firstName,
-        lastName: userData.lastName
+        lastName: userData.lastName,
+        profile: userData.profile || 'standard-user'
       }
       
       // Update state
@@ -192,7 +195,7 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
         })
       } else {
         // Have token but backend unreachable: assume still authenticated so we don't redirect to login
-        const placeholder = decodeUserFromToken(token) ?? { id: 0, username: 'User', email: '', firstName: '', lastName: '' }
+        const placeholder = decodeUserFromToken(token) ?? { id: 0, username: 'User', email: '', firstName: '', lastName: '', profile: 'standard-user' }
         set({
           user: placeholder,
           isAuthenticated: true,
@@ -213,6 +216,7 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
 
 // Selector helpers for components
 export const selectUser = (state: AuthStore) => state.user
+export const selectProfile = (state: AuthStore) => state.user?.profile || 'standard-user'
 export const selectIsAuthenticated = (state: AuthStore) => state.isAuthenticated
 export const selectIsLoading = (state: AuthStore) => state.isLoading
 export const selectError = (state: AuthStore) => state.error

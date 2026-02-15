@@ -4,6 +4,7 @@ import { db } from '../db/index.js'
 import { entityRegistry, type EntityPath } from './entity-registry.generated.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { runTrigger } from '../services/trigger-runner.js'
+import { getUserProfile, hasObjectPermission, isFieldVisible, canEditField } from '../lib/permissions.js'
 
 export const entityRoutes = new Hono()
 
@@ -46,9 +47,11 @@ function toRecord(
   row: Record<string, unknown>,
   joinedRow: Record<string, unknown> | null,
   config: EntityConfig,
-  requestedFields: string[] | null
+  requestedFields: string[] | null,
+  profile: Awaited<ReturnType<typeof getUserProfile>> = null
 ): Record<string, unknown> {
   const base = { ...row } as Record<string, unknown>
+  const objectName = config.objectName
   const computedFields = config.computedFields
   if (computedFields) {
     for (const cf of computedFields) {
@@ -71,15 +74,35 @@ function toRecord(
           : null
     }
   }
+  
+  // Filter fields based on permissions
+  const filtered: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(base)) {
+    // Always include id
+    if (key === 'id') {
+      filtered[key] = value
+      continue
+    }
+    // Check field visibility permission
+    if (profile && objectName) {
+      if (isFieldVisible(profile, objectName, key)) {
+        filtered[key] = value
+      }
+    } else {
+      // No profile or objectName, allow all (backward compatibility)
+      filtered[key] = value
+    }
+  }
+  
   if (requestedFields) {
     const out: Record<string, unknown> = {}
     for (const f of requestedFields) {
-      const key = Object.keys(base).find((k) => k.toLowerCase() === f.toLowerCase())
-      if (key && base[key] !== undefined) out[key] = base[key]
+      const key = Object.keys(filtered).find((k) => k.toLowerCase() === f.toLowerCase())
+      if (key && filtered[key] !== undefined) out[key] = filtered[key]
     }
-    return out.id !== undefined ? out : base
+    return out.id !== undefined ? out : filtered
   }
-  return base
+  return filtered
 }
 
 function buildInsertPayload(
@@ -116,11 +139,27 @@ function buildInsertPayload(
 function buildUpdatePayload(
   body: Record<string, unknown>,
   oldRow: Record<string, unknown>,
-  config: EntityConfig
+  config: EntityConfig,
+  profile: Awaited<ReturnType<typeof getUserProfile>> = null
 ): Record<string, unknown> {
   const payload: Record<string, unknown> = { updatedAt: new Date() }
+  const objectName = config.objectName
+  
   for (const field of config.updateFields) {
     if (field === 'updatedAt') continue
+    
+    // Check if field is editable (skip permission check for system fields)
+    if (profile && objectName && field !== 'id' && field !== 'createdAt') {
+      // Check if user is trying to update this field
+      if (body[field] !== undefined && body[field] !== oldRow[field]) {
+        if (!canEditField(profile, objectName, field)) {
+          // Field is not editable, keep old value
+          payload[field] = oldRow[field]
+          continue
+        }
+      }
+    }
+    
     const ref = config.referenceFields?.find((r) => r.idField === field)
     if (ref) {
       const val = (body[ref.key] as { id?: number })?.id ?? body[field] ?? oldRow[field]
@@ -154,6 +193,15 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       const filterCol = (table as any)[filterColumn]
       entityRoutes.get(`/${entityPath}/${subPath}/:parentId`, async (c) => {
         try {
+        // Check read permission
+        const user = c.get('user')
+        let profile = null
+        if (user?.id) {
+          profile = await getUserProfile(user.id)
+          if (!hasObjectPermission(profile, objectName, 'read')) {
+            return c.json({ message: 'Forbidden' }, 403)
+          }
+        }
         const parentId = Number(c.req.param('parentId'))
         const page = Math.max(0, Number(c.req.query('page')) || 0)
         const size = Math.min(100, Math.max(1, Number(c.req.query('size')) || 10))
@@ -202,9 +250,9 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
 
         const result = join
           ? (slice as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>).map((r) =>
-              toRecord(r.main || (r as Record<string, unknown>), r.joined || null, config, requestedFields)
+              toRecord(r.main || (r as Record<string, unknown>), r.joined || null, config, requestedFields, profile)
             )
-          : (slice as Record<string, unknown>[]).map((r) => toRecord(r, null, config, requestedFields))
+          : (slice as Record<string, unknown>[]).map((r) => toRecord(r, null, config, requestedFields, profile))
 
         return c.json({ [entityPath]: result, count: total, totalPages, currentPage: page })
         } catch (err) {
@@ -217,6 +265,15 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
 
   entityRoutes.get(`/${entityPath}`, async (c) => {
     try {
+      // Check read permission
+      const user = c.get('user')
+      let profile = null
+      if (user?.id) {
+        profile = await getUserProfile(user.id)
+        if (!hasObjectPermission(profile, objectName, 'read')) {
+          return c.json({ message: 'Forbidden' }, 403)
+        }
+      }
       const page = Math.max(0, Number(c.req.query('page')) || 0)
       const size = Math.min(100, Math.max(1, Number(c.req.query('size')) || 10))
       const search = c.req.query('search')?.trim()
@@ -255,9 +312,9 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
 
       const result = join
         ? (slice as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>).map((r) =>
-            toRecord(r.main || (r as Record<string, unknown>), r.joined || null, config, requestedFields)
+            toRecord(r.main || (r as Record<string, unknown>), r.joined || null, config, requestedFields, profile)
           )
-        : (slice as Record<string, unknown>[]).map((r) => toRecord(r, null, config, requestedFields))
+        : (slice as Record<string, unknown>[]).map((r) => toRecord(r, null, config, requestedFields, profile))
 
       return c.json({ [entityPath]: result, count: total, totalPages, currentPage: page })
     } catch (err) {
@@ -271,6 +328,15 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
 
   entityRoutes.get(`/${entityPath}/:id`, async (c) => {
     try {
+      // Check read permission
+      const user = c.get('user')
+      let profile = null
+      if (user?.id) {
+        profile = await getUserProfile(user.id)
+        if (!hasObjectPermission(profile, objectName, 'read')) {
+          return c.json({ message: 'Forbidden' }, 403)
+        }
+      }
       const id = Number(c.req.param('id'))
       if (Number.isNaN(id)) return c.json({ message: 'Invalid ID' }, 400)
       if (join) {
@@ -281,11 +347,11 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
           .leftJoin(j.joinTable as any, eq(j.leftColumn as any, j.rightColumn as any))
           .where(eq(idCol as any, id))) as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>
         if (!row?.main) return c.json({ message: 'Not found' }, 404)
-        return c.json(toRecord(row.main, row.joined || null, config, null))
+        return c.json(toRecord(row.main, row.joined || null, config, null, profile))
       }
       const [row] = await db.select().from(table).where(eq(idCol as any, id))
       if (!row) return c.json({ message: 'Not found' }, 404)
-      return c.json(toRecord(row as Record<string, unknown>, null, config, null))
+      return c.json(toRecord(row as Record<string, unknown>, null, config, null, profile))
     } catch (err) {
       console.error(`GET ${entityPath}/:id error:`, err)
       return c.json(
@@ -296,6 +362,15 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
   })
 
   entityRoutes.post(`/${entityPath}`, async (c) => {
+    // Check create permission
+    const user = c.get('user')
+    let profile = null
+    if (user?.id) {
+      profile = await getUserProfile(user.id)
+      if (!hasObjectPermission(profile, objectName, 'create')) {
+        return c.json({ message: 'Forbidden' }, 403)
+      }
+    }
     const body = (await c.req.json()) as Record<string, unknown>
     const requiredRefIdFields = (config as { requiredRefIdFields?: string[] }).requiredRefIdFields
     if (requiredRefIdFields?.length && config.referenceFields) {
@@ -344,10 +419,10 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       if (ref && (inserted as any)[ref.idField]) {
         const j = join as JoinConfig
         const [cust] = await db.select().from(j.joinTable as any).where(eq((j.joinTable as any).id, (inserted as any)[ref.idField]))
-        return c.json(toRecord(inserted as Record<string, unknown>, cust as Record<string, unknown>, config, null), 201)
+        return c.json(toRecord(inserted as Record<string, unknown>, cust as Record<string, unknown>, config, null, profile), 201)
       }
     }
-    return c.json(toRecord(inserted as Record<string, unknown>, null, config, null), 201)
+    return c.json(toRecord(inserted as Record<string, unknown>, null, config, null, profile), 201)
     } catch (err) {
       console.error(`POST /${entityPath} error:`, err)
       const msg = (err as Error).message || 'Internal server error'
@@ -356,11 +431,20 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
   })
 
   entityRoutes.put(`/${entityPath}/:id`, async (c) => {
+    // Check update permission
+    const user = c.get('user')
+    let profile = null
+    if (user?.id) {
+      profile = await getUserProfile(user.id)
+      if (!hasObjectPermission(profile, objectName, 'update')) {
+        return c.json({ message: 'Forbidden' }, 403)
+      }
+    }
     const id = Number(c.req.param('id'))
     const [oldRow] = await db.select().from(table).where(eq(idCol as any, id))
     if (!oldRow) return c.json({ message: 'Not found' }, 404)
     const body = (await c.req.json()) as Record<string, unknown>
-    const newPayload = buildUpdatePayload(body, oldRow as Record<string, unknown>, config)
+    const newPayload = buildUpdatePayload(body, oldRow as Record<string, unknown>, config, profile)
     const modified = (await runTrigger(objectName, 'beforeUpdate', oldRow as Record<string, unknown>, newPayload)) ?? newPayload
     await db.update(table).set(modified as any).where(eq(idCol as any, id))
     const [updated] = await db.select().from(table).where(eq(idCol as any, id))
@@ -370,13 +454,21 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       if (ref && (updated as any)[ref.idField]) {
         const j = join as JoinConfig
         const [cust] = await db.select().from(j.joinTable as any).where(eq((j.joinTable as any).id, (updated as any)[ref.idField]))
-        return c.json(toRecord(updated as Record<string, unknown>, cust as Record<string, unknown>, config, null))
+        return c.json(toRecord(updated as Record<string, unknown>, cust as Record<string, unknown>, config, null, profile))
       }
     }
-    return c.json(toRecord(updated as Record<string, unknown>, null, config, null))
+    return c.json(toRecord(updated as Record<string, unknown>, null, config, null, profile))
   })
 
   entityRoutes.delete(`/${entityPath}/:id`, async (c) => {
+    // Check delete permission
+    const user = c.get('user')
+    if (user?.id) {
+      const profile = await getUserProfile(user.id)
+      if (!hasObjectPermission(profile, objectName, 'delete')) {
+        return c.json({ message: 'Forbidden' }, 403)
+      }
+    }
     const id = Number(c.req.param('id'))
     const [oldRow] = await db.select().from(table).where(eq(idCol as any, id))
     if (!oldRow) return c.json({ message: 'Not found' }, 404)

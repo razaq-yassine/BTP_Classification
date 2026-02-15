@@ -542,6 +542,37 @@ mysql -u user -p -e "DESCRIBE dbname.table_name"
 
 Replace `dbname` with your database name and `table_name` with any table from your metadata (e.g. `customers`, `orders`). You should see the columns defined in your metadata.
 
+### Testing Permissions
+
+The permissions system uses profiles. Two users are seeded on startup:
+
+| User | Password | Profile | Access |
+|------|----------|---------|--------|
+| `admin` | `admin123` | `admin` | Full access to all objects and fields |
+| `testuser` | `test123` | `standard-user` | No permissions (deny by default) |
+
+**To test permissions:**
+
+1. **Apply migrations** (if not already done):
+   ```bash
+   cd backend && pnpm run db:migrate
+   ```
+
+2. **Start the backend** — `initDb` runs on startup and will:
+   - Set existing `admin` user's profile to `admin`
+   - Create `testuser` with profile `standard-user` if they don't exist
+
+3. **Log in as admin** — You should see all objects, create/edit/delete buttons, and all fields.
+
+4. **Log out and log in as testuser** — You should see:
+   - No Create or Delete buttons
+   - Empty or restricted list views (no object read permission)
+   - 403 Forbidden if you try to access entity APIs directly
+
+5. **Create a custom profile** — Add `frontend/public/metadata/profiles/sales-rep.json` with object/field permissions, then assign that profile to a user in the database to test granular access.
+
+Profiles are defined in `frontend/public/metadata/profiles/`. See the permissions implementation plan for the full structure.
+
 ### Troubleshooting
 
 | Error | Cause | Fix |

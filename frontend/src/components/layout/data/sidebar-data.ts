@@ -29,6 +29,7 @@ export const settingsNavGroups: NavGroup[] = [
     title: 'Settings',
     items: [
       { title: 'Object Manager', url: '/settings/object-manager', icon: IconBox },
+      { title: 'Profiles', url: '/settings/profiles', icon: IconLockAccess },
       { title: 'Profile', url: '/settings', icon: IconUserCog },
       { title: 'Account', url: '/settings/account', icon: IconTool },
       { title: 'Appearance', url: '/settings/appearance', icon: IconPalette },

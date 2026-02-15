@@ -13,6 +13,7 @@ import { ThemeSwitch } from '@/components/theme-switch'
 import SkipToMain from '@/components/skip-to-main'
 import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
 import { useMetadataVersionPolling } from '@/hooks/useMetadataVersionPolling'
+import { usePermissions } from '@/hooks/usePermissions'
 
 interface Props {
   children?: React.ReactNode
@@ -28,13 +29,14 @@ export function AuthenticatedLayout({ children }: Props) {
   const location = useLocation()
   const isSettings = location.pathname.startsWith('/settings')
   const { data: defs } = useObjectDefinitionsQuery()
+  const { canRead } = usePermissions()
   const topNav = useMemo(() => {
     if (!defs?.length) return staticTopNav
-    const withNav = defs.filter((d) => d.basePath && (d.sidebar?.showInSidebar !== false))
+    const withNav = defs.filter((d) => d.basePath && (d.sidebar?.showInSidebar !== false) && canRead(d.name))
     if (withNav.length === 0) return staticTopNav
     const dataNav = { title: withNav[0].labelPlural, href: withNav[0].basePath!, isActive: false }
     return [staticTopNav[0], dataNav, ...staticTopNav.slice(1)]
-  }, [defs])
+  }, [defs, canRead])
 
   const defaultOpen = Cookies.get('sidebar_state') !== 'false'
 

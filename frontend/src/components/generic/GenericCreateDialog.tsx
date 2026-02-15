@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import api from '@/services/api'
 import { toast } from 'sonner'
 import { isNetworkError } from '@/utils/handle-server-error'
+import { usePermissions } from '@/hooks/usePermissions'
 
 // Field validation result
 interface FieldValidation {
@@ -29,18 +30,22 @@ function CreateFieldDisplay({
   field, 
   formData, 
   onChange,
-  error
+  error,
+  canEditField
 }: {
   field: FieldDefinition
   formData: Record<string, any>
   onChange: (fieldKey: string, value: any) => void
   error?: string
+  canEditField: (fieldKey: string) => boolean
 }) {
   const value = formData[field.key] || ''
+  const fieldEditable = canEditField(field.key)
   const isReadOnly =
     field.type === 'autoNumber' ||
     field.type === 'autonumber' ||
-    field.editable === false
+    field.editable === false ||
+    !fieldEditable
 
   return (
     <div className="space-y-2">
@@ -65,6 +70,7 @@ export function GenericCreateDialog({
   onOpenChange, 
   onRecordCreated 
 }: GenericCreateDialogProps) {
+  const { isFieldVisible, canEditField } = usePermissions()
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [, setHasChanges] = useState(false)
   const [error, setError] = useState('')
@@ -95,9 +101,14 @@ export function GenericCreateDialog({
             ? objectDefinition.fields?.find(f => f.key === fieldKey)
             : field
           
+          // Filter fields based on permissions
+          if (!fieldDefinition || !isFieldVisible(objectDefinition.name, fieldKey)) {
+            return
+          }
+          
           // Set default values: use field.defaultValue if set, else type-based fallback
           // Skip formula and autoNumber fields (read-only)
-          if (fieldDefinition && fieldDefinition.type !== 'formula' && fieldDefinition.type !== 'autoNumber') {
+          if (fieldDefinition.type !== 'formula' && fieldDefinition.type !== 'autoNumber') {
             if (fieldDefinition.defaultValue !== undefined && fieldDefinition.defaultValue !== null) {
               initialFormData[fieldKey] = fieldDefinition.defaultValue
             } else {
@@ -466,11 +477,17 @@ export function GenericCreateDialog({
                         section.columns === 1 ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
                       )}>
                         {section.fields.map((field) => {
+                          const fieldKey = typeof field === 'string' ? field : field.key
                           const fieldDefinition = typeof field === 'string' 
-                            ? objectDefinition.fields?.find(f => f.key === field)
+                            ? objectDefinition.fields?.find(f => f.key === fieldKey)
                             : field
                           
                           if (!fieldDefinition) return null
+                          
+                          // Filter fields based on permissions
+                          if (!isFieldVisible(objectDefinition.name, fieldKey)) {
+                            return null
+                          }
                           
                           return (
                             <CreateFieldDisplay
@@ -479,6 +496,7 @@ export function GenericCreateDialog({
                               formData={formData}
                               onChange={handleFieldChange}
                               error={fieldErrors[fieldDefinition.key]}
+                              canEditField={(fieldKey) => canEditField(objectDefinition.name, fieldKey)}
                             />
                           )
                         })}

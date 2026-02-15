@@ -542,6 +542,22 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
       }
     }
   }
+  
+  // Validate profiles
+  const profilesPath = path.join(metadataPath, 'profiles')
+  if (fs.existsSync(profilesPath)) {
+    const profileFiles = fs.readdirSync(profilesPath).filter((f) => f.endsWith('.json'))
+    for (const file of profileFiles) {
+      const profileName = file.replace(/\.json$/, '')
+      try {
+        const profileData = JSON.parse(fs.readFileSync(path.join(profilesPath, file), 'utf-8')) as Record<string, unknown>
+        validateProfileFile(profileName, profileData, objectNames, objectsPath, errors)
+      } catch (e) {
+        addError(errors, `profiles/${file}`, `Failed to parse: ${(e as Error).message}`, 'PARSE_ERROR')
+      }
+    }
+  }
+  
   return { valid: errors.length === 0, errors }
 }
 
@@ -633,4 +649,104 @@ export function validateRelatedObjects(
  */
 export function getObjectNamesForValidation(objectsPath: string): string[] {
   return getObjectNames(objectsPath)
+}
+
+function loadFieldKeysForProfile(objectsPath: string, objectName: string): string[] {
+  try {
+    const fieldsPath = path.join(objectsPath, objectName, 'fields.json')
+    if (!fs.existsSync(fieldsPath)) return []
+    const data = JSON.parse(fs.readFileSync(fieldsPath, 'utf-8'))
+    if (!Array.isArray(data)) return []
+    return data.filter((k: string) => typeof k === 'string')
+  } catch {
+    return []
+  }
+}
+
+function validateProfileFile(
+  profileName: string,
+  profileData: Record<string, unknown>,
+  objectNames: string[],
+  objectsPath: string,
+  errors: ValidationError[]
+): void {
+  const pathPrefix = `profiles/${profileName}.json`
+  
+  // Validate structure
+  if (!profileData.name || typeof profileData.name !== 'string' || !profileData.name.trim()) {
+    addError(errors, pathPrefix, 'Missing required: name', 'PROFILE_MISSING_NAME')
+  }
+  if (profileData.name && profileData.name !== profileName) {
+    addError(errors, pathPrefix, `Profile name "${profileData.name}" does not match filename "${profileName}"`, 'PROFILE_NAME_MISMATCH')
+  }
+  if (!profileData.label || typeof profileData.label !== 'string' || !profileData.label.trim()) {
+    addError(errors, pathPrefix, 'Missing required: label', 'PROFILE_MISSING_LABEL')
+  }
+  if (!profileData.objectPermissions || typeof profileData.objectPermissions !== 'object') {
+    addError(errors, pathPrefix, 'Missing required: objectPermissions', 'PROFILE_MISSING_OBJECT_PERMISSIONS')
+    return
+  }
+  
+  const objectPermissions = profileData.objectPermissions as Record<string, unknown>
+  
+  // Validate each object permission
+  for (const [objectName, objPerm] of Object.entries(objectPermissions)) {
+    if (!objectNames.includes(objectName)) {
+      addError(errors, pathPrefix, `Object "${objectName}" does not exist in metadata`, 'PROFILE_INVALID_OBJECT')
+      continue
+    }
+    
+    if (!objPerm || typeof objPerm !== 'object') {
+      addError(errors, pathPrefix, `Invalid objectPermission for "${objectName}"`, 'PROFILE_INVALID_OBJECT_PERMISSION')
+      continue
+    }
+    
+    const perm = objPerm as Record<string, unknown>
+    const requiredPerms = ['create', 'read', 'update', 'delete']
+    for (const permKey of requiredPerms) {
+      if (typeof perm[permKey] !== 'boolean') {
+        addError(errors, pathPrefix, `objectPermissions.${objectName}.${permKey} must be a boolean`, 'PROFILE_INVALID_PERMISSION_VALUE')
+      }
+    }
+    
+    // Validate field permissions if present
+    if (perm.fieldPermissions && typeof perm.fieldPermissions === 'object') {
+      const fieldPerms = perm.fieldPermissions as Record<string, unknown>
+      const validFieldKeys = loadFieldKeysForProfile(objectsPath, objectName)
+      
+      for (const [fieldKey, fieldPerm] of Object.entries(fieldPerms)) {
+        if (!validFieldKeys.includes(fieldKey)) {
+          addError(errors, pathPrefix, `Field "${fieldKey}" does not exist on object "${objectName}"`, 'PROFILE_INVALID_FIELD')
+          continue
+        }
+        
+        if (!fieldPerm || typeof fieldPerm !== 'object') {
+          addError(errors, pathPrefix, `Invalid fieldPermission for "${objectName}.${fieldKey}"`, 'PROFILE_INVALID_FIELD_PERMISSION')
+          continue
+        }
+        
+        const fp = fieldPerm as Record<string, unknown>
+        if (typeof fp.visible !== 'boolean') {
+          addError(errors, pathPrefix, `fieldPermissions.${objectName}.${fieldKey}.visible must be a boolean`, 'PROFILE_INVALID_FIELD_PERMISSION_VALUE')
+        }
+        if (typeof fp.editable !== 'boolean') {
+          addError(errors, pathPrefix, `fieldPermissions.${objectName}.${fieldKey}.editable must be a boolean`, 'PROFILE_INVALID_FIELD_PERMISSION_VALUE')
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Validate a profile file - used by API when saving a profile.
+ */
+export function validateProfile(
+  profileName: string,
+  profileData: Record<string, unknown>,
+  objectsPath: string
+): ValidationResult {
+  const errors: ValidationError[] = []
+  const objectNames = getObjectNames(objectsPath)
+  validateProfileFile(profileName, profileData, objectNames, objectsPath, errors)
+  return { valid: errors.length === 0, errors }
 }

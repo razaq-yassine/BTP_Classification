@@ -31,7 +31,7 @@ Build on the foundation. These don't block later work.
 | 8 | **Salesforce Path** | MEDIUM | Detail view, select field with `useInPath` |
 | 9 | **General Layout** | MEDIUM | Page layout, sidebar |
 | 10 | **owner Id, created by, edited by** | MEDIUM | Create/update flows (populate on insert/update) |
-| 11 | **Permissions** | HIGH | Auth, list/detail/create (to enforce read/write) |
+| 11 | **Permissions** ✅ | HIGH | Auth, list/detail/create (to enforce read/write) |
 | 12 | **Validation rules** | HIGH | Create/update (validate before save) |
 
 **Dependency chain:** Detail formatter + Path + Layout can run in parallel. owner/created/edited → Permissions → Validation.

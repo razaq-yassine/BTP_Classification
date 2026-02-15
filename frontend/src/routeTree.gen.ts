@@ -31,6 +31,7 @@ import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedObjectNameIndexRouteImport } from './routes/_authenticated/$objectName/index'
+import { Route as AuthenticatedSettingsProfilesRouteImport } from './routes/_authenticated/settings/profiles'
 import { Route as AuthenticatedSettingsObjectManagerRouteImport } from './routes/_authenticated/settings/object-manager'
 import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
@@ -40,8 +41,14 @@ import { Route as AuthenticatedDevComponentsSalesforcePathRouteImport } from './
 import { Route as AuthenticatedDevComponentsOrderDetailPathRouteImport } from './routes/_authenticated/dev-components/order-detail-path'
 import { Route as AuthenticatedDevComponentsDetailViewFormatterRouteImport } from './routes/_authenticated/dev-components/detail-view-formatter'
 import { Route as AuthenticatedObjectNameRecordIdRouteImport } from './routes/_authenticated/$objectName/$recordId'
+import { Route as AuthenticatedSettingsProfilesIndexRouteImport } from './routes/_authenticated/settings/profiles/index'
 import { Route as AuthenticatedSettingsObjectManagerIndexRouteImport } from './routes/_authenticated/settings/object-manager/index'
+import { Route as AuthenticatedSettingsProfilesProfileNameRouteImport } from './routes/_authenticated/settings/profiles/$profileName'
 import { Route as AuthenticatedSettingsObjectManagerObjectNameRouteImport } from './routes/_authenticated/settings/object-manager/$objectName'
+import { Route as AuthenticatedSettingsProfilesProfileNameIndexRouteImport } from './routes/_authenticated/settings/profiles/$profileName/index'
+import { Route as AuthenticatedSettingsProfilesProfileNameObjectsRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects'
+import { Route as AuthenticatedSettingsProfilesProfileNameObjectsIndexRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects/index'
+import { Route as AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects/$objectName'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -156,6 +163,12 @@ const AuthenticatedObjectNameIndexRoute =
     path: '/$objectName/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsProfilesRoute =
+  AuthenticatedSettingsProfilesRouteImport.update({
+    id: '/profiles',
+    path: '/profiles',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedSettingsObjectManagerRoute =
   AuthenticatedSettingsObjectManagerRouteImport.update({
     id: '/object-manager',
@@ -210,17 +223,53 @@ const AuthenticatedObjectNameRecordIdRoute =
     path: '/$objectName/$recordId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsProfilesIndexRoute =
+  AuthenticatedSettingsProfilesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsProfilesRoute,
+  } as any)
 const AuthenticatedSettingsObjectManagerIndexRoute =
   AuthenticatedSettingsObjectManagerIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedSettingsObjectManagerRoute,
   } as any)
+const AuthenticatedSettingsProfilesProfileNameRoute =
+  AuthenticatedSettingsProfilesProfileNameRouteImport.update({
+    id: '/$profileName',
+    path: '/$profileName',
+    getParentRoute: () => AuthenticatedSettingsProfilesRoute,
+  } as any)
 const AuthenticatedSettingsObjectManagerObjectNameRoute =
   AuthenticatedSettingsObjectManagerObjectNameRouteImport.update({
     id: '/$objectName',
     path: '/$objectName',
     getParentRoute: () => AuthenticatedSettingsObjectManagerRoute,
+  } as any)
+const AuthenticatedSettingsProfilesProfileNameIndexRoute =
+  AuthenticatedSettingsProfilesProfileNameIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsProfilesProfileNameRoute,
+  } as any)
+const AuthenticatedSettingsProfilesProfileNameObjectsRoute =
+  AuthenticatedSettingsProfilesProfileNameObjectsRouteImport.update({
+    id: '/objects',
+    path: '/objects',
+    getParentRoute: () => AuthenticatedSettingsProfilesProfileNameRoute,
+  } as any)
+const AuthenticatedSettingsProfilesProfileNameObjectsIndexRoute =
+  AuthenticatedSettingsProfilesProfileNameObjectsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsProfilesProfileNameObjectsRoute,
+  } as any)
+const AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute =
+  AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRouteImport.update({
+    id: '/$objectName',
+    path: '/$objectName',
+    getParentRoute: () => AuthenticatedSettingsProfilesProfileNameObjectsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -247,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/object-manager': typeof AuthenticatedSettingsObjectManagerRouteWithChildren
+  '/settings/profiles': typeof AuthenticatedSettingsProfilesRouteWithChildren
   '/$objectName': typeof AuthenticatedObjectNameIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
@@ -255,7 +305,13 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
+  '/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameRouteWithChildren
   '/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
+  '/settings/profiles/': typeof AuthenticatedSettingsProfilesIndexRoute
+  '/settings/profiles/$profileName/objects': typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren
+  '/settings/profiles/$profileName/': typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
+  '/settings/profiles/$profileName/objects/$objectName': typeof AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute
+  '/settings/profiles/$profileName/objects/': typeof AuthenticatedSettingsProfilesProfileNameObjectsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -288,6 +344,10 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersIndexRoute
   '/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
   '/settings/object-manager': typeof AuthenticatedSettingsObjectManagerIndexRoute
+  '/settings/profiles': typeof AuthenticatedSettingsProfilesIndexRoute
+  '/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
+  '/settings/profiles/$profileName/objects/$objectName': typeof AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute
+  '/settings/profiles/$profileName/objects': typeof AuthenticatedSettingsProfilesProfileNameObjectsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -315,6 +375,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/_authenticated/settings/object-manager': typeof AuthenticatedSettingsObjectManagerRouteWithChildren
+  '/_authenticated/settings/profiles': typeof AuthenticatedSettingsProfilesRouteWithChildren
   '/_authenticated/$objectName/': typeof AuthenticatedObjectNameIndexRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
@@ -323,7 +384,13 @@ export interface FileRoutesById {
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
+  '/_authenticated/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameRouteWithChildren
   '/_authenticated/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
+  '/_authenticated/settings/profiles/': typeof AuthenticatedSettingsProfilesIndexRoute
+  '/_authenticated/settings/profiles/$profileName/objects': typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren
+  '/_authenticated/settings/profiles/$profileName/': typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
+  '/_authenticated/settings/profiles/$profileName/objects/$objectName': typeof AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute
+  '/_authenticated/settings/profiles/$profileName/objects/': typeof AuthenticatedSettingsProfilesProfileNameObjectsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -351,6 +418,7 @@ export interface FileRouteTypes {
     | '/settings/display'
     | '/settings/notifications'
     | '/settings/object-manager'
+    | '/settings/profiles'
     | '/$objectName'
     | '/apps'
     | '/chats'
@@ -359,7 +427,13 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/users'
     | '/settings/object-manager/$objectName'
+    | '/settings/profiles/$profileName'
     | '/settings/object-manager/'
+    | '/settings/profiles/'
+    | '/settings/profiles/$profileName/objects'
+    | '/settings/profiles/$profileName/'
+    | '/settings/profiles/$profileName/objects/$objectName'
+    | '/settings/profiles/$profileName/objects/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -392,6 +466,10 @@ export interface FileRouteTypes {
     | '/users'
     | '/settings/object-manager/$objectName'
     | '/settings/object-manager'
+    | '/settings/profiles'
+    | '/settings/profiles/$profileName'
+    | '/settings/profiles/$profileName/objects/$objectName'
+    | '/settings/profiles/$profileName/objects'
   id:
     | '__root__'
     | '/'
@@ -418,6 +496,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/display'
     | '/_authenticated/settings/notifications'
     | '/_authenticated/settings/object-manager'
+    | '/_authenticated/settings/profiles'
     | '/_authenticated/$objectName/'
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
@@ -426,7 +505,13 @@ export interface FileRouteTypes {
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
     | '/_authenticated/settings/object-manager/$objectName'
+    | '/_authenticated/settings/profiles/$profileName'
     | '/_authenticated/settings/object-manager/'
+    | '/_authenticated/settings/profiles/'
+    | '/_authenticated/settings/profiles/$profileName/objects'
+    | '/_authenticated/settings/profiles/$profileName/'
+    | '/_authenticated/settings/profiles/$profileName/objects/$objectName'
+    | '/_authenticated/settings/profiles/$profileName/objects/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -601,6 +686,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObjectNameIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/profiles': {
+      id: '/_authenticated/settings/profiles'
+      path: '/profiles'
+      fullPath: '/settings/profiles'
+      preLoaderRoute: typeof AuthenticatedSettingsProfilesRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/object-manager': {
       id: '/_authenticated/settings/object-manager'
       path: '/object-manager'
@@ -664,6 +756,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObjectNameRecordIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/profiles/': {
+      id: '/_authenticated/settings/profiles/'
+      path: '/'
+      fullPath: '/settings/profiles/'
+      preLoaderRoute: typeof AuthenticatedSettingsProfilesIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsProfilesRoute
+    }
     '/_authenticated/settings/object-manager/': {
       id: '/_authenticated/settings/object-manager/'
       path: '/'
@@ -671,12 +770,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsObjectManagerIndexRouteImport
       parentRoute: typeof AuthenticatedSettingsObjectManagerRoute
     }
+    '/_authenticated/settings/profiles/$profileName': {
+      id: '/_authenticated/settings/profiles/$profileName'
+      path: '/$profileName'
+      fullPath: '/settings/profiles/$profileName'
+      preLoaderRoute: typeof AuthenticatedSettingsProfilesProfileNameRouteImport
+      parentRoute: typeof AuthenticatedSettingsProfilesRoute
+    }
     '/_authenticated/settings/object-manager/$objectName': {
       id: '/_authenticated/settings/object-manager/$objectName'
       path: '/$objectName'
       fullPath: '/settings/object-manager/$objectName'
       preLoaderRoute: typeof AuthenticatedSettingsObjectManagerObjectNameRouteImport
       parentRoute: typeof AuthenticatedSettingsObjectManagerRoute
+    }
+    '/_authenticated/settings/profiles/$profileName/': {
+      id: '/_authenticated/settings/profiles/$profileName/'
+      path: '/'
+      fullPath: '/settings/profiles/$profileName/'
+      preLoaderRoute: typeof AuthenticatedSettingsProfilesProfileNameIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsProfilesProfileNameRoute
+    }
+    '/_authenticated/settings/profiles/$profileName/objects': {
+      id: '/_authenticated/settings/profiles/$profileName/objects'
+      path: '/objects'
+      fullPath: '/settings/profiles/$profileName/objects'
+      preLoaderRoute: typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteImport
+      parentRoute: typeof AuthenticatedSettingsProfilesProfileNameRoute
+    }
+    '/_authenticated/settings/profiles/$profileName/objects/': {
+      id: '/_authenticated/settings/profiles/$profileName/objects/'
+      path: '/'
+      fullPath: '/settings/profiles/$profileName/objects/'
+      preLoaderRoute: typeof AuthenticatedSettingsProfilesProfileNameObjectsIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsProfilesProfileNameObjectsRoute
+    }
+    '/_authenticated/settings/profiles/$profileName/objects/$objectName': {
+      id: '/_authenticated/settings/profiles/$profileName/objects/$objectName'
+      path: '/$objectName'
+      fullPath: '/settings/profiles/$profileName/objects/$objectName'
+      preLoaderRoute: typeof AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRouteImport
+      parentRoute: typeof AuthenticatedSettingsProfilesProfileNameObjectsRoute
     }
   }
 }
@@ -699,12 +833,67 @@ const AuthenticatedSettingsObjectManagerRouteWithChildren =
     AuthenticatedSettingsObjectManagerRouteChildren,
   )
 
+interface AuthenticatedSettingsProfilesProfileNameObjectsRouteChildren {
+  AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute: typeof AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute
+  AuthenticatedSettingsProfilesProfileNameObjectsIndexRoute: typeof AuthenticatedSettingsProfilesProfileNameObjectsIndexRoute
+}
+
+const AuthenticatedSettingsProfilesProfileNameObjectsRouteChildren: AuthenticatedSettingsProfilesProfileNameObjectsRouteChildren =
+  {
+    AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute:
+      AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute,
+    AuthenticatedSettingsProfilesProfileNameObjectsIndexRoute:
+      AuthenticatedSettingsProfilesProfileNameObjectsIndexRoute,
+  }
+
+const AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren =
+  AuthenticatedSettingsProfilesProfileNameObjectsRoute._addFileChildren(
+    AuthenticatedSettingsProfilesProfileNameObjectsRouteChildren,
+  )
+
+interface AuthenticatedSettingsProfilesProfileNameRouteChildren {
+  AuthenticatedSettingsProfilesProfileNameObjectsRoute: typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren
+  AuthenticatedSettingsProfilesProfileNameIndexRoute: typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
+}
+
+const AuthenticatedSettingsProfilesProfileNameRouteChildren: AuthenticatedSettingsProfilesProfileNameRouteChildren =
+  {
+    AuthenticatedSettingsProfilesProfileNameObjectsRoute:
+      AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren,
+    AuthenticatedSettingsProfilesProfileNameIndexRoute:
+      AuthenticatedSettingsProfilesProfileNameIndexRoute,
+  }
+
+const AuthenticatedSettingsProfilesProfileNameRouteWithChildren =
+  AuthenticatedSettingsProfilesProfileNameRoute._addFileChildren(
+    AuthenticatedSettingsProfilesProfileNameRouteChildren,
+  )
+
+interface AuthenticatedSettingsProfilesRouteChildren {
+  AuthenticatedSettingsProfilesProfileNameRoute: typeof AuthenticatedSettingsProfilesProfileNameRouteWithChildren
+  AuthenticatedSettingsProfilesIndexRoute: typeof AuthenticatedSettingsProfilesIndexRoute
+}
+
+const AuthenticatedSettingsProfilesRouteChildren: AuthenticatedSettingsProfilesRouteChildren =
+  {
+    AuthenticatedSettingsProfilesProfileNameRoute:
+      AuthenticatedSettingsProfilesProfileNameRouteWithChildren,
+    AuthenticatedSettingsProfilesIndexRoute:
+      AuthenticatedSettingsProfilesIndexRoute,
+  }
+
+const AuthenticatedSettingsProfilesRouteWithChildren =
+  AuthenticatedSettingsProfilesRoute._addFileChildren(
+    AuthenticatedSettingsProfilesRouteChildren,
+  )
+
 interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
   AuthenticatedSettingsDisplayRoute: typeof AuthenticatedSettingsDisplayRoute
   AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
   AuthenticatedSettingsObjectManagerRoute: typeof AuthenticatedSettingsObjectManagerRouteWithChildren
+  AuthenticatedSettingsProfilesRoute: typeof AuthenticatedSettingsProfilesRouteWithChildren
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
@@ -717,6 +906,8 @@ const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteCh
       AuthenticatedSettingsNotificationsRoute,
     AuthenticatedSettingsObjectManagerRoute:
       AuthenticatedSettingsObjectManagerRouteWithChildren,
+    AuthenticatedSettingsProfilesRoute:
+      AuthenticatedSettingsProfilesRouteWithChildren,
     AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   }
 

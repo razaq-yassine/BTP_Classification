@@ -37,6 +37,7 @@ authRoutes.post('/login', async (c) => {
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
+    profile: user.profile || 'standard-user',
   })
 })
 
@@ -58,6 +59,7 @@ authRoutes.get('/me', async (c) => {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      profile: user.profile || 'standard-user',
     })
   } catch {
     return c.json({ message: 'Unauthorized' }, 401)

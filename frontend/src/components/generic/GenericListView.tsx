@@ -19,6 +19,7 @@ import { Main } from '@/components/layout/main'
 import { isNetworkError } from '@/utils/handle-server-error'
 import { trackRecentlyViewed, getRecentlyViewedIds } from '@/utils/recently-viewed'
 import { useAuthStore, selectUser } from '@/stores/authStore'
+import { usePermissions } from '@/hooks/usePermissions'
 
 interface GenericListViewProps {
   objectDefinition: ObjectDefinition
@@ -66,6 +67,7 @@ function setPinnedViewKey(objectName: string, viewKey: string | null): void {
 export function GenericListView({ objectDefinition, basePath }: GenericListViewProps) {
   const navigate = useNavigate()
   const user = useAuthStore(selectUser)
+  const { canCreate, canDelete, isFieldVisible } = usePermissions()
   const [records, setRecords] = useState<GenericRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -92,13 +94,22 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
 
   // Get active view configuration
   const activeView: ListViewDefinition | undefined = views?.find((v) => v.key === activeViewKey)
-  const currentListView = activeView || {
+  const baseListView = activeView || {
     fields: objectDefinition.listView?.fields || [],
     defaultSort: objectDefinition.listView?.defaultSort,
     defaultSortOrder: objectDefinition.listView?.defaultSortOrder,
     pageSize: objectDefinition.listView?.pageSize,
     statistics: objectDefinition.listView?.statistics,
   } as ListViewDefinition
+  
+  // Filter fields based on permissions
+  const currentListView: ListViewDefinition = {
+    ...baseListView,
+    fields: baseListView.fields.filter((field) => {
+      const fieldKey = typeof field === 'string' ? field : field.key
+      return isFieldVisible(objectDefinition.name, fieldKey)
+    }),
+  }
 
   // Debounce search to avoid refetch on every keystroke (prevents focus loss)
   useEffect(() => {
@@ -402,7 +413,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
               </div>
             )}
             <div className="flex items-center gap-1.5 shrink-0 sm:hidden">
-              {selectedIds.length > 0 && (
+              {selectedIds.length > 0 && canDelete(objectDefinition.name) && (
                 <Button
                   variant="destructive"
                   size="icon"
@@ -412,9 +423,11 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
                   <Trash2 className="h-4 w-4" />
                 </Button>
               )}
-              <Button size="icon" className="h-8 w-8" onClick={handleAddRecord}>
-                <Plus className="h-4 w-4" />
-              </Button>
+              {canCreate(objectDefinition.name) && (
+                <Button size="icon" className="h-8 w-8" onClick={handleAddRecord}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto sm:flex-1 sm:max-w-sm">
@@ -425,7 +438,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
               className="h-9 sm:h-10 min-w-0 flex-1"
             />
             <div className="hidden sm:flex items-center gap-2 shrink-0">
-              {selectedIds.length > 0 && (
+              {selectedIds.length > 0 && canDelete(objectDefinition.name) && (
                 <Button
                   variant="destructive"
                   size="sm"
@@ -435,10 +448,12 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
                   Delete {selectedIds.length} item{selectedIds.length > 1 ? 's' : ''}
                 </Button>
               )}
-              <Button size="sm" onClick={handleAddRecord}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add {objectDefinition.label}
-              </Button>
+              {canCreate(objectDefinition.name) && (
+                <Button size="sm" onClick={handleAddRecord}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add {objectDefinition.label}
+                </Button>
+              )}
             </div>
           </div>
         </div>
