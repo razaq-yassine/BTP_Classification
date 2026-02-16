@@ -1,0 +1,1 @@
+{"layout":"two-column","sections":[{"title":"Basic Information","columns":2,"defaultOpen":true,"fields":["name","organization"]},{"title":"System Information","columns":2,"defaultOpen":false,"fields":["id","createdAt","updatedAt"]}]}

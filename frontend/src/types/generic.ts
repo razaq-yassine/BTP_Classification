@@ -25,6 +25,7 @@ export interface FieldDefinition {
   isRequired?: boolean // Alternative to required for compatibility
   isImportant?: boolean // Important fields show popup if empty on submit
   editable?: boolean
+  editableForProfiles?: string[]
   sortable?: boolean
   searchable?: boolean
   format?: string // For date formatting, etc.

@@ -11,7 +11,7 @@ import type {
 } from '@/types/object-definition'
 import { getIcon, resolveAction, resolveCalculatedData, resolveStatisticsCard } from './action-registry'
 import { objectSchema, fieldSchema } from './schemas'
-import { SYSTEM_FIELD_LABELS } from '@shared/protected-metadata'
+import { SYSTEM_FIELD_LABELS, TENANT_SYSTEM_OBJECTS_SET } from '@shared/protected-metadata'
 
 const METADATA_BASE = '/metadata'
 
@@ -26,14 +26,16 @@ async function fetchJson<T>(path: string): Promise<T> {
 }
 
 export async function loadObjectDefinition(objectName: string): Promise<ObjectDefinition> {
-  const basePath = `/objects/${objectName}`
+  // System objects (organization, tenant) load from metadata/system/, not metadata/objects/
+  const isSystemObject = TENANT_SYSTEM_OBJECTS_SET.has(objectName)
+  const basePath = isSystemObject ? `/system/${objectName}` : `/objects/${objectName}`
 
   const [objectData, listViewData, detailViewData, fieldsData, headerData, relatedData] =
     await Promise.all([
       fetchJson<Record<string, unknown>>(`${basePath}/object.json`),
       fetchJson<Record<string, unknown>>(`${basePath}/listView.json`),
       fetchJson<Record<string, unknown>>(`${basePath}/detailView.json`),
-      loadFields(objectName),
+      loadFields(objectName, basePath),
       fetchJson<Record<string, unknown>>(`${basePath}/header.json`).catch(() => null),
       fetchJson<RelatedObjectDefinition[]>(`${basePath}/relatedObjects.json`).catch(() => []),
     ])
@@ -239,8 +241,8 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
   }
 }
 
-async function loadFields(objectName: string): Promise<FieldDefinition[]> {
-  const objPath = `/objects/${objectName}`
+async function loadFields(objectName: string, objPathOverride?: string): Promise<FieldDefinition[]> {
+  const objPath = objPathOverride ?? `/objects/${objectName}`
   let fieldNames: string[]
   try {
     const index = await fetchJson<string[]>(`${objPath}/fields.json`)

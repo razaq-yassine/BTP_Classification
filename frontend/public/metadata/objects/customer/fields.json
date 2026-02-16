@@ -1,13 +1,1 @@
-[
-  "name",
-  "firstName",
-  "lastName",
-  "fullName",
-  "email",
-  "phone",
-  "company",
-  "address",
-  "notes",
-  "tags",
-  "priority"
-]
+["name","firstName","lastName","fullName","email","phone","company","address","notes","tags","priority","organization","tenant"]

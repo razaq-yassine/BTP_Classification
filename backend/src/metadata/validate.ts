@@ -7,12 +7,52 @@ import fs from 'fs'
 import path from 'path'
 import type { ValidationError, ValidationResult } from './types.js'
 import { addError } from './types.js'
-import { SYSTEM_FIELDS_SET, SYSTEM_OBJECTS_SET } from '../../../shared/dist/protected-metadata.js'
+import {
+  SYSTEM_FIELDS_SET,
+  SYSTEM_OBJECTS_SET,
+  SYSTEM_OBJECTS_WITH_EXTENSIONS,
+  SYSTEM_OBJECT_BASE_FIELDS
+} from '../../../shared/dist/protected-metadata.js'
 
 const VALID_FIELD_TYPES = new Set([
   'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text', 'url',
   'select', 'multiselect', 'reference', 'lookup', 'autoNumber', 'formula'
 ])
+
+const VALID_TENANT_MODES = new Set(['none', 'tenant', 'org_and_tenant'])
+
+export type TenantMode = 'none' | 'tenant' | 'org_and_tenant'
+export type TenantScope = 'tenant' | 'org_and_tenant' | null
+
+export interface TenantConfig {
+  mode: TenantMode
+}
+
+export function loadTenantConfig(metadataPath: string): TenantConfig | null {
+  const configPath = path.join(metadataPath, 'tenant-config.json')
+  if (!fs.existsSync(configPath)) return null
+  try {
+    const data = JSON.parse(fs.readFileSync(configPath, 'utf-8')) as Record<string, unknown>
+    const mode = (data.mode as string) || 'none'
+    return { mode: mode as TenantMode }
+  } catch {
+    return null
+  }
+}
+
+function validateTenantConfig(
+  tenantConfig: TenantConfig | null,
+  _metadataPath: string,
+  _objectNames: string[],
+  errors: ValidationError[]
+): void {
+  const pathPrefix = 'tenant-config.json'
+  if (!tenantConfig) return
+  if (!VALID_TENANT_MODES.has(tenantConfig.mode)) {
+    addError(errors, pathPrefix, `mode must be one of: none, tenant, org_and_tenant`, 'TENANT_INVALID_MODE')
+  }
+  // Organization and tenant are system objects in metadata/system/, not metadata/objects/ - no existence check needed
+}
 
 function pluralize(name: string): string {
   if (name.endsWith('y')) return name.slice(0, -1) + 'ies'
@@ -31,7 +71,8 @@ function validateAutoNumberPattern(pattern: string): string | null {
 function validateObjectFile(
   objectName: string,
   data: Record<string, unknown>,
-  errors: ValidationError[]
+  errors: ValidationError[],
+  tenantConfig?: TenantConfig | null
 ): void {
   const pathPrefix = `${objectName}/object.json`
   if (!data.name || typeof data.name !== 'string' || !data.name.trim()) {
@@ -51,6 +92,24 @@ function validateObjectFile(
   }
   if (data.sidebar && typeof data.sidebar !== 'object') {
     addError(errors, pathPrefix, 'sidebar must be an object', 'OBJECT_INVALID_SIDEBAR')
+  }
+  // tenantScope: null | 'tenant' | 'org_and_tenant'. Must match mode when mode !== 'none'
+  const tenantScope = data.tenantScope as string | null | undefined
+  if (tenantScope !== undefined && tenantScope !== null) {
+    if (tenantScope !== 'tenant' && tenantScope !== 'org_and_tenant') {
+      addError(errors, pathPrefix, 'tenantScope must be "tenant" or "org_and_tenant"', 'OBJECT_INVALID_TENANT_SCOPE')
+    } else if (tenantConfig && tenantConfig.mode !== 'none') {
+      if (tenantConfig.mode === 'tenant' && tenantScope !== 'tenant') {
+        addError(errors, pathPrefix, 'tenantScope must be "tenant" when mode is "tenant"', 'OBJECT_TENANT_SCOPE_MISMATCH')
+      }
+      if (tenantConfig.mode === 'org_and_tenant' && tenantScope !== 'tenant' && tenantScope !== 'org_and_tenant') {
+        addError(errors, pathPrefix, 'tenantScope must be "tenant" or "org_and_tenant" when mode is "org_and_tenant"', 'OBJECT_TENANT_SCOPE_MISMATCH')
+      }
+    }
+  }
+  // Master objects (organization, tenant) must not have tenantScope
+  if ((objectName === 'organization' || objectName === 'tenant') && tenantScope) {
+    addError(errors, pathPrefix, `Master object "${objectName}" must not have tenantScope`, 'OBJECT_MASTER_NO_TENANT_SCOPE')
   }
 }
 
@@ -427,21 +486,64 @@ function validateRelatedObjectsFile(
 
 function getObjectNames(objectsPath: string): string[] {
   try {
-    const indexPath = path.join(objectsPath, 'index.json')
-    if (fs.existsSync(indexPath)) {
-      const data = JSON.parse(fs.readFileSync(indexPath, 'utf-8'))
-      return Array.isArray(data) ? data.filter((n: string) => !SYSTEM_OBJECTS_SET.has(n.toLowerCase())) : []
-    }
     if (fs.existsSync(objectsPath)) {
+      // Use directory scan so validation sees all objects on disk (index.json may be stale)
       return fs.readdirSync(objectsPath).filter((d) => {
         const p = path.join(objectsPath, d)
         return fs.statSync(p).isDirectory() && fs.existsSync(path.join(p, 'object.json'))
-      })
+      }).filter((n) => !SYSTEM_OBJECTS_SET.has(n.toLowerCase()))
     }
   } catch {
     // ignore
   }
   return []
+}
+
+export function validateSystemExtensionField(
+  objectName: string,
+  fieldKey: string,
+  data: Record<string, unknown>,
+  baseFields: Set<string>,
+  errors: ValidationError[]
+): void {
+  const pathPrefix = `system-extensions/${objectName}/fields/${fieldKey}`
+  if (baseFields.has(fieldKey)) {
+    addError(errors, pathPrefix, `Extension field '${fieldKey}' cannot override base field`, 'EXT_BASE_FIELD_OVERRIDE')
+    return
+  }
+  if (!data.key || typeof data.key !== 'string') {
+    addError(errors, pathPrefix, 'Missing required: key', 'FIELD_MISSING_KEY')
+  }
+  if (!data.label || typeof data.label !== 'string') {
+    addError(errors, pathPrefix, 'Missing required: label', 'FIELD_MISSING_LABEL')
+  }
+  if (!data.type || typeof data.type !== 'string') {
+    addError(errors, pathPrefix, 'Missing required: type', 'FIELD_MISSING_TYPE')
+    return
+  }
+  const type = (data.type as string).toLowerCase()
+  if (!VALID_FIELD_TYPES.has(type) && type !== 'autonumber') {
+    addError(errors, pathPrefix, `Invalid field type: ${data.type}`, 'FIELD_INVALID_TYPE')
+  }
+  if (type === 'reference' && (!data.objectName || typeof data.objectName !== 'string')) {
+    addError(errors, pathPrefix, 'objectName is required for reference type', 'FIELD_REFERENCE_MISSING_OBJECT')
+  }
+}
+
+/** Validate extension field - used by API when saving system extension fields. */
+export function validateSystemExtension(
+  objectName: string,
+  fieldKey: string,
+  fieldData: Record<string, unknown>
+): ValidationResult {
+  const errors: ValidationError[] = []
+  const baseFields = SYSTEM_OBJECT_BASE_FIELDS[objectName]
+  if (!baseFields) {
+    addError(errors, `system-extensions/${objectName}`, `Object "${objectName}" does not support extensions`, 'EXT_OBJECT_NOT_SUPPORTED')
+    return { valid: false, errors }
+  }
+  validateSystemExtensionField(objectName, fieldKey, fieldData, baseFields, errors)
+  return { valid: errors.length === 0, errors }
 }
 
 /**
@@ -459,6 +561,10 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
     const p = path.join(objectsPath, d)
     return fs.statSync(p).isDirectory()
   })
+
+  // Validate tenant config
+  const tenantConfig = loadTenantConfig(metadataPath)
+  validateTenantConfig(tenantConfig, metadataPath, objectNames, errors)
 
   // Check tableName uniqueness across objects
   const tableNameToObjects = new Map<string, string[]>()
@@ -490,7 +596,7 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
     let fieldsList: string[] = []
     try {
       objectData = JSON.parse(fs.readFileSync(path.join(objPath, 'object.json'), 'utf-8')) as Record<string, unknown>
-      validateObjectFile(objectName, objectData, errors)
+      validateObjectFile(objectName, objectData, errors, tenantConfig)
     } catch (e) {
       addError(errors, `${objectName}/object.json`, `Failed to parse: ${(e as Error).message}`, 'PARSE_ERROR')
     }
@@ -543,6 +649,44 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
     }
   }
   
+  // Validate system extensions (add-only fields for user, organization, tenant)
+  const extensionsPath = path.join(metadataPath, 'system-extensions')
+  if (fs.existsSync(extensionsPath)) {
+    for (const objectName of SYSTEM_OBJECTS_WITH_EXTENSIONS) {
+      const extDir = path.join(extensionsPath, objectName)
+      if (!fs.existsSync(extDir)) continue
+      const fieldsPath = path.join(extDir, 'fields.json')
+      if (!fs.existsSync(fieldsPath)) continue
+      try {
+        const fieldsData = JSON.parse(fs.readFileSync(fieldsPath, 'utf-8'))
+        if (!Array.isArray(fieldsData)) {
+          addError(errors, `system-extensions/${objectName}/fields.json`, 'fields.json must be an array of field keys', 'EXT_FIELDS_INVALID_FORMAT')
+          continue
+        }
+        const baseFields = SYSTEM_OBJECT_BASE_FIELDS[objectName]
+        if (!baseFields) continue
+        for (const fieldKey of fieldsData as string[]) {
+          if (baseFields.has(fieldKey)) {
+            addError(errors, `system-extensions/${objectName}/fields.json`, `Extension field '${fieldKey}' cannot override base field`, 'EXT_BASE_FIELD_OVERRIDE')
+          }
+          const fieldPath = path.join(extDir, 'fields', `${fieldKey}.json`)
+          if (!fs.existsSync(fieldPath)) {
+            addError(errors, `system-extensions/${objectName}/fields/${fieldKey}.json`, 'Field file missing', 'EXT_FIELD_FILE_MISSING')
+            continue
+          }
+          try {
+            const fieldData = JSON.parse(fs.readFileSync(fieldPath, 'utf-8')) as Record<string, unknown>
+            validateSystemExtensionField(objectName, fieldKey, fieldData, baseFields, errors)
+          } catch (e) {
+            addError(errors, `system-extensions/${objectName}/fields/${fieldKey}.json`, `Failed to parse: ${(e as Error).message}`, 'PARSE_ERROR')
+          }
+        }
+      } catch (e) {
+        addError(errors, `system-extensions/${objectName}/fields.json`, `Failed to parse: ${(e as Error).message}`, 'PARSE_ERROR')
+      }
+    }
+  }
+
   // Validate profiles
   const profilesPath = path.join(metadataPath, 'profiles')
   if (fs.existsSync(profilesPath)) {
@@ -583,13 +727,16 @@ export function validateField(
 
 /**
  * Validate object.json - used by API when saving object.json.
+ * Pass metadataPath to validate tenantScope against tenant-config.
  */
 export function validateObject(
   objectName: string,
-  objectData: Record<string, unknown>
+  objectData: Record<string, unknown>,
+  metadataPath?: string
 ): ValidationResult {
   const errors: ValidationError[] = []
-  validateObjectFile(objectName, objectData, errors)
+  const tenantConfig = metadataPath ? loadTenantConfig(metadataPath) : null
+  validateObjectFile(objectName, objectData, errors, tenantConfig)
   return { valid: errors.length === 0, errors }
 }
 

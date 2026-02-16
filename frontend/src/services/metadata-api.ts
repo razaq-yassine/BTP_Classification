@@ -1,19 +1,11 @@
 import api from './api'
+import { SYSTEM_OBJECTS_SET } from '@shared/protected-metadata'
 
 const METADATA_BASE = '/api/admin/metadata'
 
-/** System objects (permissions, roles, etc.) are not managed via metadata. User can be extended. */
-const SYSTEM_OBJECTS = new Set([
-  'permission',
-  'permissions',
-  'role',
-  'roles',
-  'session',
-  'sessions',
-])
-
+/** Filter out system objects (organization, tenant, user, permissions, roles, etc.) from Object Manager list. */
 function filterSystemObjects(names: string[]): string[] {
-  return names.filter((name) => !SYSTEM_OBJECTS.has(name.toLowerCase()))
+  return names.filter((name) => !SYSTEM_OBJECTS_SET.has(name.toLowerCase()))
 }
 
 async function getObjectNamesFromStatic(): Promise<string[]> {

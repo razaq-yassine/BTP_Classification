@@ -21,6 +21,19 @@ const defaultMetadataPath = path.join(
 );
 const METADATA_PATH = process.env.METADATA_PATH || defaultMetadataPath;
 const OBJECTS_PATH = path.join(METADATA_PATH, "objects");
+const SYSTEM_OBJECTS_PATH = path.join(METADATA_PATH, "system");
+
+function loadTenantConfig(): { mode: "none" | "tenant" | "org_and_tenant" } {
+  const configPath = path.join(METADATA_PATH, "tenant-config.json");
+  if (!fs.existsSync(configPath)) return { mode: "none" };
+  try {
+    const data = JSON.parse(fs.readFileSync(configPath, "utf-8")) as Record<string, unknown>;
+    const mode = (data.mode as string) || "none";
+    return { mode: mode as "none" | "tenant" | "org_and_tenant" };
+  } catch {
+    return { mode: "none" };
+  }
+}
 
 function pluralize(name: string): string {
   if (name.endsWith("y")) return name.slice(0, -1) + "ies";
@@ -34,6 +47,16 @@ function toSnakeCase(str: string): string {
 
 function getExpectedTablesFromMetadata(): Set<string> {
   const expected = new Set<string>(["users"]);
+  const tenantConfig = loadTenantConfig();
+
+  // Add tenant system tables when mode != none
+  if (tenantConfig.mode !== "none" && fs.existsSync(path.join(SYSTEM_OBJECTS_PATH, "organization", "object.json"))) {
+    expected.add("organizations");
+  }
+  if (tenantConfig.mode === "org_and_tenant" && fs.existsSync(path.join(SYSTEM_OBJECTS_PATH, "tenant", "object.json"))) {
+    expected.add("tenants");
+  }
+
   if (!fs.existsSync(OBJECTS_PATH)) return expected;
 
   const objectDirs = fs.readdirSync(OBJECTS_PATH).filter((d) => {
@@ -60,8 +83,53 @@ function getExpectedTablesFromMetadata(): Set<string> {
   return expected;
 }
 
+function loadColumnsFromObject(objectsPath: string, objectName: string): { tableName: string; cols: Set<string> } | null {
+  try {
+    const object = JSON.parse(
+      fs.readFileSync(path.join(objectsPath, objectName, "object.json"), "utf-8")
+    ) as Record<string, unknown>;
+    const tableName = (object.tableName as string) || pluralize(objectName);
+    const cols = new Set<string>(SYSTEM_COLUMNS_SET);
+    const fieldsPath = path.join(objectsPath, objectName, "fields.json");
+    if (fs.existsSync(fieldsPath)) {
+      const fieldsIndex = JSON.parse(fs.readFileSync(fieldsPath, "utf-8")) as string[];
+      for (const key of fieldsIndex) {
+        if (key === "id") continue;
+        const fieldPath = path.join(objectsPath, objectName, "fields", `${key}.json`);
+        if (!fs.existsSync(fieldPath)) continue;
+        const fd = JSON.parse(fs.readFileSync(fieldPath, "utf-8")) as {
+          key: string;
+          type?: string;
+          computed?: boolean;
+        };
+        if (fd.computed || fd.type === "formula") continue;
+        if (fd.type === "reference") {
+          cols.add(toSnakeCase(key) + "_id");
+        } else {
+          cols.add(toSnakeCase(key));
+        }
+      }
+    }
+    return { tableName, cols };
+  } catch {
+    return null;
+  }
+}
+
 function getExpectedColumnsFromMetadata(): Map<string, Set<string>> {
   const result = new Map<string, Set<string>>();
+  const tenantConfig = loadTenantConfig();
+
+  // Add tenant system object columns when mode != none
+  if (tenantConfig.mode !== "none" && fs.existsSync(path.join(SYSTEM_OBJECTS_PATH, "organization", "object.json"))) {
+    const loaded = loadColumnsFromObject(SYSTEM_OBJECTS_PATH, "organization");
+    if (loaded) result.set(loaded.tableName, loaded.cols);
+  }
+  if (tenantConfig.mode === "org_and_tenant" && fs.existsSync(path.join(SYSTEM_OBJECTS_PATH, "tenant", "object.json"))) {
+    const loaded = loadColumnsFromObject(SYSTEM_OBJECTS_PATH, "tenant");
+    if (loaded) result.set(loaded.tableName, loaded.cols);
+  }
+
   if (!fs.existsSync(OBJECTS_PATH)) return result;
 
   const objectDirs = fs.readdirSync(OBJECTS_PATH).filter((d) => {

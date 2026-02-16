@@ -9,6 +9,7 @@
   "icon": "IconShoppingCart",
   "color": "green",
   "trigger": "order",
+  "tenantScope": "org_and_tenant",
   "sidebar": {
     "showInSidebar": true,
     "group": "Data",

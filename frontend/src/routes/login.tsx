@@ -4,6 +4,7 @@ import { useAuthStore, selectLogin, selectIsLoading, selectIsAuthenticated } fro
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { PasswordInput } from '@/components/password-input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
@@ -13,12 +14,12 @@ export const Route = createFileRoute('/login')({
   beforeLoad: async () => {
     // Check authentication status first
     const { checkAuth, isAuthenticated } = useAuthStore.getState()
-    
+
     // If already authenticated, redirect immediately
     if (isAuthenticated) {
       throw redirect({ to: '/dashboard' })
     }
-    
+
     try {
       await checkAuth()
       // If checkAuth succeeds, user is authenticated
@@ -42,7 +43,7 @@ function LoginPage() {
   const login = useAuthStore(selectLogin)
   const isLoading = useAuthStore(selectIsLoading)
   const isAuthenticated = useAuthStore(selectIsAuthenticated)
-  
+
   const [username, setUsername] = useState('admin') // Pre-populate with default credentials
   const [password, setPassword] = useState('admin123') // Pre-populate with default credentials
   const [error, setError] = useState('')
@@ -57,10 +58,10 @@ function LoginPage() {
     const timer = setTimeout(() => {
       setIsCheckingAuth(false)
     }, 100)
-    
+
     return () => clearTimeout(timer)
   }, [isAuthenticated, navigate])
-  
+
   // Show loading while checking authentication
   if (isCheckingAuth || isAuthenticated) {
     return (
@@ -76,7 +77,7 @@ function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    
+
     const result = await login(username, password)
     if (!result.success) {
       setError(result.error || 'Login failed')
@@ -102,7 +103,7 @@ function LoginPage() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
+
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
@@ -114,22 +115,21 @@ function LoginPage() {
                 placeholder="Enter your username"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Enter your password"
               />
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full" 
+
+            <Button
+              type="submit"
+              className="w-full"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -142,11 +142,12 @@ function LoginPage() {
               )}
             </Button>
           </form>
-          
+
           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800 font-medium">Default Credentials:</p>
-            <p className="text-sm text-blue-600">Username: admin | Password: admin123</p>
-            <p className="text-sm text-blue-600">Username: demo | Password: demo123</p>
+            <p className="text-sm text-blue-600">admin / admin123 (platform admin)</p>
+            <p className="text-sm text-blue-600">acme-org-user / acme123 (org user, all Acme tenants)</p>
+            <p className="text-sm text-blue-600">acme-us-user / acme123 (tenant user, Acme US only)</p>
           </div>
         </CardContent>
       </Card>

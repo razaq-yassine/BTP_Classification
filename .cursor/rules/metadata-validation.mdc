@@ -23,6 +23,8 @@ When adding or changing metadata-driven features:
 
 5. **System field/object/table** → Update `shared/protected-metadata.ts` (SYSTEM_FIELDS, SYSTEM_OBJECTS, PROTECTED_TABLES)
 
+5a. **System objects and extensions** → Update `shared/protected-metadata.ts` (SYSTEM_OBJECTS_WITH_EXTENSIONS, SYSTEM_OBJECT_BASE_FIELDS). Add `validateSystemExtensionField()` for new extension types. Schema generator merges base + extensions in `loadExtensionFields()`.
+
 6. **Field types and DB dialect** → Metadata field types (text, number, boolean, date, reference) map to MySQL types via `generate-schema-from-metadata.ts` when `--dialect=mysql`. The mapping is in that script.
 
 7. **Computed fields** → Validate `computedExpression` is one of concat|join|lookup, `sourceFields` exist, `referenceField` valid for join
@@ -34,3 +36,5 @@ When adding or changing metadata-driven features:
 10. **Name field** → Every object must have a `name` field in `fields.json`. The name field can be `string` or `autoNumber`. Only the name field may use `autoNumber` type. When `type` is `autoNumber`, `editable` must be `false`; when `type` is `string`, `editable` may be `true` or `false`.
 
 11. **Metadata-driven** → Never create schema, migrations, or entity config manually. See `.cursor/rules/metadata-driven.mdc`.
+
+12. **Profile-specific field editability** → Use `editableForProfiles: ["profile-name"]` when a field should be read-only by default but editable for specific profiles. Example: `tenant` field with `editable: false` and `editableForProfiles: ["org-user"]` lets org users reassign records to another tenant. Frontend checks `editableForProfiles?.includes(profileName)`; backend must allow the field in update payload when profile matches (e.g. entities.ts for org-user + tenantId). See `.cursor/rules/profile-field-editability.mdc` for full implementation guide, `docs/USAGE.md`, and `.cursor/rules/tenant-multi-tenancy.mdc`.

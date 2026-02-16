@@ -1,0 +1,43 @@
+---
+description: Profile-specific field editability—when and how to use editableForProfiles
+globs: frontend/public/metadata/objects/**/fields/*.json, frontend/src/components/generic/GenericObjectDetailViewMainSection.tsx, frontend/src/components/generic/GenericCreateDialog.tsx, backend/src/routes/entities.ts
+alwaysApply: false
+---
+
+# Profile-Specific Field Editability (editableForProfiles)
+
+When a field should be **read-only for most users but editable for specific profiles**, use `editableForProfiles` in field metadata.
+
+## When to Use
+
+- **Tenant field on tenant-scoped objects**: Currently disabled. When re-enabled, org users could reassign records; requires cascade (order → order items). See `docs/FUTURE.md`.
+- **Any field** where edit permission depends on profile (e.g. only "manager" can edit status, only "admin" can edit audit fields).
+
+## Field Metadata
+
+```json
+{
+  "key": "tenant",
+  "label": "Tenant",
+  "type": "reference",
+  "objectName": "tenant",
+  "basePath": "/tenants",
+  "editable": false,
+  "editableForProfiles": ["org-user"]
+}
+```
+
+- `editable: false` — Default: field is read-only for everyone
+- `editableForProfiles: ["profile-name"]` — Users with these profiles can edit even when `editable` is false
+
+## Implementation Checklist
+
+1. **Metadata**: Add `editableForProfiles` to the field JSON (e.g. `fields/tenant.json`).
+2. **Frontend**: `GenericObjectDetailViewMainSection` and `GenericCreateDialog` already check `editableForProfiles?.includes(profileName)`—no code change needed if profile is passed.
+3. **Backend**: If the field is normally excluded from updates (e.g. tenantId for tenant users), allow it in the update payload when `profile?.name` is in `editableForProfiles` and validate (e.g. new tenant belongs to user's org). See `entities.ts` PUT handler for tenantId + org-user.
+
+## References
+
+- `.cursor/rules/tenant-multi-tenancy.mdc` — Org vs tenant user behavior, tenant field example
+- `docs/USAGE.md` — [Profile-specific editability](#profile-specific-editability-editableforprofiles)
+- `frontend/src/metadata/schemas.ts` — `editableForProfiles: z.array(z.string()).optional()` in field schema

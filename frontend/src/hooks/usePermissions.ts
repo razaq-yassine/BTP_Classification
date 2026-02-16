@@ -29,6 +29,9 @@ export function usePermissions() {
   })
 
   const permissionHelpers = useMemo(() => {
+    // Admin profile: full access to everything without needing OLS/FLS in profile
+    const isAdmin = profileName === 'admin'
+
     /**
      * Check if user has permission for an object action
      */
@@ -36,6 +39,7 @@ export function usePermissions() {
       objectName: string,
       action: 'create' | 'read' | 'update' | 'delete'
     ): boolean => {
+      if (isAdmin) return true
       if (!profile) return false
       const objPerm = profile.objectPermissions[objectName]
       if (!objPerm) return false // Deny by default
@@ -50,11 +54,12 @@ export function usePermissions() {
       fieldKey: string,
       permission: 'visible' | 'editable'
     ): boolean => {
+      if (isAdmin) return true
       if (!profile) return false
       const objPerm = profile.objectPermissions[objectName]
       if (!objPerm) return false // Deny by default
 
-      // If no fieldPermissions specified, allow all fields (for admin profiles)
+      // If no fieldPermissions specified, allow all fields (for profiles with broad object perms)
       if (!objPerm.fieldPermissions) {
         if (permission === 'visible') {
           return objPerm.read === true
@@ -93,7 +98,7 @@ export function usePermissions() {
       canEditField: (objectName: string, fieldKey: string) =>
         hasFieldPermission(objectName, fieldKey, 'editable'),
     }
-  }, [profile, isLoading])
+  }, [profile, profileName, isLoading])
 
   return permissionHelpers
 }

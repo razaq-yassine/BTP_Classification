@@ -1,17 +1,1 @@
-{
-  "layout": "two-column",
-  "sections": [
-    {
-      "title": "Line Item Details",
-      "columns": 2,
-      "defaultOpen": true,
-      "fields": ["name", "order", "product", "quantity", "unitPrice", "lineTotal"]
-    },
-    {
-      "title": "System Information",
-      "columns": 2,
-      "defaultOpen": false,
-      "fields": ["id", "createdAt", "updatedAt"]
-    }
-  ]
-}
+{"layout":"two-column","sections":[{"title":"Line Item Details","columns":2,"defaultOpen":true,"fields":["name","order","product","quantity","unitPrice","lineTotal"]},{"title":"Tenant Scope","columns":2,"defaultOpen":true,"fields":["organization","tenant"]},{"title":"System Information","columns":2,"defaultOpen":false,"fields":["id","createdAt","updatedAt"]}]}

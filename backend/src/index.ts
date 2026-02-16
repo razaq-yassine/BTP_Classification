@@ -2,6 +2,7 @@ import "dotenv/config";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { authRoutes } from "./routes/auth.js";
+import { configRoutes } from "./routes/config.js";
 import { entityRoutes } from "./routes/entities.js";
 import { metadataRoutes } from "./routes/metadata.js";
 import { runMigrations } from "./db/migrate.js";
@@ -27,6 +28,7 @@ await runMigrations();
 await initDb();
 
 app.route("/api/auth", authRoutes);
+app.route("/api/config", configRoutes);
 app.route("/api", entityRoutes);
 app.route("/api/admin/metadata", metadataRoutes);
 

@@ -30,7 +30,7 @@ authRoutes.post('/login', async (c) => {
 
   const token = await signToken({ sub: user.username, id: user.id })
 
-  return c.json({
+  const response: Record<string, unknown> = {
     accessToken: token,
     id: user.id,
     username: user.username,
@@ -38,7 +38,10 @@ authRoutes.post('/login', async (c) => {
     firstName: user.firstName,
     lastName: user.lastName,
     profile: user.profile || 'standard-user',
-  })
+  }
+  if ('organizationId' in user && user.organizationId != null) response.organizationId = user.organizationId
+  if ('tenantId' in user && user.tenantId != null) response.tenantId = user.tenantId
+  return c.json(response)
 })
 
 authRoutes.get('/me', async (c) => {
@@ -53,14 +56,17 @@ authRoutes.get('/me', async (c) => {
     if (!user || !user.isActive) {
       return c.json({ message: 'Unauthorized' }, 401)
     }
-    return c.json({
+    const response: Record<string, unknown> = {
       id: user.id,
       username: user.username,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
       profile: user.profile || 'standard-user',
-    })
+    }
+    if ('organizationId' in user && user.organizationId != null) response.organizationId = user.organizationId
+    if ('tenantId' in user && user.tenantId != null) response.tenantId = user.tenantId
+    return c.json(response)
   } catch {
     return c.json({ message: 'Unauthorized' }, 401)
   }

@@ -29,6 +29,8 @@ export const fieldSchema = z.object({
   ]),
   required: z.boolean().optional(),
   editable: z.boolean().optional(),
+  /** Profile names that can edit this field even when editable: false (e.g. org-user for tenant field) */
+  editableForProfiles: z.array(z.string()).optional(),
   sortable: z.boolean().optional(),
   searchable: z.boolean().optional(),
   format: z.string().optional(),

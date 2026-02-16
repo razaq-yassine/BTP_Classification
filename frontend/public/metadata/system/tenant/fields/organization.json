@@ -1,0 +1,1 @@
+{"key":"organization","label":"Organization","type":"reference","objectName":"organization","required":true,"editable":true,"sortable":true,"searchable":true,"relationshipType":"masterDetail"}

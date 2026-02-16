@@ -26,26 +26,33 @@ interface GenericCreateDialogProps {
 }
 
 // Component for displaying field in create mode
-function CreateFieldDisplay({ 
-  field, 
-  formData, 
+function CreateFieldDisplay({
+  field,
+  formData,
   onChange,
   error,
-  canEditField
+  canEditField,
+  profileName,
 }: {
   field: FieldDefinition
   formData: Record<string, any>
   onChange: (fieldKey: string, value: any) => void
   error?: string
   canEditField: (fieldKey: string) => boolean
+  profileName?: string
 }) {
   const value = formData[field.key] || ''
   const fieldEditable = canEditField(field.key)
+  const editableForProfiles = field.editableForProfiles
+  const profileCanEdit =
+    (editableForProfiles?.length && profileName && editableForProfiles.includes(profileName)) ||
+    // Tenant field: org-user must select tenant when creating (edit not allowed)
+    (field.key === 'tenant' && profileName === 'org-user')
   const isReadOnly =
     field.type === 'autoNumber' ||
     field.type === 'autonumber' ||
-    field.editable === false ||
-    !fieldEditable
+    (field.editable === false && !profileCanEdit) ||
+    (!fieldEditable && !profileCanEdit)
 
   return (
     <div className="space-y-2">
@@ -70,7 +77,7 @@ export function GenericCreateDialog({
   onOpenChange, 
   onRecordCreated 
 }: GenericCreateDialogProps) {
-  const { isFieldVisible, canEditField } = usePermissions()
+  const { isFieldVisible, canEditField, profile } = usePermissions()
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [, setHasChanges] = useState(false)
   const [error, setError] = useState('')
@@ -497,6 +504,7 @@ export function GenericCreateDialog({
                               onChange={handleFieldChange}
                               error={fieldErrors[fieldDefinition.key]}
                               canEditField={(fieldKey) => canEditField(objectDefinition.name, fieldKey)}
+                              profileName={profile?.name}
                             />
                           )
                         })}

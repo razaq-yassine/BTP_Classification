@@ -51,6 +51,8 @@ export interface FieldDefinition {
   isRequired?: boolean // Alternative to required for compatibility
   isImportant?: boolean // Important fields show popup if empty on submit
   editable?: boolean
+  /** Profile names that can edit this field even when editable: false (e.g. org-user for tenant field) */
+  editableForProfiles?: string[]
   sortable?: boolean
   searchable?: boolean
   format?: string // For date formatting, etc.

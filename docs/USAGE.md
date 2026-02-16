@@ -18,6 +18,8 @@ This project is **metadata-driven**. The UI, API routes, and database schema are
 10. [Related Objects](#related-objects)
 11. [Triggers](#triggers)
 12. [Validation & Deployment](#validation--deployment)
+13. [System Objects](#system-objects)
+14. [Multi-Tenancy (Org/Tenant)](#multi-tenancy-orgtenant)
 
 ---
 
@@ -204,6 +206,7 @@ Every object must have a `name` field. It serves as the primary identifier for r
 | `type` | string | Required. One of the field types above. |
 | `required` | boolean | Validation |
 | `editable` | boolean | Can user edit? (default true) |
+| `editableForProfiles` | string[] | Profile names that can edit this field even when `editable: false`. Use for profile-specific overrides (e.g. `["org-user"]` for tenant field so org users can change tenant). |
 | `sortable` | boolean | Show in list sort options |
 | `searchable` | boolean | Include in search |
 | `format` | string | e.g. `MMM dd, yyyy` for dates |
@@ -246,6 +249,26 @@ For **master-detail** (e.g. order items under order):
   "required": true
 }
 ```
+
+### Profile-specific editability (editableForProfiles)
+
+Use `editableForProfiles` when a field should be read-only for most users but editable for specific profiles. Example pattern (tenant edit for org users is currently disabled; see `docs/FUTURE.md`):
+
+```json
+{
+  "key": "tenant",
+  "label": "Tenant",
+  "type": "reference",
+  "objectName": "tenant",
+  "basePath": "/tenants",
+  "editable": false,
+  "editableForProfiles": ["org-user"]
+}
+```
+
+- `editable: false` — Default: field is read-only
+- `editableForProfiles: ["profile-name"]` — Users with these profiles can edit even when `editable` is false
+- Re-enabling tenant edit for org users requires cascade logic (order → order items). See `docs/FUTURE.md`.
 
 ### Select fields with Path
 
@@ -595,3 +618,39 @@ Profiles are defined in `frontend/public/metadata/profiles/`. See the permission
 - `tableName` must be unique across objects (validation fails if two objects use the same table)
 
 See `.cursor/rules/metadata-validation.mdc` for the full checklist when adding new metadata features.
+
+---
+
+## System Objects
+
+**User**, **organization**, and **tenant** are system objects—they are not in `metadata/objects/` and cannot be created or edited via Object Manager.
+
+| Object | When present | Metadata location |
+|--------|--------------|-------------------|
+| user | Always | Hardcoded in schema; extensions in `metadata/system-extensions/user/` |
+| organization | When `tenant-config.json` mode ≠ `none` | `metadata/system/organization/` (read-only UI) |
+| tenant | When `tenant-config.json` mode is `org_and_tenant` | `metadata/system/tenant/` (read-only UI) |
+
+- **`metadata/system/`** — Read-only UI definitions for organization and tenant (listView, detailView, fields). Shipped with the app.
+- **`metadata/system-extensions/`** — Add-only extension fields for user, organization, and tenant. You can add new fields but cannot remove or override base fields.
+
+### Adding Extension Fields to System Objects
+
+1. Add the field key to `metadata/system-extensions/{objectName}/fields.json` (e.g. `["phone", "department"]` for user).
+2. Create `metadata/system-extensions/{objectName}/fields/{fieldKey}.json` with the field definition (same schema as regular fields).
+3. Run `db:deploy` to regenerate schema and apply migrations.
+
+**Rules:**
+- Extension field keys must not overlap with base fields (see `SYSTEM_OBJECT_BASE_FIELDS` in `shared/protected-metadata.ts`).
+- Extensions are add-only—you cannot remove fields once added.
+- Use the Admin Metadata API: `PUT /api/admin/metadata/objects/system-extensions/{objectName}/fields.json` and `PUT .../fields/{fieldKey}`.
+
+---
+
+## Multi-Tenancy (Org/Tenant)
+
+Organization and tenant are **system objects** (see [System Objects](#system-objects)). They live in `metadata/system/` for UI and are not editable via Object Manager. Configure multi-tenancy via `metadata/tenant-config.json`.
+
+See `.cursor/rules/tenant-multi-tenancy.mdc` for mode, tenantScope, and enforcement rules.
+
+**Org users** (organizationId set, tenantId null) see data across all tenants in their org. They must select tenant when creating records. Tenant editing on existing records is disabled (see `docs/FUTURE.md`).

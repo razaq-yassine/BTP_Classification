@@ -8,6 +8,7 @@
   "detailPath": "/orderitems/$orderitemId",
   "icon": "Layers",
   "color": "blue",
+  "tenantScope": "org_and_tenant",
   "sidebar": {
     "showInSidebar": true,
     "group": "Data",

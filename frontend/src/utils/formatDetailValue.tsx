@@ -29,10 +29,12 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
         ? (val.fullName ?? [val.firstName, val.lastName].filter(Boolean).join(' ').trim()) || val.name || val.email || `#${val.id ?? '(Unknown)'}`
         : String(val)
     const objectName = field.objectName
-    if (objectName && refId != null) {
+    const basePath = (field as { basePath?: string }).basePath
+    const toPath = basePath ? `${basePath}/${refId}` : `/${objectName}/${refId}`
+    if ((objectName || basePath) && refId != null) {
       return (
         <Link
-          to={`/${objectName}/${refId}`}
+          to={toPath}
           className={linkClass}
           onClick={(e) => e.stopPropagation()}
         >

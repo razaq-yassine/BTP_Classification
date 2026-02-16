@@ -21,6 +21,19 @@ const defaultMetadataPath = path.join(
 );
 const METADATA_PATH = process.env.METADATA_PATH || defaultMetadataPath;
 const OBJECTS_PATH = path.join(METADATA_PATH, "objects");
+const SYSTEM_OBJECTS_PATH = path.join(METADATA_PATH, "system");
+
+function loadTenantConfig(): { mode: "none" | "tenant" | "org_and_tenant" } {
+  const configPath = path.join(METADATA_PATH, "tenant-config.json");
+  if (!fs.existsSync(configPath)) return { mode: "none" };
+  try {
+    const data = JSON.parse(fs.readFileSync(configPath, "utf-8")) as Record<string, unknown>;
+    const mode = (data.mode as string) || "none";
+    return { mode: mode as "none" | "tenant" | "org_and_tenant" };
+  } catch {
+    return { mode: "none" };
+  }
+}
 
 function pluralize(name: string): string {
   if (name.endsWith("y")) return name.slice(0, -1) + "ies";
@@ -49,11 +62,11 @@ function mapTypeToMySQL(field: FieldDef): string {
   return "VARCHAR(255)";
 }
 
-function loadObjectMetadata(objectName: string): {
+function loadObjectMetadata(objectName: string, objectsPath: string = OBJECTS_PATH): {
   object: Record<string, unknown>;
   fields: FieldDef[];
 } {
-  const objPath = path.join(OBJECTS_PATH, objectName);
+  const objPath = path.join(objectsPath, objectName);
   const object = JSON.parse(
     fs.readFileSync(path.join(objPath, "object.json"), "utf-8")
   ) as Record<string, unknown>;
@@ -110,12 +123,23 @@ async function main() {
     return;
   }
 
+  const tenantConfig = loadTenantConfig();
   const objectDirs = fs.readdirSync(OBJECTS_PATH).filter((d) => {
     const p = path.join(OBJECTS_PATH, d);
     return (
       fs.statSync(p).isDirectory() && fs.existsSync(path.join(p, "object.json"))
     );
   });
+
+  // Add tenant system objects when mode != none (load from metadata/system/)
+  const systemObjects: string[] = [];
+  if (tenantConfig.mode !== "none" && fs.existsSync(path.join(SYSTEM_OBJECTS_PATH, "organization", "object.json"))) {
+    systemObjects.push("organization");
+  }
+  if (tenantConfig.mode === "org_and_tenant" && fs.existsSync(path.join(SYSTEM_OBJECTS_PATH, "tenant", "object.json"))) {
+    systemObjects.push("tenant");
+  }
+  const allObjectNames = [...systemObjects, ...objectDirs];
 
   const connectionString =
     process.env.DATABASE_URL || "mysql://root:root@localhost:3306/generic_saas";
@@ -133,8 +157,9 @@ async function main() {
   const existingTables = new Set((tableRows || []).map((r) => (r.table_name ?? r.TABLE_NAME) as string));
 
   let created = 0;
-  for (const objectName of objectDirs) {
-    const { object, fields } = loadObjectMetadata(objectName);
+  for (const objectName of allObjectNames) {
+    const objectsPath = systemObjects.includes(objectName) ? SYSTEM_OBJECTS_PATH : OBJECTS_PATH;
+    const { object, fields } = loadObjectMetadata(objectName, objectsPath);
     const tableName = (object.tableName as string) || pluralize(objectName);
 
     if (existingTables.has(tableName)) continue;

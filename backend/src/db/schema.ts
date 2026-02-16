@@ -10,6 +10,24 @@ export const users = mysqlTable('users', {
   profile: varchar('profile', { length: 255 }).default('standard-user'),
   isActive: boolean('is_active').default(true),
   dateJoined: datetime('date_joined'),
+  organizationId: int('organization_id').references(() => organizations.id),
+  tenantId: int('tenant_id').references(() => tenants.id),
+})
+
+export const organizations = mysqlTable('organizations', {
+  id: int('id').autoincrement().primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  slug: varchar('slug', { length: 255 }),
+  createdAt: datetime('created_at'),
+  updatedAt: datetime('updated_at'),
+})
+
+export const tenants = mysqlTable('tenants', {
+  id: int('id').autoincrement().primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  organizationId: int('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  createdAt: datetime('created_at'),
+  updatedAt: datetime('updated_at'),
 })
 
 export const categories = mysqlTable('categories', {
@@ -23,6 +41,8 @@ export const categories = mysqlTable('categories', {
 
 export const customers = mysqlTable('customers', {
   id: int('id').autoincrement().primaryKey(),
+  organizationId: int('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  tenantId: int('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
   firstName: varchar('first_name', { length: 255 }).notNull(),
   lastName: varchar('last_name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
@@ -64,6 +84,8 @@ export const opportunities = mysqlTable('opportunities', {
 
 export const orders = mysqlTable('orders', {
   id: int('id').autoincrement().primaryKey(),
+  organizationId: int('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  tenantId: int('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 255 }).notNull().unique(),
   status: varchar('status', { length: 255 }).notNull(),
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
@@ -77,6 +99,8 @@ export const orders = mysqlTable('orders', {
 
 export const orderitems = mysqlTable('orderitems', {
   id: int('id').autoincrement().primaryKey(),
+  organizationId: int('organization_id').references(() => organizations.id, { onDelete: 'cascade' }).notNull(),
+  tenantId: int('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 255 }).notNull().unique(),
   orderId: int('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
   productId: int('product_id').notNull().references(() => products.id),
@@ -118,6 +142,8 @@ export const warehouses = mysqlTable('warehouses', {
 })
 
 export type User = typeof users.$inferSelect
+export type Organization = typeof organizations.$inferSelect
+export type Tenant = typeof tenants.$inferSelect
 export type Category = typeof categories.$inferSelect
 export type Customer = typeof customers.$inferSelect
 export type Deploytest = typeof deploytests.$inferSelect

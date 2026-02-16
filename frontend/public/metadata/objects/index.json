@@ -7,5 +7,7 @@
   "orderitem",
   "product",
   "supplier",
-  "warehouse"
+  "warehouse",
+  "organization",
+  "tenant"
 ]

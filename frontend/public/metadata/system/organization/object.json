@@ -1,0 +1,1 @@
+{"name":"organization","label":"Organization","labelPlural":"Organizations","description":"Master entity for tenant isolation. System object - not editable via Object Manager.","apiEndpoint":"/api/organizations","basePath":"/organizations","detailPath":"/organizations/$organizationId","icon":"Layers","color":"blue","sidebar":{"showInSidebar":true,"group":"Data"}}

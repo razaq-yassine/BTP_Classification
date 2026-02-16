@@ -2,9 +2,16 @@ import { db } from './index.js'
 import { users, customers, orders, products, categories } from './schema.js'
 import { eq } from 'drizzle-orm'
 import bcrypt from 'bcrypt'
+import { tenantConfig } from '../routes/entity-registry.generated.js'
+import { seedMultiTenant } from '../../scripts/seed-multi-tenant.ts'
 
 /** Seed data only - tables are created by Drizzle migrations */
 export async function initDb() {
+  if (tenantConfig.mode === 'org_and_tenant') {
+    await initDbMultiTenant()
+    return
+  }
+
   const userList = await db.select().from(users)
   if (userList.length === 0) {
     const hash = await bcrypt.hash('admin123', 10)
@@ -20,7 +27,6 @@ export async function initDb() {
     })
     console.log('Created admin user: admin/admin123')
   } else {
-    // Ensure existing admin user has profile 'admin' (system admin)
     const [adminUser] = await db.select().from(users).where(eq(users.username, 'admin'))
     if (adminUser && adminUser.profile !== 'admin') {
       await db.update(users).set({ profile: 'admin' }).where(eq(users.id, adminUser.id))
@@ -28,7 +34,6 @@ export async function initDb() {
     }
   }
 
-  // Create or update test user with sales-rep profile for permission testing
   const [testUser] = await db.select().from(users).where(eq(users.username, 'testuser'))
   if (!testUser) {
     const hash = await bcrypt.hash('test123', 10)
@@ -93,4 +98,36 @@ export async function initDb() {
     ])
     console.log('Created sample categories')
   }
+}
+
+async function initDbMultiTenant() {
+  const userList = await db.select().from(users)
+  if (userList.length === 0) {
+    const hash = await bcrypt.hash('admin123', 10)
+    await db.insert(users).values({
+      username: 'admin',
+      email: 'admin@example.com',
+      passwordHash: hash,
+      firstName: 'Admin',
+      lastName: 'User',
+      profile: 'admin',
+      isActive: true,
+      dateJoined: new Date(),
+    })
+    console.log('Created admin user: admin/admin123 (platform admin)')
+  } else {
+    const [adminUser] = await db.select().from(users).where(eq(users.username, 'admin'))
+    if (adminUser) {
+      if (adminUser.profile !== 'admin') {
+        await db.update(users).set({ profile: 'admin' }).where(eq(users.id, adminUser.id))
+        console.log('Updated admin user profile to admin')
+      }
+      if (adminUser.organizationId != null || adminUser.tenantId != null) {
+        await db.update(users).set({ organizationId: null, tenantId: null }).where(eq(users.username, 'admin'))
+        console.log('Cleared admin org/tenant (platform admin)')
+      }
+    }
+  }
+
+  await seedMultiTenant()
 }

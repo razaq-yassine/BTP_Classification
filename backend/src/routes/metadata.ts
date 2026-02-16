@@ -12,11 +12,18 @@ import {
   validateDetailView,
   validateRelatedObjects,
   validateField,
+  validateSystemExtension,
   getObjectNamesForValidation,
   validateMetadataFull,
   validateProfile,
 } from '../metadata/validate.js'
-import { SYSTEM_FIELDS_SET, SYSTEM_OBJECTS_SET, SYSTEM_INFO_SECTION_FIELDS } from '../../../shared/dist/protected-metadata.js'
+import {
+  SYSTEM_FIELDS_SET,
+  SYSTEM_OBJECTS_SET,
+  SYSTEM_INFO_SECTION_FIELDS,
+  SYSTEM_OBJECTS_WITH_EXTENSIONS,
+  SYSTEM_OBJECT_BASE_FIELDS,
+} from '../../../shared/dist/protected-metadata.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const backendRoot = path.join(__dirname, '..', '..')
@@ -24,6 +31,7 @@ const defaultMetadataPath = path.join(backendRoot, '../frontend/public/metadata'
 const METADATA_PATH = process.env.METADATA_PATH || defaultMetadataPath
 const OBJECTS_PATH = path.join(METADATA_PATH, 'objects')
 const PROFILES_PATH = path.join(METADATA_PATH, 'profiles')
+const SYSTEM_EXTENSIONS_PATH = path.join(METADATA_PATH, 'system-extensions')
 
 const ALLOWED_FILES = ['object.json', 'listView.json', 'detailView.json', 'fields.json', 'header.json', 'relatedObjects.json']
 
@@ -316,6 +324,9 @@ metadataRoutes.put('/objects/:name/:file', async (c) => {
     return c.json({ message: 'Invalid file' }, 400)
   }
   const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '')
+  if (SYSTEM_OBJECTS_SET.has(safeName.toLowerCase())) {
+    return c.json({ message: `"${safeName}" is a system object and cannot be edited via Object Manager.` }, 400)
+  }
   const filePath = path.join(OBJECTS_PATH, safeName, file)
   if (!path.resolve(filePath).startsWith(path.resolve(OBJECTS_PATH))) {
     return c.json({ message: 'Invalid path' }, 400)
@@ -324,7 +335,7 @@ metadataRoutes.put('/objects/:name/:file', async (c) => {
     const body = await c.req.json()
     let result: { valid: boolean; errors: Array<{ path: string; message: string; code?: string }> }
     if (file === 'object.json') {
-      result = validateObject(safeName, body as Record<string, unknown>)
+      result = validateObject(safeName, body as Record<string, unknown>, METADATA_PATH)
     } else if (file === 'fields.json') {
       result = validateFieldsIndex(safeName, body)
     } else if (file === 'listView.json') {
@@ -386,6 +397,9 @@ metadataRoutes.put('/objects/:name/fields/:fieldKey', async (c) => {
   const fieldKey = c.req.param('fieldKey')
   const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '')
   const safeFieldKey = fieldKey.replace(/[^a-zA-Z0-9_-]/g, '')
+  if (SYSTEM_OBJECTS_SET.has(safeName.toLowerCase())) {
+    return c.json({ message: `"${safeName}" is a system object and cannot be edited via Object Manager.` }, 400)
+  }
   if (SYSTEM_FIELDS_SET.has(safeFieldKey)) {
     return c.json({ message: 'System fields cannot be edited' }, 400)
   }
@@ -428,6 +442,153 @@ metadataRoutes.put('/objects/:name/fields/:fieldKey', async (c) => {
   } catch (err) {
     console.error('Metadata field write error:', err)
     return c.json({ message: 'Failed to write field' }, 500)
+  }
+})
+
+// ============ System Extensions API (add-only fields for user, organization, tenant) ============
+metadataRoutes.get('/objects/system-extensions/:objectName/fields.json', (c) => {
+  const objectName = c.req.param('objectName')
+  const safeName = objectName.replace(/[^a-zA-Z0-9_-]/g, '')
+  if (!SYSTEM_OBJECTS_WITH_EXTENSIONS.includes(safeName as 'user' | 'organization' | 'tenant')) {
+    return c.json({ message: `"${safeName}" does not support extensions` }, 400)
+  }
+  const filePath = path.join(SYSTEM_EXTENSIONS_PATH, safeName, 'fields.json')
+  if (!path.resolve(filePath).startsWith(path.resolve(SYSTEM_EXTENSIONS_PATH))) {
+    return c.json({ message: 'Invalid path' }, 400)
+  }
+  try {
+    if (!fs.existsSync(filePath)) {
+      return c.json([])
+    }
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'))
+    return c.json(Array.isArray(data) ? data : [])
+  } catch (err) {
+    console.error('Extension fields read error:', err)
+    return c.json({ message: 'Failed to read extension fields' }, 500)
+  }
+})
+
+metadataRoutes.put('/objects/system-extensions/:objectName/fields.json', async (c) => {
+  const objectName = c.req.param('objectName')
+  const safeName = objectName.replace(/[^a-zA-Z0-9_-]/g, '')
+  if (!SYSTEM_OBJECTS_WITH_EXTENSIONS.includes(safeName as 'user' | 'organization' | 'tenant')) {
+    return c.json({ message: `"${safeName}" does not support extensions` }, 400)
+  }
+  const extDir = path.join(SYSTEM_EXTENSIONS_PATH, safeName)
+  const filePath = path.join(extDir, 'fields.json')
+  if (!path.resolve(filePath).startsWith(path.resolve(SYSTEM_EXTENSIONS_PATH))) {
+    return c.json({ message: 'Invalid path' }, 400)
+  }
+  try {
+    const body = (await c.req.json()) as unknown
+    if (!Array.isArray(body) || !body.every((k) => typeof k === 'string')) {
+      return c.json({ message: 'fields.json must be an array of field keys' }, 400)
+    }
+    const baseFields = SYSTEM_OBJECT_BASE_FIELDS[safeName]
+    if (!baseFields) return c.json({ message: 'Invalid object' }, 400)
+    const currentKeys: string[] = fs.existsSync(filePath)
+      ? (JSON.parse(fs.readFileSync(filePath, 'utf-8')) as string[])
+      : []
+    for (const key of body as string[]) {
+      if (baseFields.has(key)) {
+        return c.json({ message: `Extension field '${key}' cannot override base field` }, 400)
+      }
+    }
+    if ((body as string[]).length < currentKeys.length) {
+      return c.json({ message: 'Cannot remove extension fields. Add-only extensions.' }, 400)
+    }
+    for (const key of currentKeys) {
+      if (!(body as string[]).includes(key)) {
+        return c.json({ message: `Cannot remove field '${key}'. Add-only extensions.` }, 400)
+      }
+    }
+    fs.mkdirSync(extDir, { recursive: true })
+    fs.writeFileSync(filePath, JSON.stringify(body, null, 2))
+    bumpVersion()
+    triggerAutoDeploy()
+    return c.json({ success: true })
+  } catch (err) {
+    console.error('Extension fields write error:', err)
+    return c.json({ message: 'Failed to write extension fields' }, 500)
+  }
+})
+
+metadataRoutes.get('/objects/system-extensions/:objectName/fields/:fieldKey', (c) => {
+  const objectName = c.req.param('objectName')
+  const fieldKey = c.req.param('fieldKey')
+  const safeName = objectName.replace(/[^a-zA-Z0-9_-]/g, '')
+  const safeFieldKey = fieldKey.replace(/[^a-zA-Z0-9_-]/g, '')
+  if (!SYSTEM_OBJECTS_WITH_EXTENSIONS.includes(safeName as 'user' | 'organization' | 'tenant')) {
+    return c.json({ message: `"${safeName}" does not support extensions` }, 400)
+  }
+  const filePath = path.join(SYSTEM_EXTENSIONS_PATH, safeName, 'fields', `${safeFieldKey}.json`)
+  if (!path.resolve(filePath).startsWith(path.resolve(SYSTEM_EXTENSIONS_PATH))) {
+    return c.json({ message: 'Invalid path' }, 400)
+  }
+  try {
+    if (!fs.existsSync(filePath)) {
+      return c.json({ message: 'Not found' }, 404)
+    }
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'))
+    return c.json(data)
+  } catch (err) {
+    console.error('Extension field read error:', err)
+    return c.json({ message: 'Failed to read extension field' }, 500)
+  }
+})
+
+metadataRoutes.put('/objects/system-extensions/:objectName/fields/:fieldKey', async (c) => {
+  const objectName = c.req.param('objectName')
+  const fieldKey = c.req.param('fieldKey')
+  const safeName = objectName.replace(/[^a-zA-Z0-9_-]/g, '')
+  const safeFieldKey = fieldKey.replace(/[^a-zA-Z0-9_-]/g, '')
+  if (!SYSTEM_OBJECTS_WITH_EXTENSIONS.includes(safeName as 'user' | 'organization' | 'tenant')) {
+    return c.json({ message: `"${safeName}" does not support extensions` }, 400)
+  }
+  const baseFields = SYSTEM_OBJECT_BASE_FIELDS[safeName]
+  if (baseFields?.has(safeFieldKey)) {
+    return c.json({ message: `Cannot override base field '${safeFieldKey}'` }, 400)
+  }
+  const extDir = path.join(SYSTEM_EXTENSIONS_PATH, safeName)
+  const fieldsDir = path.join(extDir, 'fields')
+  const filePath = path.join(fieldsDir, `${safeFieldKey}.json`)
+  if (!path.resolve(filePath).startsWith(path.resolve(SYSTEM_EXTENSIONS_PATH))) {
+    return c.json({ message: 'Invalid path' }, 400)
+  }
+  const isNewField = !fs.existsSync(filePath)
+  if (isNewField && !/^[a-z][a-z0-9_]*$/.test(safeFieldKey)) {
+    return c.json({ message: 'Field key must start with a letter and contain only lowercase letters, numbers, and underscores' }, 400)
+  }
+  const fieldsPath = path.join(extDir, 'fields.json')
+  const currentKeys: string[] = fs.existsSync(fieldsPath)
+    ? (JSON.parse(fs.readFileSync(fieldsPath, 'utf-8')) as string[])
+    : []
+  if (isNewField && !currentKeys.includes(safeFieldKey)) {
+    return c.json({ message: 'Add new field to fields.json first, then save the field definition' }, 400)
+  }
+  try {
+    const body = (await c.req.json()) as Record<string, unknown>
+    const result = validateSystemExtension(safeName, safeFieldKey, body)
+    if (!result.valid) {
+      const message = result.errors[0]?.message ?? 'Validation failed'
+      return c.json({ message, errors: result.errors }, 400)
+    }
+    if (isNewField) {
+      const updatedKeys = [...currentKeys]
+      if (!updatedKeys.includes(safeFieldKey)) {
+        updatedKeys.push(safeFieldKey)
+        fs.mkdirSync(fieldsDir, { recursive: true })
+        fs.writeFileSync(fieldsPath, JSON.stringify(updatedKeys, null, 2))
+      }
+    }
+    fs.mkdirSync(fieldsDir, { recursive: true })
+    fs.writeFileSync(filePath, JSON.stringify(body, null, 2))
+    bumpVersion()
+    triggerAutoDeploy()
+    return c.json({ success: true })
+  } catch (err) {
+    console.error('Extension field write error:', err)
+    return c.json({ message: 'Failed to write extension field' }, 500)
   }
 })
 

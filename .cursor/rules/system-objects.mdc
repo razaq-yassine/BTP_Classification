@@ -1,0 +1,27 @@
+---
+description: System objects (user, organization, tenant) - read-only metadata/system/, add-only metadata/system-extensions/
+globs: shared/protected-metadata.ts, backend/scripts/generate-schema-from-metadata.ts, frontend/public/metadata/system/**, frontend/public/metadata/system-extensions/**
+alwaysApply: false
+---
+
+# System Objects
+
+## What Are System Objects?
+
+- **user** — Always present. Hardcoded in schema; extensions in `metadata/system-extensions/user/`
+- **organization** — Present when `tenant-config.json` mode ≠ `none`. UI in `metadata/system/organization/`
+- **tenant** — Present when mode is `org_and_tenant`. UI in `metadata/system/tenant/`
+
+## Metadata Layout
+
+| Path | Purpose |
+|------|---------|
+| `metadata/system/` | Read-only UI definitions (object.json, listView, detailView, fields). Shipped with app. Do not edit via Object Manager. |
+| `metadata/system-extensions/` | Add-only extension fields. Add new fields; never remove or override base fields. |
+
+## Rules
+
+1. **Never allow overriding base fields** — `SYSTEM_OBJECT_BASE_FIELDS` in `shared/protected-metadata.ts` defines which keys are reserved.
+2. **Schema generator** — Merges base fields (hardcoded or from metadata/system/) + extension fields from metadata/system-extensions/ for user, organization, tenant.
+3. **Metadata API** — Rejects create/update/delete for system objects. Extension routes: `GET/PUT /objects/system-extensions/:objectName/fields.json` and `.../fields/:fieldKey`.
+4. **Validation** — `validateSystemExtension()` and `validateSystemExtensionField()` enforce extension rules. Add to `validateMetadataFull()` when adding new extension features.

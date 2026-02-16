@@ -47,7 +47,7 @@ export async function loadAllProfiles(): Promise<Profile[]> {
     const profiles: Profile[] = []
     // Since we don't have an index.json for profiles, we'll need to try common profile names
     // or implement a different approach. For now, we'll try to load known profiles.
-    const knownProfiles = ['admin', 'standard-user', 'sales-rep']
+    const knownProfiles = ['admin', 'standard-user', 'sales-rep', 'tenant-user', 'org-user']
     for (const name of knownProfiles) {
       try {
         const profile = await loadProfile(name)

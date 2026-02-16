@@ -42,17 +42,18 @@ interface TabState {
 const tabStates = new Map<string, TabState>()
 
 // Component for displaying field value in read-only or edit mode
-function FieldDisplay({ 
-  field, 
-  record, 
-  isEditing, 
-  formData, 
+function FieldDisplay({
+  field,
+  record,
+  isEditing,
+  formData,
   onChange,
   onStartEdit,
   onRevertField,
   error,
   objectName,
-  canEditField
+  canEditField,
+  profileName,
 }: {
   field: FieldDefinition
   record: GenericRecord
@@ -64,6 +65,7 @@ function FieldDisplay({
   error?: string
   objectName: string
   canEditField: (fieldKey: string) => boolean
+  profileName?: string
 }) {
   // Formula fields: evaluate expression (read-only, not editable)
   let value = record[field.key]
@@ -72,11 +74,14 @@ function FieldDisplay({
   }
   const formValue = formData[field.key] !== undefined ? formData[field.key] : value
 
+  const fieldEditable = canEditField(field.key)
+  const editableForProfiles = field.editableForProfiles
+  const effectiveEditable = (field.editable !== false || (editableForProfiles?.length && profileName && editableForProfiles.includes(profileName))) && fieldEditable
+
   // Formula fields are always read-only
   if (isEditing && field.type !== 'formula') {
     const hasChanged = formValue !== value
-    const fieldEditable = canEditField(field.key)
-    
+
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-1">
@@ -98,7 +103,7 @@ function FieldDisplay({
           value={formValue}
           onChange={(newValue) => onChange(field.key, newValue)}
           showLabel={false}
-          disabled={!fieldEditable}
+          disabled={!effectiveEditable}
           className={error ? 'border-red-500' : ''}
         />
         {error && (
@@ -111,8 +116,7 @@ function FieldDisplay({
   // Read-only mode
   const isEmpty = value === null || value === undefined || value === ''
   const isImportant = field.isImportant && isEmpty
-  const fieldEditable = canEditField(field.key)
-  const canEdit = field.editable !== false && fieldEditable
+  const canEdit = effectiveEditable
 
   return (
     <div 
@@ -153,7 +157,7 @@ function DetailsTabContent({
   onRecordUpdate: (updatedRecord: GenericRecord) => void
   isLoading?: boolean
 }) {
-  const { canUpdate, isFieldVisible, canEditField } = usePermissions()
+  const { canUpdate, isFieldVisible, canEditField, profile } = usePermissions()
   const tabKey = `details_${objectDefinition.name}_${record?.id}`
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -297,18 +301,21 @@ function DetailsTabContent({
             : field
           
           // Transform reference fields to the format expected by backend: { id: <value> }
+          // Also set the idField (e.g. tenantId) so it overwrites stale values from record spread
           if (fieldDefinition?.type === 'reference') {
             const refValue = updateData[fieldKey]
-            // If it's already an object with id, keep it; otherwise transform it
+            const idField = `${fieldKey}Id` // Convention: tenant -> tenantId, customer -> customerId
+            let resolvedId: number | string | null = null
             if (refValue != null && typeof refValue === 'object' && 'id' in refValue) {
-              // Already in correct format from backend
+              resolvedId = (refValue as { id?: number }).id ?? null
             } else if (refValue !== null && refValue !== undefined && refValue !== '') {
-              // Transform primitive ID value to object format
               updateData[fieldKey] = { id: refValue }
-            } else if (refValue === null || refValue === undefined || refValue === '') {
-              // If cleared, keep null/undefined
+              resolvedId = refValue as number | string
+            } else {
               updateData[fieldKey] = refValue
             }
+            if (resolvedId != null) updateData[idField] = resolvedId
+            else if (refValue === null || refValue === undefined || refValue === '') updateData[idField] = null
           }
           
           // Only preserve values for required fields, not just important ones
@@ -737,6 +744,7 @@ function DetailsTabContent({
                           error={tabState.fieldErrors[fieldDefinition.key]}
                           objectName={objectDefinition.name}
                           canEditField={(fieldKey) => canEditField(objectDefinition.name, fieldKey)}
+                          profileName={profile?.name}
                         />
                       )
                     })}

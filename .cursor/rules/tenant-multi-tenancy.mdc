@@ -1,0 +1,70 @@
+---
+description: Multi-tenancy (org/tenant) configuration and enforcement rules
+globs: frontend/public/metadata/tenant-config.json, frontend/public/metadata/objects/**/object.json, backend/src/routes/entities.ts, backend/scripts/generate-schema-from-metadata.ts
+alwaysApply: false
+---
+
+# Multi-Tenancy (Org/Tenant)
+
+**Organization and tenant are system objects.** They live in `metadata/system/` for UI definitions (read-only). They are not in `metadata/objects/` and cannot be created or edited via Object Manager. Extension fields can be added via `metadata/system-extensions/` (add-only). See `.cursor/rules/system-objects.mdc`.
+
+## tenant-config.json
+
+Location: `frontend/public/metadata/tenant-config.json`
+
+| mode | Master tables | User columns | Scoped object columns |
+|------|---------------|--------------|------------------------|
+| none | — | — | — |
+| tenant | organizations | organizationId | organizationId |
+| org_and_tenant | organizations, tenants | organizationId, tenantId | organizationId, tenantId |
+
+## tenantScope (object.json)
+
+Per-object: `tenantScope: null | "tenant" | "org_and_tenant"`
+
+- `null`: Platform-wide (not tenant-scoped)
+- `"tenant"`: Filter by organizationId (mode tenant) or org+tenant (mode org_and_tenant)
+- `"org_and_tenant"`: Only when mode is org_and_tenant; filter by both
+
+**Rules:**
+- tenantScope must match global mode (tenantScope "tenant" ok for mode tenant; "org_and_tenant" only for mode org_and_tenant)
+- Master objects (organization, tenant) must NOT have tenantScope
+
+## Admin vs Org User vs Tenant User
+
+| User type | Tenant filter | Create scoped record | Edit tenant field |
+|-----------|---------------|----------------------|-------------------|
+| Admin (profile=admin or no org/tenant) | No filter | Must provide organizationId and tenantId in body | Yes |
+| Org user (org set, tenant null) | Filter by organizationId only | Must provide tenantId in body | No (immutable) |
+| Tenant user | Filter by org+tenant | organizationId/tenantId set from user | No (immutable) |
+
+**Note:** Tenant editing for org users is disabled. See "Future: Tenant edit + cascade" below.
+
+## Enforcement Rules
+
+1. **Admin**: Can set org/tenant on create; can edit tenant on update
+2. **Org user**: Must provide tenantId on create; cannot edit tenant on update (excluded from updateFields)
+3. **Tenant user**: org/tenant set from user on create; cannot edit tenant (excluded from updateFields)
+4. **Cascade delete** — scope columns use ON DELETE CASCADE
+5. **Reference field filtering** — list endpoint already filters; lookup options are tenant-scoped
+
+## Mode Changes
+
+| Action | Implications |
+|--------|---------------|
+| none → tenant | Add organizations, organizationId to users/scoped objects. Migration + data backfill |
+| tenant → org_and_tenant | Add tenants table, tenantId columns. Migration + data backfill |
+| org_and_tenant → tenant | Breaking; drop tenant_id columns |
+| Adding tenantScope to object | Add columns via migration; backfill existing rows |
+| Removing tenantScope | Filtering stops; optional migration to drop column |
+
+**Rule:** Changing mode or tenantScope affects schema. Always run `db:deploy` and handle existing data explicitly.
+
+## Future: Tenant edit + cascade
+
+**Planned feature** — not yet implemented. When re-enabling org-user tenant editing:
+
+1. **Metadata**: Add `editableForProfiles: ["org-user"]` to tenant field on customer, order, orderitem.
+2. **Backend**: Allow tenantId in PUT payload when `profile?.name === 'org-user'`, validate tenant belongs to user's org.
+3. **Cascade**: When updating an order's tenantId, cascade to order items (update orderitems.tenantId where orderId = order.id). Consider customer → orders cascade based on business rules.
+4. **References**: See `docs/FUTURE.md` (Tenant edit for org users + cascade) and `.cursor/rules/profile-field-editability.mdc`.

@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
 import { eq, desc, like, or, and } from 'drizzle-orm'
 import { db } from '../db/index.js'
-import { entityRegistry, type EntityPath } from './entity-registry.generated.js'
+import { organizations, tenants } from '../db/schema.js'
+import { entityRegistry, tenantConfig, type EntityPath } from './entity-registry.generated.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { runTrigger } from '../services/trigger-runner.js'
 import { getUserProfile, hasObjectPermission, isFieldVisible, canEditField } from '../lib/permissions.js'
@@ -9,6 +10,32 @@ import { getUserProfile, hasObjectPermission, isFieldVisible, canEditField } fro
 export const entityRoutes = new Hono()
 
 entityRoutes.use('*', authMiddleware)
+
+type UserWithTenant = { id?: number; profile?: string | null; organizationId?: number | null; tenantId?: number | null }
+
+/** Returns tenant filter for scoped objects, or null if no filter (admin/platform-wide). */
+function getTenantFilter(
+  user: UserWithTenant | undefined,
+  objectConfig: EntityConfig
+): Record<string, number> | null {
+  if (!user) return null
+  const mode = tenantConfig.mode
+  if (mode === 'none') return null
+  const tenantScope = (objectConfig as { tenantScope?: string }).tenantScope
+  if (!tenantScope) return null
+  const isAdmin = user.profile === 'admin' || (user.organizationId == null && user.tenantId == null)
+  if (isAdmin) return null
+  if (user.organizationId == null) return null
+  if (tenantScope === 'tenant') return { organizationId: user.organizationId }
+  if (tenantScope === 'org_and_tenant') {
+    if (user.tenantId != null) {
+      return { organizationId: user.organizationId, tenantId: user.tenantId }
+    }
+    // Org user: org set, tenant null → see all tenants under org
+    return { organizationId: user.organizationId }
+  }
+  return null
+}
 
 type EntityConfig = (typeof entityRegistry)[EntityPath]
 type JoinConfig = { joinTable: { id: unknown }; leftColumn: unknown; rightColumn: unknown }
@@ -105,6 +132,27 @@ function toRecord(
   return filtered
 }
 
+/** Enrich tenant-scoped records with organization and tenant objects for display. */
+async function enrichWithTenantScope(
+  record: Record<string, unknown>,
+  config: EntityConfig
+): Promise<Record<string, unknown>> {
+  const tenantScope = (config as { tenantScope?: string }).tenantScope
+  if (!tenantScope || tenantConfig.mode === 'none') return record
+  const out = { ...record }
+  const orgId = record.organizationId as number | undefined
+  const tenantId = record.tenantId as number | undefined
+  if (orgId != null) {
+    const [org] = await db.select().from(organizations).where(eq(organizations.id, orgId))
+    out.organization = org ? { id: org.id, ...org } : null
+  }
+  if (tenantId != null && tenantScope === 'org_and_tenant') {
+    const [tenant] = await db.select().from(tenants).where(eq(tenants.id, tenantId))
+    out.tenant = tenant ? { id: tenant.id, ...tenant } : null
+  }
+  return out
+}
+
 function buildInsertPayload(
   body: Record<string, unknown>,
   config: EntityConfig,
@@ -149,7 +197,7 @@ function buildUpdatePayload(
     if (field === 'updatedAt') continue
     
     // Check if field is editable (skip permission check for system fields)
-    if (profile && objectName && field !== 'id' && field !== 'createdAt') {
+    if (profile && objectName && !['id', 'createdAt'].includes(field as string)) {
       // Check if user is trying to update this field
       if (body[field] !== undefined && body[field] !== oldRow[field]) {
         if (!canEditField(profile, objectName, field)) {
@@ -181,6 +229,22 @@ function getOrderColumn(table: { orderDate?: unknown; createdAt?: unknown; id?: 
   return table.orderDate ?? table.createdAt ?? table.id
 }
 
+/** Build AND conditions for tenant filter when applicable. */
+function buildTenantConditions(
+  table: { organizationId?: unknown; tenantId?: unknown },
+  tenantFilter: Record<string, number> | null
+): ReturnType<typeof eq>[] {
+  if (!tenantFilter) return []
+  const conds: ReturnType<typeof eq>[] = []
+  if (tenantFilter.organizationId != null && 'organizationId' in table) {
+    conds.push(eq((table as any).organizationId, tenantFilter.organizationId))
+  }
+  if (tenantFilter.tenantId != null && 'tenantId' in table) {
+    conds.push(eq((table as any).tenantId, tenantFilter.tenantId))
+  }
+  return conds
+}
+
 for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
   const config = entityRegistry[entityPath]
   const { table, objectName, searchFields, relatedListPaths } = config
@@ -194,7 +258,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       entityRoutes.get(`/${entityPath}/${subPath}/:parentId`, async (c) => {
         try {
         // Check read permission
-        const user = c.get('user')
+        const user = (c.get as (k: string) => unknown)('user') as UserWithTenant | undefined
         let profile = null
         if (user?.id) {
           profile = await getUserProfile(user.id)
@@ -203,6 +267,10 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
           }
         }
         const parentId = Number(c.req.param('parentId'))
+        const tenantFilter = getTenantFilter(user, config)
+        const tenantConds = buildTenantConditions(table as any, tenantFilter)
+        const parentCond = eq(filterCol as any, parentId)
+        const whereCond = tenantConds.length > 0 ? and(parentCond, ...tenantConds) : parentCond
         const page = Math.max(0, Number(c.req.query('page')) || 0)
         const size = Math.min(100, Math.max(1, Number(c.req.query('size')) || 10))
         const search = c.req.query('search')?.trim()
@@ -217,14 +285,14 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
             .select({ main: table, joined: j.joinTable as any })
             .from(table)
             .leftJoin(j.joinTable as any, eq(j.leftColumn as any, j.rightColumn as any))
-            .where(eq(filterCol as any, parentId))
+            .where(whereCond)
             .orderBy(desc(orderCol as any))
           rows = result as any
         } else {
           rows = (await db
             .select()
             .from(table)
-            .where(eq(filterCol as any, parentId))
+            .where(whereCond)
             .orderBy(desc(orderCol as any))) as any
         }
 
@@ -248,11 +316,12 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
         const totalPages = Math.ceil(total / size)
         const slice = filtered.slice(page * size, page * size + size)
 
-        const result = join
+        const rawResult = join
           ? (slice as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>).map((r) =>
               toRecord(r.main || (r as Record<string, unknown>), r.joined || null, config, requestedFields, profile)
             )
           : (slice as Record<string, unknown>[]).map((r) => toRecord(r, null, config, requestedFields, profile))
+        const result = await Promise.all(rawResult.map((r) => enrichWithTenantScope(r, config)))
 
         return c.json({ [entityPath]: result, count: total, totalPages, currentPage: page })
         } catch (err) {
@@ -266,7 +335,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
   entityRoutes.get(`/${entityPath}`, async (c) => {
     try {
       // Check read permission
-      const user = c.get('user')
+      const user = (c.get as (k: string) => unknown)('user') as UserWithTenant | undefined
       let profile = null
       if (user?.id) {
         profile = await getUserProfile(user.id)
@@ -274,6 +343,13 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
           return c.json({ message: 'Forbidden' }, 403)
         }
       }
+      const tenantFilter = getTenantFilter(user, config)
+      let tenantConds = buildTenantConditions(table as any, tenantFilter)
+      // Org users listing tenants: filter to their org only
+      if (entityPath === 'tenants' && user?.organizationId != null && user?.tenantId == null) {
+        tenantConds = [...tenantConds, eq((table as any).organizationId, user.organizationId)]
+      }
+
       const page = Math.max(0, Number(c.req.query('page')) || 0)
       const size = Math.min(100, Math.max(1, Number(c.req.query('size')) || 10))
       const search = c.req.query('search')?.trim()
@@ -284,14 +360,19 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
 
       if (join) {
         const j = join as JoinConfig
-        const result = await db
+        let q = db
           .select({ main: table, joined: j.joinTable as any })
           .from(table)
           .leftJoin(j.joinTable as any, eq(j.leftColumn as any, j.rightColumn as any))
           .orderBy(desc(orderCol as any))
+        if (tenantConds.length > 0) q = q.where(and(...tenantConds)) as any
+        const result = await q
         rows = result as any
       } else {
-        const whereCond = search && searchFields.length > 0 ? or(...searchFields.map((f: any) => like(f, `%${search}%`)))! : undefined
+        const searchCond = search && searchFields.length > 0 ? or(...searchFields.map((f: any) => like(f, `%${search}%`)))! : undefined
+        const allConds = [...tenantConds]
+        if (searchCond) allConds.push(searchCond)
+        const whereCond = allConds.length > 0 ? and(...allConds) : undefined
         const q = db.select().from(table).orderBy(desc(orderCol as any))
         rows = (await (whereCond ? q.where(whereCond) : q)) as any
       }
@@ -310,11 +391,12 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       const totalPages = Math.ceil(total / size)
       const slice = filtered.slice(page * size, page * size + size)
 
-      const result = join
+      const rawResult = join
         ? (slice as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>).map((r) =>
             toRecord(r.main || (r as Record<string, unknown>), r.joined || null, config, requestedFields, profile)
           )
         : (slice as Record<string, unknown>[]).map((r) => toRecord(r, null, config, requestedFields, profile))
+      const result = await Promise.all(rawResult.map((r) => enrichWithTenantScope(r, config)))
 
       return c.json({ [entityPath]: result, count: total, totalPages, currentPage: page })
     } catch (err) {
@@ -329,7 +411,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
   entityRoutes.get(`/${entityPath}/:id`, async (c) => {
     try {
       // Check read permission
-      const user = c.get('user')
+      const user = (c.get as (k: string) => unknown)('user') as UserWithTenant | undefined
       let profile = null
       if (user?.id) {
         profile = await getUserProfile(user.id)
@@ -339,19 +421,32 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       }
       const id = Number(c.req.param('id'))
       if (Number.isNaN(id)) return c.json({ message: 'Invalid ID' }, 400)
+      const tenantFilter = getTenantFilter(user, config)
+      let tenantConds = buildTenantConditions(table as any, tenantFilter)
+      // Org users fetching tenant by id: must belong to their org
+      if (entityPath === 'tenants' && user?.organizationId != null && user?.tenantId == null) {
+        tenantConds = [...tenantConds, eq((table as any).organizationId, user.organizationId)]
+      }
+      const idCond = eq(idCol as any, id)
+      const whereCond = tenantConds.length > 0 ? and(idCond, ...tenantConds) : idCond
+
       if (join) {
         const j = join as JoinConfig
         const [row] = (await db
           .select({ main: table, joined: j.joinTable as any })
           .from(table)
           .leftJoin(j.joinTable as any, eq(j.leftColumn as any, j.rightColumn as any))
-          .where(eq(idCol as any, id))) as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>
+          .where(whereCond)) as Array<{ main?: Record<string, unknown>; joined?: Record<string, unknown> }>
         if (!row?.main) return c.json({ message: 'Not found' }, 404)
-        return c.json(toRecord(row.main, row.joined || null, config, null, profile))
+        const rec = toRecord(row.main, row.joined || null, config, null, profile)
+        const enriched = await enrichWithTenantScope(rec, config)
+        return c.json(enriched)
       }
-      const [row] = await db.select().from(table).where(eq(idCol as any, id))
+      const [row] = await db.select().from(table).where(whereCond)
       if (!row) return c.json({ message: 'Not found' }, 404)
-      return c.json(toRecord(row as Record<string, unknown>, null, config, null, profile))
+      const rec = toRecord(row as Record<string, unknown>, null, config, null, profile)
+      const enriched = await enrichWithTenantScope(rec, config)
+      return c.json(enriched)
     } catch (err) {
       console.error(`GET ${entityPath}/:id error:`, err)
       return c.json(
@@ -363,7 +458,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
 
   entityRoutes.post(`/${entityPath}`, async (c) => {
     // Check create permission
-    const user = c.get('user')
+    const user = (c.get as (k: string) => unknown)('user') as UserWithTenant | undefined
     let profile = null
     if (user?.id) {
       profile = await getUserProfile(user.id)
@@ -372,6 +467,31 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       }
     }
     const body = (await c.req.json()) as Record<string, unknown>
+    const tenantScope = (config as { tenantScope?: string }).tenantScope
+    const mode = tenantConfig.mode
+    const isAdmin = user && (user.profile === 'admin' || (user.organizationId == null && user.tenantId == null))
+    if (tenantScope && mode !== 'none') {
+      if (isAdmin) {
+        const orgVal = body.organizationId ?? (body.organization as { id?: number })?.id
+        if (orgVal == null) return c.json({ message: 'organizationId is required for admin create on tenant-scoped object' }, 400)
+        if (tenantScope === 'org_and_tenant') {
+          const tenantVal = body.tenantId ?? (body.tenant as { id?: number })?.id
+          if (tenantVal == null) return c.json({ message: 'tenantId is required for admin create on org_and_tenant-scoped object' }, 400)
+        }
+      } else {
+        if (user?.organizationId == null) return c.json({ message: 'User has no organization; cannot create tenant-scoped record' }, 403)
+        // Org user (tenantId null): must provide tenantId in body when creating
+        if (tenantScope === 'org_and_tenant' && user.tenantId == null) {
+          const tenantVal = body.tenantId ?? (body.tenant as { id?: number })?.id
+          if (tenantVal == null) return c.json({ message: 'tenantId is required for org-level user; specify which tenant to create in' }, 400)
+          // Validate tenant belongs to user's org
+          const [tenant] = await db.select().from(tenants).where(eq(tenants.id, Number(tenantVal)))
+          if (!tenant || tenant.organizationId !== user.organizationId) {
+            return c.json({ message: 'tenantId must belong to your organization' }, 400)
+          }
+        }
+      }
+    }
     const requiredRefIdFields = (config as { requiredRefIdFields?: string[] }).requiredRefIdFields
     if (requiredRefIdFields?.length && config.referenceFields) {
       for (const idField of requiredRefIdFields) {
@@ -403,7 +523,18 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       }
     }
 
-    const payload = buildInsertPayload(insertBody, config, {})
+    let payload = buildInsertPayload(insertBody, config, {})
+    if (tenantScope && mode !== 'none') {
+      if (isAdmin) {
+        payload.organizationId = body.organizationId ?? (body.organization as { id?: number })?.id
+        if (tenantScope === 'org_and_tenant') payload.tenantId = body.tenantId ?? (body.tenant as { id?: number })?.id
+      } else {
+        payload.organizationId = user!.organizationId
+        if (tenantScope === 'org_and_tenant') {
+          payload.tenantId = user!.tenantId ?? body.tenantId ?? (body.tenant as { id?: number })?.id
+        }
+      }
+    }
     const modified = (await runTrigger(objectName, 'beforeInsert', undefined, payload)) ?? payload
     const insertFieldsSet = new Set(config.insertFields as readonly string[])
     const filteredPayload = Object.fromEntries(
@@ -432,7 +563,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
 
   entityRoutes.put(`/${entityPath}/:id`, async (c) => {
     // Check update permission
-    const user = c.get('user')
+    const user = (c.get as (k: string) => unknown)('user') as UserWithTenant | undefined
     let profile = null
     if (user?.id) {
       profile = await getUserProfile(user.id)
@@ -441,13 +572,17 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       }
     }
     const id = Number(c.req.param('id'))
-    const [oldRow] = await db.select().from(table).where(eq(idCol as any, id))
+    const tenantFilter = getTenantFilter(user, config)
+    const tenantConds = buildTenantConditions(table as any, tenantFilter)
+    const idCond = eq(idCol as any, id)
+    const whereCond = tenantConds.length > 0 ? and(idCond, ...tenantConds) : idCond
+    const [oldRow] = await db.select().from(table).where(whereCond)
     if (!oldRow) return c.json({ message: 'Not found' }, 404)
     const body = (await c.req.json()) as Record<string, unknown>
     const newPayload = buildUpdatePayload(body, oldRow as Record<string, unknown>, config, profile)
     const modified = (await runTrigger(objectName, 'beforeUpdate', oldRow as Record<string, unknown>, newPayload)) ?? newPayload
-    await db.update(table).set(modified as any).where(eq(idCol as any, id))
-    const [updated] = await db.select().from(table).where(eq(idCol as any, id))
+    await db.update(table).set(modified as any).where(whereCond)
+    const [updated] = await db.select().from(table).where(whereCond)
     await runTrigger(objectName, 'afterUpdate', oldRow as Record<string, unknown>, updated as Record<string, unknown>)
     if (join && updated) {
       const ref = config.referenceFields?.[0]
@@ -462,7 +597,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
 
   entityRoutes.delete(`/${entityPath}/:id`, async (c) => {
     // Check delete permission
-    const user = c.get('user')
+    const user = (c.get as (k: string) => unknown)('user') as UserWithTenant | undefined
     if (user?.id) {
       const profile = await getUserProfile(user.id)
       if (!hasObjectPermission(profile, objectName, 'delete')) {
@@ -470,10 +605,14 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       }
     }
     const id = Number(c.req.param('id'))
-    const [oldRow] = await db.select().from(table).where(eq(idCol as any, id))
+    const tenantFilter = getTenantFilter(user, config)
+    const tenantConds = buildTenantConditions(table as any, tenantFilter)
+    const idCond = eq(idCol as any, id)
+    const whereCond = tenantConds.length > 0 ? and(idCond, ...tenantConds) : idCond
+    const [oldRow] = await db.select().from(table).where(whereCond)
     if (!oldRow) return c.json({ message: 'Not found' }, 404)
     await runTrigger(objectName, 'beforeDelete', oldRow as Record<string, unknown>)
-    await db.delete(table).where(eq(idCol as any, id))
+    await db.delete(table).where(whereCond)
     await runTrigger(objectName, 'afterDelete', oldRow as Record<string, unknown>)
     return c.json({})
   })
