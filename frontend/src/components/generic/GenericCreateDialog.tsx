@@ -71,11 +71,11 @@ function CreateFieldDisplay({
   )
 }
 
-export function GenericCreateDialog({ 
-  objectDefinition, 
-  open, 
-  onOpenChange, 
-  onRecordCreated 
+export function GenericCreateDialog({
+  objectDefinition,
+  open,
+  onOpenChange,
+  onRecordCreated
 }: GenericCreateDialogProps) {
   const { isFieldVisible, canEditField, profile } = usePermissions()
   const [formData, setFormData] = useState<Record<string, any>>({})
@@ -96,55 +96,75 @@ export function GenericCreateDialog({
         initialSectionStates[`section_${index}`] = true
       })
       setSectionStates(initialSectionStates)
-      
+
       // Initialize form data with default values (exclude System Information section)
       const initialFormData: Record<string, any> = {}
       objectDefinition.detailView?.sections
         ?.filter((s) => s.title !== 'System Information')
         ?.forEach(section => {
-        section.fields.forEach(field => {
-          const fieldKey = typeof field === 'string' ? field : field.key
-          const fieldDefinition = typeof field === 'string' 
-            ? objectDefinition.fields?.find(f => f.key === fieldKey)
-            : field
-          
-          // Filter fields based on permissions
-          if (!fieldDefinition || !isFieldVisible(objectDefinition.name, fieldKey)) {
-            return
-          }
-          
-          // Set default values: use field.defaultValue if set, else type-based fallback
-          // Skip formula and autoNumber fields (read-only)
-          if (fieldDefinition.type !== 'formula' && fieldDefinition.type !== 'autoNumber') {
-            if (fieldDefinition.defaultValue !== undefined && fieldDefinition.defaultValue !== null) {
-              initialFormData[fieldKey] = fieldDefinition.defaultValue
-            } else {
-              switch (fieldDefinition.type) {
-                case 'boolean':
-                  initialFormData[fieldKey] = false
-                  break
-                case 'number':
-                  initialFormData[fieldKey] = ''
-                  break
-                default:
-                  initialFormData[fieldKey] = ''
+          section.fields.forEach(field => {
+            const fieldKey = typeof field === 'string' ? field : field.key
+            const fieldDefinition = typeof field === 'string'
+              ? objectDefinition.fields?.find(f => f.key === fieldKey)
+              : field
+
+            // Filter fields based on permissions
+            if (!fieldDefinition || !isFieldVisible(objectDefinition.name, fieldKey)) {
+              return
+            }
+
+            // Filter out non-editable fields in create modal
+            const fieldEditable = canEditField(objectDefinition.name, fieldKey)
+            const editableForProfiles = fieldDefinition.editableForProfiles
+            const profileCanEdit =
+              (editableForProfiles?.length && profile?.name && editableForProfiles.includes(profile.name)) ||
+              // Tenant field: org-user must select tenant when creating (edit not allowed)
+              (fieldKey === 'tenant' && profile?.name === 'org-user')
+            const isReadOnly =
+              fieldDefinition.type === 'autoNumber' ||
+              fieldDefinition.type === 'autonumber' ||
+              (fieldDefinition.editable === false && !profileCanEdit) ||
+              (!fieldEditable && !profileCanEdit)
+
+            // Skip non-editable fields
+            if (isReadOnly) {
+              return
+            }
+
+            // Set default values: use field.defaultValue if set, else type-based fallback
+            // Skip formula and autoNumber fields (read-only)
+            if (fieldDefinition.type !== 'formula' && fieldDefinition.type !== 'autoNumber') {
+              if (fieldDefinition.defaultValue !== undefined && fieldDefinition.defaultValue !== null) {
+                initialFormData[fieldKey] = fieldDefinition.defaultValue
+              } else {
+                switch (fieldDefinition.type) {
+                  case 'boolean':
+                    initialFormData[fieldKey] = false
+                    break
+                  case 'number':
+                    initialFormData[fieldKey] = ''
+                    break
+                  default:
+                    initialFormData[fieldKey] = ''
+                }
               }
             }
-          }
+          })
         })
-      })
       setFormData(initialFormData)
       setHasChanges(false)
       setError('')
     }
-  }, [open, objectDefinition])
+  }, [open, objectDefinition, isFieldVisible, canEditField, profile])
 
   // Validate individual field
   const validateField = (fieldDefinition: FieldDefinition, value: any): FieldValidation => {
     const isAutoNumber = fieldDefinition.type === 'autoNumber' || fieldDefinition.type === 'autonumber'
     const isNameField = fieldDefinition.key === 'name'
+    const isMasterDetail = fieldDefinition.relationshipType === 'masterDetail'
     // AutoNumber fields are never required - they're generated on save
-    const isRequired = !isAutoNumber && (fieldDefinition.required || isNameField)
+    // Master-detail fields are always required
+    const isRequired = !isAutoNumber && (fieldDefinition.required || isNameField || isMasterDetail)
 
     if (isRequired) {
       if (value === null || value === undefined || value === '') {
@@ -203,7 +223,7 @@ export function GenericCreateDialog({
     let fieldDefinition: FieldDefinition | undefined
     objectDefinition.detailView?.sections?.forEach(section => {
       section.fields.forEach(field => {
-        const fieldDef = typeof field === 'string' 
+        const fieldDef = typeof field === 'string'
           ? objectDefinition.fields?.find(f => f.key === field)
           : field
         if (fieldDef && fieldDef.key === fieldKey) {
@@ -240,17 +260,17 @@ export function GenericCreateDialog({
     try {
       setSaving(true)
       setError('')
-      
+
       // Prepare create data
       const createData = { ...formData }
-      
+
       objectDefinition.detailView?.sections?.forEach(section => {
         section.fields.forEach(field => {
           const fieldKey = typeof field === 'string' ? field : field.key
-          const fieldDefinition = typeof field === 'string' 
+          const fieldDefinition = typeof field === 'string'
             ? objectDefinition.fields?.find(f => f.key === fieldKey)
             : field
-          
+
           const isAutoNumber = fieldDefinition?.type === 'autoNumber' || fieldDefinition?.type === 'autonumber'
           if (isAutoNumber) {
             delete createData[fieldKey]
@@ -268,26 +288,26 @@ export function GenericCreateDialog({
           }
         })
       })
-      
+
       // Ensure endpoint doesn't have trailing slash
-      const endpoint = objectDefinition.apiEndpoint.endsWith('/') 
-        ? objectDefinition.apiEndpoint.slice(0, -1) 
+      const endpoint = objectDefinition.apiEndpoint.endsWith('/')
+        ? objectDefinition.apiEndpoint.slice(0, -1)
         : objectDefinition.apiEndpoint
-      
-      
+
+
       const response = await api.post(endpoint, createData)
-      
+
       // Show success toast
       toast.success(`${objectDefinition.label || objectDefinition.name} created successfully!`, {
         description: `New ${objectDefinition.label || objectDefinition.name} has been created.`,
         duration: 3000,
       })
-      
+
       // Call the onRecordCreated callback
       if (onRecordCreated) {
         onRecordCreated(response.data)
       }
-      
+
       // Close dialog and reset form
       onOpenChange(false)
       setFormData({})
@@ -299,7 +319,7 @@ export function GenericCreateDialog({
         data: err.response?.data,
         endpoint: err.config?.url
       })
-      
+
       // Handle authentication errors specifically
       if (err.response?.status === 401) {
         setError('Authentication failed. Please try logging in again.')
@@ -322,14 +342,14 @@ export function GenericCreateDialog({
   // Validate all fields before save
   const validateAllFields = () => {
     const newErrors: Record<string, string> = {}
-    
+
     objectDefinition.detailView?.sections?.forEach(section => {
       section.fields.forEach(field => {
         const fieldKey = typeof field === 'string' ? field : field.key
-        const fieldDefinition = typeof field === 'string' 
+        const fieldDefinition = typeof field === 'string'
           ? objectDefinition.fields?.find(f => f.key === fieldKey)
           : field
-        
+
         if (fieldDefinition) {
           const value = formData[fieldKey]
           const validation = validateField(fieldDefinition, value)
@@ -339,7 +359,7 @@ export function GenericCreateDialog({
         }
       })
     })
-    
+
     setFieldErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -348,36 +368,37 @@ export function GenericCreateDialog({
     try {
       setSaving(true)
       setError('')
-      
+
       // First, validate all fields
       if (!validateAllFields()) {
         setError('Please fix all field errors before saving')
         setSaving(false)
         return
       }
-      
+
       // Check for empty important fields (for confirmation)
       const emptyImportantFields: string[] = []
-      
+
       objectDefinition.detailView?.sections?.forEach(section => {
         section.fields.forEach(field => {
           const fieldKey = typeof field === 'string' ? field : field.key
-          const fieldDefinition = typeof field === 'string' 
+          const fieldDefinition = typeof field === 'string'
             ? objectDefinition.fields?.find(f => f.key === fieldKey)
             : field
-          
+
           if (fieldDefinition) {
             const value = formData[fieldKey]
             const isEmpty = value === null || value === undefined || value === ''
-            
+
             // Check important fields (for confirmation) - only if not required
-            if (fieldDefinition.isImportant && !fieldDefinition.required && isEmpty) {
+            const isRequired = fieldDefinition.required || fieldDefinition.relationshipType === 'masterDetail'
+            if (fieldDefinition.isImportant && !isRequired && isEmpty) {
               emptyImportantFields.push(fieldDefinition.label || fieldKey)
             }
           }
         })
       })
-      
+
       // Important field confirmation - show dialog if there are empty important fields
       if (emptyImportantFields.length > 0) {
         setPendingEmptyImportantFields(emptyImportantFields)
@@ -385,7 +406,7 @@ export function GenericCreateDialog({
         setSaving(false)
         return
       }
-      
+
       // If no validation errors and no important field confirmation needed, proceed with create
       await performCreate()
     } catch (err: any) {
@@ -395,7 +416,7 @@ export function GenericCreateDialog({
         data: err.response?.data,
         endpoint: err.config?.url
       })
-      
+
       // Handle authentication errors specifically
       if (err.response?.status === 401) {
         setError('Authentication failed. Please try logging in again.')
@@ -442,7 +463,7 @@ export function GenericCreateDialog({
               New {objectDefinition.label || objectDefinition.name}
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="flex-1 overflow-y-auto px-6">
             {error && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -455,67 +476,85 @@ export function GenericCreateDialog({
                 ?.map((section, idx) => ({ section, sectionIndex: idx }))
                 ?.filter(({ section }) => section.title !== 'System Information')
                 ?.map(({ section, sectionIndex }) => {
-                const sectionKey = `section_${sectionIndex}`
-                const isOpen = sectionStates[sectionKey] ?? true
-                
-                return (
-                  <Collapsible
-                    key={sectionKey}
-                    open={isOpen}
-                    onOpenChange={() => toggleSection(sectionKey)}
-                    className="w-full"
-                  >
-                    <CollapsibleTrigger asChild>
-                      <div className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
-                        <h3 className="text-lg font-medium text-gray-900">
-                          {section.title}
-                        </h3>
-                        {isOpen ? (
-                          <ChevronDown className="h-5 w-5 text-gray-500" />
-                        ) : (
-                          <ChevronRight className="h-5 w-5 text-gray-500" />
-                        )}
-                      </div>
-                    </CollapsibleTrigger>
-                    
-                    <CollapsibleContent className="mt-2">
-                      <div className={cn(
-                        "grid gap-4 p-4 bg-white border border-gray-200 rounded-lg",
-                        section.columns === 1 ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
-                      )}>
-                        {section.fields.map((field) => {
-                          const fieldKey = typeof field === 'string' ? field : field.key
-                          const fieldDefinition = typeof field === 'string' 
-                            ? objectDefinition.fields?.find(f => f.key === fieldKey)
-                            : field
-                          
-                          if (!fieldDefinition) return null
-                          
-                          // Filter fields based on permissions
-                          if (!isFieldVisible(objectDefinition.name, fieldKey)) {
-                            return null
-                          }
-                          
-                          return (
-                            <CreateFieldDisplay
-                              key={fieldDefinition.key}
-                              field={fieldDefinition}
-                              formData={formData}
-                              onChange={handleFieldChange}
-                              error={fieldErrors[fieldDefinition.key]}
-                              canEditField={(fieldKey) => canEditField(objectDefinition.name, fieldKey)}
-                              profileName={profile?.name}
-                            />
-                          )
-                        })}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                )
-              })}
+                  const sectionKey = `section_${sectionIndex}`
+                  const isOpen = sectionStates[sectionKey] ?? true
+
+                  return (
+                    <Collapsible
+                      key={sectionKey}
+                      open={isOpen}
+                      onOpenChange={() => toggleSection(sectionKey)}
+                      className="w-full"
+                    >
+                      <CollapsibleTrigger asChild>
+                        <div className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
+                          <h3 className="text-lg font-medium text-gray-900">
+                            {section.title}
+                          </h3>
+                          {isOpen ? (
+                            <ChevronDown className="h-5 w-5 text-gray-500" />
+                          ) : (
+                            <ChevronRight className="h-5 w-5 text-gray-500" />
+                          )}
+                        </div>
+                      </CollapsibleTrigger>
+
+                      <CollapsibleContent className="mt-2">
+                        <div className={cn(
+                          "grid gap-4 p-4 bg-white border border-gray-200 rounded-lg",
+                          section.columns === 1 ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
+                        )}>
+                          {section.fields.map((field) => {
+                            const fieldKey = typeof field === 'string' ? field : field.key
+                            const fieldDefinition = typeof field === 'string'
+                              ? objectDefinition.fields?.find(f => f.key === fieldKey)
+                              : field
+
+                            if (!fieldDefinition) return null
+
+                            // Filter fields based on permissions
+                            if (!isFieldVisible(objectDefinition.name, fieldKey)) {
+                              return null
+                            }
+
+                            // Filter out non-editable fields in create modal
+                            const fieldEditable = canEditField(objectDefinition.name, fieldKey)
+                            const editableForProfiles = fieldDefinition.editableForProfiles
+                            const profileCanEdit =
+                              (editableForProfiles?.length && profile?.name && editableForProfiles.includes(profile.name)) ||
+                              // Tenant field: org-user must select tenant when creating (edit not allowed)
+                              (fieldKey === 'tenant' && profile?.name === 'org-user')
+                            const isReadOnly =
+                              fieldDefinition.type === 'autoNumber' ||
+                              fieldDefinition.type === 'autonumber' ||
+                              (fieldDefinition.editable === false && !profileCanEdit) ||
+                              (!fieldEditable && !profileCanEdit)
+
+                            // Don't show non-editable fields in create modal
+                            if (isReadOnly) {
+                              return null
+                            }
+
+                            return (
+                              <CreateFieldDisplay
+                                key={fieldDefinition.key}
+                                field={fieldDefinition}
+                                formData={formData}
+                                onChange={handleFieldChange}
+                                error={fieldErrors[fieldDefinition.key]}
+                                canEditField={(fieldKey) => canEditField(objectDefinition.name, fieldKey)}
+                                profileName={profile?.name}
+                              />
+                            )
+                          })}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )
+                })}
             </div>
           </div>
-          
+
           <DialogFooter className="flex-shrink-0 flex justify-end gap-2 pt-4 px-6 pb-6 border-t">
             <Button
               variant="outline"

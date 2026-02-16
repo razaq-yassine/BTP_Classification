@@ -584,15 +584,21 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     await db.update(table).set(modified as any).where(whereCond)
     const [updated] = await db.select().from(table).where(whereCond)
     await runTrigger(objectName, 'afterUpdate', oldRow as Record<string, unknown>, updated as Record<string, unknown>)
+    let rec: Record<string, unknown>
     if (join && updated) {
       const ref = config.referenceFields?.[0]
       if (ref && (updated as any)[ref.idField]) {
         const j = join as JoinConfig
         const [cust] = await db.select().from(j.joinTable as any).where(eq((j.joinTable as any).id, (updated as any)[ref.idField]))
-        return c.json(toRecord(updated as Record<string, unknown>, cust as Record<string, unknown>, config, null, profile))
+        rec = toRecord(updated as Record<string, unknown>, cust as Record<string, unknown>, config, null, profile)
+      } else {
+        rec = toRecord(updated as Record<string, unknown>, null, config, null, profile)
       }
+    } else {
+      rec = toRecord(updated as Record<string, unknown>, null, config, null, profile)
     }
-    return c.json(toRecord(updated as Record<string, unknown>, null, config, null, profile))
+    const enriched = await enrichWithTenantScope(rec, config)
+    return c.json(enriched)
   })
 
   entityRoutes.delete(`/${entityPath}/:id`, async (c) => {

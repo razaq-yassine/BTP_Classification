@@ -47,10 +47,11 @@ export function GenericDetailInputFormatter({
   })
   const [emailError, setEmailError] = useState('')
   const [phoneError, setPhoneError] = useState('')
-  
+
   const isAutoNumber = type === 'autoNumber' || type === 'autonumber'
   const isNameField = fieldDefinition.key === 'name'
-  const isFieldRequired = (required || isRequired || (isNameField && !isAutoNumber))
+  const isMasterDetail = fieldDefinition.relationshipType === 'masterDetail'
+  const isFieldRequired = (required || isRequired || (isNameField && !isAutoNumber) || isMasterDetail)
   const isFieldImportant = isImportant
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -60,9 +61,9 @@ export function GenericDetailInputFormatter({
       onChange('')
     }
   }
-  
 
-  
+
+
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (email && !emailRegex.test(email)) {
@@ -71,23 +72,23 @@ export function GenericDetailInputFormatter({
       setEmailError('')
     }
   }
-  
+
   const formatPhoneNumber = (phone: string) => {
     // Remove all non-numeric characters
     return phone.replace(/\D/g, '')
   }
-  
+
   const validatePhoneNumber = (phone: string, country: Country) => {
     // Only validate if phone is not empty
     if (!phone || phone.trim() === '') {
       setPhoneError('')
       return
     }
-    
+
     const cleanPhone = formatPhoneNumber(phone)
     const { min, max } = country.phoneLength
     const currentLength = cleanPhone.length
-    
+
     if (currentLength < min || currentLength > max) {
       const expectedRange = min === max ? `${min}` : `${min}-${max}`
       setPhoneError(`Phone number should be ${expectedRange} digits for ${country.name}. Current: ${currentLength} digits`)
@@ -285,7 +286,7 @@ export function GenericDetailInputFormatter({
             )}
           </div>
         )
-        
+
       case 'datetime':
         return (
           <DateTimePicker

@@ -5,17 +5,19 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent } from '@/components/ui/card'
-import { MoreHorizontal } from 'lucide-react'
+import { MoreHorizontal, Trash2 } from 'lucide-react'
 import { usePermissions } from '@/hooks/usePermissions'
 
 interface GenericObjectDetailViewHeaderProps {
   objectDefinition: ObjectDefinition
   record: GenericRecord
+  onDelete?: (record: GenericRecord) => void
 }
 
-export function GenericObjectDetailViewHeader({ 
-  objectDefinition, 
-  record 
+export function GenericObjectDetailViewHeader({
+  objectDefinition,
+  record,
+  onDelete
 }: GenericObjectDetailViewHeaderProps) {
   const { canUpdate, canDelete } = usePermissions()
   const Icon = objectDefinition.icon
@@ -81,7 +83,7 @@ export function GenericObjectDetailViewHeader({
                 )
               })}
               
-              {/* Secondary Actions Dropdown - filter by permissions (e.g. hide delete if !canDelete) */}
+              {/* Secondary Actions Dropdown */}
               {(() => {
                 const filteredSecondary = headerConfig?.secondaryActions?.filter((action) => {
                   const actionKey = action.key
@@ -99,11 +101,16 @@ export function GenericObjectDetailViewHeader({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       {filteredSecondary.map((action) => {
-                        const ActionIcon = action.icon
+                        const ActionIcon = action.key === 'delete' ? Trash2 : action.icon
+                        const handleClick =
+                          action.key === 'delete' && onDelete
+                            ? () => onDelete(record)
+                            : () => action.onClick(record)
                         return (
                           <DropdownMenuItem
                             key={action.key}
-                            onClick={() => action.onClick(record)}
+                            onClick={handleClick}
+                            variant={action.key === 'delete' ? 'destructive' : 'default'}
                             className="flex items-center gap-2"
                           >
                             {ActionIcon && <ActionIcon className="h-4 w-4" />}

@@ -10,7 +10,7 @@ These are prerequisites for everything else. Complete these before moving on.
 
 | Order | Feature | Priority | Why First |
 |-------|---------|----------|-----------|
-| 1 | **Metadata Deployment + checks** | HIGH | Validates metadata before it's used. Prevents bad config from breaking the app. |
+| 1 | **Metadata Deployment + checks** ✅ | HIGH | Validates metadata before it's used. Prevents bad config from breaking the app. |
 | 2 | **Generic List View** ✅ | HIGH | Core view. Must be solid before list-related features. |
 | 3 | **Generic Detail Views** | HIGH | Core view. Must be solid before detail-related features. |
 | 4 | **Generic Create** | HIGH | Core write path. Must be solid before validation, triggers, etc. |
@@ -28,7 +28,7 @@ Build on the foundation. These don't block later work.
 | Order | Feature | Priority | Depends On |
 |-------|---------|----------|------------|
 | 7 | **Detail view formatter** | MEDIUM | Detail views, field types |
-| 8 | **Salesforce Path** | MEDIUM | Detail view, select field with `useInPath` |
+| 8 | **Salesforce Path** ✅ | MEDIUM | Detail view, select field with `useInPath` |
 | 9 | **General Layout** | MEDIUM | Page layout, sidebar |
 | 10 | **owner Id, created by, edited by** | MEDIUM | Create/update flows (populate on insert/update) |
 | 11 | **Permissions** ✅ | HIGH | Auth, list/detail/create (to enforce read/write) |
@@ -45,7 +45,7 @@ Improve configurability and usability.
 | Order | Feature | Priority | Depends On |
 |-------|---------|----------|------------|
 | 13 | **Icon selector for Object Details** | LOW | Object metadata, object manager |
-| 14 | **Refine Text size** | LOW | Layout, theme/settings |
+| 14 | **Refine Text size** ✅ | LOW | Layout, theme/settings |
 | 15 | **Sidebar / Workspaces** | MEDIUM | Layout, navigation |
 | 16 | **Default values** | MEDIUM | Create, field definitions |
 | 17 | **Formulas Field** | MEDIUM | List/detail (where formulas display), field types |
@@ -61,7 +61,7 @@ Higher complexity. Build after core is solid.
 | Order | Feature | Priority | Depends On |
 |-------|---------|----------|------------|
 | 18 | **Record field history** | MEDIUM | Create/update, triggers or audit logging |
-| 19 | **Triggers** | HIGH | Create/update/delete (when to fire) |
+| 19 | **Triggers** ✅ | HIGH | Create/update/delete (when to fire) |
 | 20 | **Field visibility (conditional)** | MEDIUM | Detail/create, field definitions |
 | 21 | **Bulk actions** | MEDIUM | List view, permissions |
 | 22 | **Saved list views** | LOW | List view, filters/sort |
@@ -88,8 +88,8 @@ Higher complexity. Build after core is solid.
 ```
 Phase 1 (Foundation)          Phase 2 (Polish)              Phase 3 (Config)
 ┌─────────────────────┐       ┌─────────────────────┐       ┌─────────────────────┐
-│ 1. Metadata checks  │       │ 7. Detail formatter  │       │ 13. Icon selector   │
-│ 2. List View ✅    │──────▶│ 8. Path              │──────▶│ 14. Text size       │
+│ 1. Metadata checks ✅│       │ 7. Detail formatter  │       │ 13. Icon selector   │
+│ 2. List View ✅    │──────▶│ 8. Path ✅           │──────▶│ 14. Text size ✅    │
 │ 3. Detail View     │       │ 9. General Layout   │       │ 15. Sidebar         │
 │ 4. Create          │       │ 10. owner/created/  │       │ 16. Default values  │
 │ 5. Field types     │       │     edited by       │       │ 17. Formulas        │
@@ -101,7 +101,7 @@ Phase 1 (Foundation)          Phase 2 (Polish)              Phase 3 (Config)
                              Phase 4 (Advanced)              Phase 5 (Integrations)
                              ┌─────────────────────┐       ┌─────────────────────┐
                              │ 18. Record history  │       │ 23. Import/Export   │
-                             │ 19. Triggers        │──────▶│ 24. Email           │
+                             │ 19. Triggers ✅     │──────▶│ 24. Email           │
                              │ 20. Field visibility│      │ 25. Webhooks        │
                              │ 21. Bulk actions   │       │ 26. Approval flows  │
                              │ 22. Saved views    │       │ 27. Record types    │

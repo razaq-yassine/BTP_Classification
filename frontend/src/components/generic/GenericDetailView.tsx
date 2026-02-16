@@ -8,11 +8,14 @@ import { GenericObjectDetailViewHeader } from './GenericObjectDetailViewHeader'
 import { GenericObjectDetailViewMainSection } from './GenericObjectDetailViewMainSection'
 import { GenericObjectDetailViewSideSection } from './GenericObjectDetailViewSideSection'
 import { GenericDetailViewSkeleton } from './GenericDetailViewSkeleton'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { SalesforcePath, type SalesforcePathStep } from '@/components/ui/salesforce-path'
 import api from '@/services/api'
 import { isNetworkError } from '@/utils/handle-server-error'
 import { trackRecentlyViewed } from '@/utils/recently-viewed'
 import { useAuthStore, selectUser } from '@/stores/authStore'
+import { usePermissions } from '@/hooks/usePermissions'
+import { toast } from 'sonner'
 
 interface GenericDetailViewProps {
   objectDefinition: ObjectDefinition
@@ -23,9 +26,12 @@ interface GenericDetailViewProps {
 export function GenericDetailView({ objectDefinition, recordId, basePath }: GenericDetailViewProps) {
   const navigate = useNavigate()
   const user = useAuthStore(selectUser)
+  const { canDelete } = usePermissions()
   const [record, setRecord] = useState<GenericRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     fetchRecord()
@@ -62,6 +68,29 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
       navigate({ to: basePath })
     } else {
       window.history.back()
+    }
+  }
+
+  const handleDeleteRequest = () => {
+    setShowDeleteDialog(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!record?.id) return
+    setDeleting(true)
+    try {
+      const endpoint = objectDefinition.apiEndpoint.endsWith('/')
+        ? objectDefinition.apiEndpoint.slice(0, -1)
+        : objectDefinition.apiEndpoint
+      await api.delete(`${endpoint}/${record.id}`)
+      toast.success(`${objectDefinition.label} deleted successfully.`)
+      setShowDeleteDialog(false)
+      handleBack()
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to delete'
+      toast.error(msg)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -129,7 +158,11 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
   return (
     <main className="flex-1 space-y-6">
       {/* Header Section */}
-      <GenericObjectDetailViewHeader objectDefinition={objectDefinition} record={record} />
+      <GenericObjectDetailViewHeader
+        objectDefinition={objectDefinition}
+        record={record}
+        onDelete={canDelete(objectDefinition.name) ? handleDeleteRequest : undefined}
+      />
 
       {/* Path (Salesforce-style) - between header and content */}
       {showPath && (
@@ -165,6 +198,18 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
           <GenericObjectDetailViewSideSection objectDefinition={objectDefinition} record={record} />
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title={`Delete ${objectDefinition.label}?`}
+        desc={`Are you sure you want to delete this ${objectDefinition.label.toLowerCase()}? This cannot be undone.`}
+        confirmText="Delete"
+        destructive
+        isLoading={deleting}
+        handleConfirm={handleDeleteConfirm}
+      />
     </main>
   )
 }

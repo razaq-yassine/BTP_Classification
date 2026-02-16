@@ -1,14 +1,14 @@
-import { validateEmail } from './helpers/validation'
-
+/**
+ * Order triggers. Add logic as needed. Use helpers/order.ts for object-specific logic.
+ */
 type Record = { [key: string]: unknown }
 
-export function beforeInsert(newValue: Record): Record {
-  validateEmail((newValue.email as string) || '')
+export function beforeInsert(_oldValue: Record | undefined, newValue: Record): Record {
   return newValue
 }
 
-export function afterInsert(_newValue: Record): void {
-  // sendWelcomeEmail(newValue.email)
+export function afterInsert(_oldValue: Record | undefined, _newValue: Record): void {
+  // Side effects
 }
 
 export function beforeUpdate(_oldValue: Record, newValue: Record): Record {
@@ -16,7 +16,7 @@ export function beforeUpdate(_oldValue: Record, newValue: Record): Record {
 }
 
 export function afterUpdate(_oldValue: Record, _newValue: Record): void {
-  // auditLog.record('customer', oldValue, newValue)
+  // audit
 }
 
 export function beforeDelete(_oldValue: Record): void {

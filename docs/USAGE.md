@@ -463,7 +463,7 @@ Triggers are the **automation layer** of the project. They run before and after 
 
 ### Location
 
-Triggers live in `triggers/{objectName}.ts`. The file name must match the object name (e.g. `triggers/customer.ts` for the `customer` object).
+Triggers live in `backend/triggers/{objectName}.ts`. The file name must match the object name (e.g. `backend/triggers/customer.ts` for the `customer` object). The path is fixed relative to the backend; it does not depend on `process.cwd()`.
 
 ### Optional: `trigger` in object.json
 
@@ -482,17 +482,21 @@ You can add `"trigger": "customer"` to `object.json` for reference. The backend 
 
 **Before** hooks receive `(oldValue?, newValue?)` and can return a modified object that will be used for the DB operation. **After** hooks run after the operation and are for side effects only.
 
+### Helpers (one per object)
+
+Put reusable logic in `backend/triggers/helpers/` and import it in your trigger hooks. **Best practice: one helper per object** (e.g. `helpers/customer.ts` for customer-specific logic). Use `helpers/utils.ts` for general logic that can be reused across helpers (e.g. `validateEmail`).
+
 ### Adding a Trigger for a New Object
 
-1. Create `triggers/{objectName}.ts`:
+1. Create `backend/triggers/{objectName}.ts`:
    ```typescript
    type Record = { [key: string]: unknown }
 
-   export function beforeInsert(newValue: Record): Record {
+   export function beforeInsert(_oldValue: Record | undefined, newValue: Record): Record {
      return newValue
    }
 
-   export function afterInsert(_newValue: Record): void {
+   export function afterInsert(_oldValue: Record | undefined, _newValue: Record): void {
      // Side effects
    }
 
@@ -515,7 +519,7 @@ You can add `"trigger": "customer"` to `object.json` for reference. The backend 
 
 2. Implement only the hooks you need. Missing hooks are ignored.
 
-3. **Helpers**: Put reusable logic in `triggers/helpers/` and import it in your hooks. This keeps trigger files lean and lets you share validation, audit, or other logic across different events in that trigger, the best practice is to have one helper per object, and using Utils helper inside other helpers when something very general and can be reused accross helpers.
+3. Create `backend/triggers/helpers/{objectName}.ts` for object-specific logic. Import from `helpers/utils.ts` for general utilities.
 
 ---
 

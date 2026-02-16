@@ -8,7 +8,7 @@ A full-stack SaaS application with React frontend (based on shadcn-admin) and Ho
 generic_saas/
 ├── frontend/          # React + TypeScript frontend (Vite)
 ├── backend/           # Hono REST API backend (Node.js)
-├── triggers/          # Object triggers (beforeInsert, afterUpdate, etc.)
+│   └── triggers/      # Object triggers (beforeInsert, afterUpdate, etc.)
 ├── metadata/          # Object metadata (symlink to frontend/public/metadata)
 ├── .devrules          # Development rules and guidelines
 └── README.md          # This file
@@ -116,7 +116,7 @@ To add a new object: create metadata folder, run `db:generate-from-metadata`, ad
 - Backend uses MySQL (mysql2). Set `DATABASE_URL` in `.env` (e.g. `mysql://root:root@localhost:3306/generic_saas`). Create the database before first run.
 - JWT tokens stored in localStorage
 - CORS configured for localhost:5173 and 5174
-- Triggers in `triggers/` run before/after insert/update/delete
+- Triggers in `backend/triggers/` run before/after insert/update/delete
 
 ## Technologies Used
 

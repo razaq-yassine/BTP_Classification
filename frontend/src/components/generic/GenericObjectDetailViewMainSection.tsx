@@ -82,11 +82,14 @@ function FieldDisplay({
   if (isEditing && field.type !== 'formula') {
     const hasChanged = formValue !== value
 
+    const isMasterDetail = field.relationshipType === 'masterDetail'
+    const isFieldRequired = field.required || isMasterDetail
+
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-1">
           <span className="text-sm font-medium text-gray-700">{field.label}</span>
-          {field.required && <span className="text-red-500 text-sm">*</span>}
+          {isFieldRequired && <span className="text-red-500 text-sm">*</span>}
           {field.isImportant && <span className="text-orange-500 text-sm" title="Important field">!</span>}
           {hasChanged && onRevertField && (
             <button
@@ -119,7 +122,7 @@ function FieldDisplay({
   const canEdit = effectiveEditable
 
   return (
-    <div 
+    <div
       className={cn(
         "space-y-1 group",
         canEdit && "cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
@@ -128,7 +131,7 @@ function FieldDisplay({
     >
       <div className="flex items-center gap-1">
         <span className="text-sm font-medium text-gray-700">{field.label}</span>
-        {field.required && <span className="text-red-500 text-sm">*</span>}
+        {(field.required || field.relationshipType === 'masterDetail') && <span className="text-red-500 text-sm">*</span>}
         {field.isImportant && <span className="text-orange-500 text-sm" title="Important field">!</span>}
         {canEdit && onStartEdit && (
           <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
@@ -146,12 +149,12 @@ function FieldDisplay({
 }
 
 // Component for the Details tab content with accordion sections and global edit mode
-function DetailsTabContent({ 
-  objectDefinition, 
-  record, 
+function DetailsTabContent({
+  objectDefinition,
+  record,
   onRecordUpdate,
   isLoading = false
-}: { 
+}: {
   objectDefinition: ObjectDefinition
   record: GenericRecord | null
   onRecordUpdate: (updatedRecord: GenericRecord) => void
@@ -164,7 +167,7 @@ function DetailsTabContent({
   const [showImportantFieldsDialog, setShowImportantFieldsDialog] = useState(false)
   const [pendingEmptyImportantFields, setPendingEmptyImportantFields] = useState<string[]>([])
   const [previousRecordState, setPreviousRecordState] = useState<GenericRecord | null>(null)
-  
+
   // Get or initialize tab state
   const getTabState = (): TabState => {
     if (!tabStates.has(tabKey)) {
@@ -173,7 +176,7 @@ function DetailsTabContent({
       objectDefinition.detailView?.sections?.forEach((section, index) => {
         sectionStates[`section_${index}`] = section.defaultOpen ?? true
       })
-      
+
       tabStates.set(tabKey, {
         isEditing: false,
         formData: {},
@@ -184,9 +187,9 @@ function DetailsTabContent({
     }
     return tabStates.get(tabKey)!
   }
-  
+
   const [tabState, setTabState] = useState<TabState>(getTabState)
-  
+
   // Update tab state in map when local state changes
   useEffect(() => {
     tabStates.set(tabKey, tabState)
@@ -200,8 +203,9 @@ function DetailsTabContent({
 
   // Validate individual field
   const validateField = (fieldDefinition: FieldDefinition, value: any): FieldValidation => {
-    // Check if field is required and empty
-    if (fieldDefinition.required) {
+    // Check if field is required and empty (master-detail fields are always required)
+    const isRequired = fieldDefinition.required || fieldDefinition.relationshipType === 'masterDetail'
+    if (isRequired) {
       if (value === null || value === undefined || value === '') {
         return {
           isValid: false,
@@ -252,10 +256,10 @@ function DetailsTabContent({
       setError('You do not have permission to edit this record')
       return
     }
-    
+
     // Capture the current state for undo functionality BEFORE any changes
     setPreviousRecordState({ ...record })
-    
+
     // Initialize form data with current record values
     const formData: Record<string, any> = {}
     objectDefinition.detailView?.sections?.forEach(section => {
@@ -267,7 +271,7 @@ function DetailsTabContent({
         }
       })
     })
-    
+
     setTabState(prev => ({
       ...prev,
       isEditing: true,
@@ -283,23 +287,23 @@ function DetailsTabContent({
     try {
       setSaving(true)
       setError('')
-      
+
       // Previous state was already captured when entering edit mode
-      
+
       // Prepare update data with all form data
       const updateData = {
         ...record,
         ...tabState.formData
       }
-      
+
       // Transform reference fields and handle required fields
       objectDefinition.detailView?.sections?.forEach(section => {
         section.fields.forEach(field => {
           const fieldKey = typeof field === 'string' ? field : field.key
-          const fieldDefinition = typeof field === 'string' 
+          const fieldDefinition = typeof field === 'string'
             ? objectDefinition.fields?.find(f => f.key === fieldKey)
             : field
-          
+
           // Transform reference fields to the format expected by backend: { id: <value> }
           // Also set the idField (e.g. tenantId) so it overwrites stale values from record spread
           if (fieldDefinition?.type === 'reference') {
@@ -317,7 +321,7 @@ function DetailsTabContent({
             if (resolvedId != null) updateData[idField] = resolvedId
             else if (refValue === null || refValue === undefined || refValue === '') updateData[idField] = null
           }
-          
+
           // Only preserve values for required fields, not just important ones
           if (fieldDefinition?.required && (updateData[fieldKey] === null || updateData[fieldKey] === undefined)) {
             // For required fields, use original value if new value is null/undefined
@@ -325,19 +329,19 @@ function DetailsTabContent({
           }
         })
       })
-      
+
       // Ensure endpoint doesn't have trailing slash
-      const baseEndpoint = objectDefinition.apiEndpoint.endsWith('/') 
-        ? objectDefinition.apiEndpoint.slice(0, -1) 
+      const baseEndpoint = objectDefinition.apiEndpoint.endsWith('/')
+        ? objectDefinition.apiEndpoint.slice(0, -1)
         : objectDefinition.apiEndpoint
-      
+
       const endpoint = `${baseEndpoint}/${record.id}`
-      
+
       const response = await api.put(endpoint, updateData)
-      
+
       // Call the onRecordUpdate callback to refresh the data
       onRecordUpdate(response.data)
-      
+
       // Show success toast with undo button
       toast.success('Changes saved successfully!', {
         description: `${objectDefinition.label || objectDefinition.name} has been updated.`,
@@ -347,7 +351,7 @@ function DetailsTabContent({
           onClick: () => handleUndo()
         }
       })
-      
+
       // Exit edit mode
       setTabState(prev => ({
         ...prev,
@@ -378,14 +382,14 @@ function DetailsTabContent({
   // Validate all fields before save
   const validateAllFields = () => {
     const newErrors: Record<string, string> = {}
-    
+
     objectDefinition.detailView?.sections?.forEach(section => {
       section.fields.forEach(field => {
         const fieldKey = typeof field === 'string' ? field : field.key
-        const fieldDefinition = typeof field === 'string' 
+        const fieldDefinition = typeof field === 'string'
           ? objectDefinition.fields?.find(f => f.key === fieldKey)
           : field
-        
+
         if (fieldDefinition) {
           const value = tabState.formData[fieldKey]
           const validation = validateField(fieldDefinition, value)
@@ -395,7 +399,7 @@ function DetailsTabContent({
         }
       })
     })
-    
+
     setTabState(prev => ({
       ...prev,
       fieldErrors: newErrors
@@ -407,36 +411,37 @@ function DetailsTabContent({
     try {
       setSaving(true)
       setError('')
-      
+
       // First, validate all fields
       if (!validateAllFields()) {
         setError('Please fix all field errors before saving')
         setSaving(false)
         return
       }
-      
+
       // Check for empty important fields (for confirmation)
       const emptyImportantFields: string[] = []
-      
+
       objectDefinition.detailView?.sections?.forEach(section => {
         section.fields.forEach(field => {
           const fieldKey = typeof field === 'string' ? field : field.key
-          const fieldDefinition = typeof field === 'string' 
+          const fieldDefinition = typeof field === 'string'
             ? objectDefinition.fields?.find(f => f.key === fieldKey)
             : field
-          
+
           if (fieldDefinition) {
             const value = tabState.formData[fieldKey]
             const isEmpty = value === null || value === undefined || value === ''
-            
+
             // Check important fields (for confirmation) - only if not required
-            if (fieldDefinition.isImportant && !fieldDefinition.required && isEmpty) {
+            const isRequired = fieldDefinition.required || fieldDefinition.relationshipType === 'masterDetail'
+            if (fieldDefinition.isImportant && !isRequired && isEmpty) {
               emptyImportantFields.push(fieldDefinition.label || fieldKey)
             }
           }
         })
       })
-      
+
       // Important field confirmation - show dialog if there are empty important fields
       if (emptyImportantFields.length > 0) {
         setPendingEmptyImportantFields(emptyImportantFields)
@@ -444,7 +449,7 @@ function DetailsTabContent({
         setSaving(false)
         return
       }
-      
+
       // If no validation errors and no important field confirmation needed, proceed with save
       await performSave()
     } catch (err: any) {
@@ -484,29 +489,29 @@ function DetailsTabContent({
       })
       return
     }
-    
+
     try {
       setSaving(true)
       setError('')
-      
+
       // Ensure endpoint doesn't have trailing slash
-      const baseEndpoint = objectDefinition.apiEndpoint.endsWith('/') 
-        ? objectDefinition.apiEndpoint.slice(0, -1) 
+      const baseEndpoint = objectDefinition.apiEndpoint.endsWith('/')
+        ? objectDefinition.apiEndpoint.slice(0, -1)
         : objectDefinition.apiEndpoint
-      
+
       const endpoint = `${baseEndpoint}/${previousRecordState.id}`
-      
+
       const response = await api.put(endpoint, previousRecordState)
-      
+
       // Call the onRecordUpdate callback to refresh the data
       onRecordUpdate(response.data)
-      
+
       // Show undo success toast
       toast.success('Changes undone successfully!', {
         description: `${objectDefinition.label || objectDefinition.name} has been reverted.`,
         duration: 3000,
       })
-      
+
       // Clear previous state after successful undo
       setPreviousRecordState(null)
     } catch {
@@ -547,7 +552,7 @@ function DetailsTabContent({
     let fieldDefinition: FieldDefinition | undefined
     objectDefinition.detailView?.sections?.forEach(section => {
       section.fields.forEach(field => {
-        const fieldDef = typeof field === 'string' 
+        const fieldDef = typeof field === 'string'
           ? objectDefinition.fields?.find(f => f.key === field)
           : field
         if (fieldDef && fieldDef.key === fieldKey) {
@@ -579,27 +584,27 @@ function DetailsTabContent({
       const newFormData = { ...prev.formData }
       // Reset field to original record value
       newFormData[fieldKey] = record[fieldKey]
-      
+
       // Check if there are any actual changes by comparing all form fields with original record values
       const hasActualChanges = Object.keys(newFormData).some(key => {
         const formValue = newFormData[key]
         const originalValue = record[key]
-        
+
         // Handle different types of comparisons
         if (formValue === originalValue) return false
-        
+
         // Handle null/undefined/empty string equivalence
         const isFormEmpty = formValue === null || formValue === undefined || formValue === ''
         const isOriginalEmpty = originalValue === null || originalValue === undefined || originalValue === ''
-        
+
         if (isFormEmpty && isOriginalEmpty) return false
-        
+
         // Handle string/number comparisons (e.g., "123" vs 123)
         if (String(formValue) === String(originalValue)) return false
-        
+
         return true
       })
-      
+
       return {
         ...prev,
         formData: newFormData,
@@ -674,9 +679,9 @@ function DetailsTabContent({
       {/* Accordion sections */}
       {objectDefinition.detailView?.sections?.map((section, sectionIndex) => {
         if (!section.fields || section.fields.length === 0) return null
-        
+
         const isOpen = tabState.sectionStates[`section_${sectionIndex}`] ?? true
-        
+
         return (
           <Collapsible
             key={sectionIndex}
@@ -694,7 +699,7 @@ function DetailsTabContent({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <div className="p-4 pt-0 border-t border-gray-100">
-                  <div 
+                  <div
                     className={cn(
                       "grid gap-6",
                       section.columns === 1 ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
@@ -703,10 +708,10 @@ function DetailsTabContent({
                     {section.fields.map((field) => {
                       // Handle both string and FieldDefinition types
                       const fieldKey = typeof field === 'string' ? field : field.key
-                      const fieldDefinition = typeof field === 'string' 
+                      const fieldDefinition = typeof field === 'string'
                         ? objectDefinition.fields?.find(f => f.key === fieldKey)
                         : field
-                      
+
                       if (!fieldDefinition) return null
 
                       // Check field visibility permission
@@ -723,12 +728,12 @@ function DetailsTabContent({
                       // Important fields should ALWAYS be visible, even when empty in read-only mode
                       // Editable fields should also be visible even when empty to maintain consistent UI
                       // Formula fields should always be visible
-                      const shouldShow = fieldDefinition.isImportant || 
-                                       tabState.isEditing ||
-                                       fieldDefinition.type === 'formula' ||
-                                       (value !== null && value !== undefined && value !== '') ||
-                                       (fieldDefinition.editable !== false) // Show all editable fields
-                      
+                      const shouldShow = fieldDefinition.isImportant ||
+                        tabState.isEditing ||
+                        fieldDefinition.type === 'formula' ||
+                        (value !== null && value !== undefined && value !== '') ||
+                        (fieldDefinition.editable !== false) // Show all editable fields
+
                       if (!shouldShow) return null
 
                       return (
@@ -758,7 +763,7 @@ function DetailsTabContent({
 
       {/* Global save/cancel buttons at bottom */}
       {tabState.isEditing && <GlobalButtons showUnsavedMessage={tabState.hasChanges} />}
-      
+
       {/* Important Fields Confirmation Dialog */}
       <ImportantFieldsDialog
         open={showImportantFieldsDialog}
@@ -772,10 +777,10 @@ function DetailsTabContent({
 }
 
 // Component for the Related Object tab content
-function RelatedObjectTabContent({ 
-  parentRecord, 
-  relatedObjectDefinition 
-}: { 
+function RelatedObjectTabContent({
+  parentRecord,
+  relatedObjectDefinition
+}: {
   parentRecord: GenericRecord
   relatedObjectDefinition: any
 }) {
@@ -794,12 +799,12 @@ function RelatedObjectTabContent({
 export function GenericObjectDetailViewMainSection({ objectDefinition, record, onRecordUpdate, isLoading = false }: GenericObjectDetailViewMainSectionProps) {
   const [activeTab, setActiveTab] = useState('details');
   const { canRead } = usePermissions();
-  
+
   // Get related objects from the object definition configuration, filtered by read permission
   const relatedObjects = (objectDefinition.relatedObjects || []).filter((relObj) =>
     canRead(relObj.objectDefinition)
   );
-  
+
   if (!record) {
     return null;
   }
@@ -807,35 +812,35 @@ export function GenericObjectDetailViewMainSection({ objectDefinition, record, o
   return (
     <div className='w-full'>
       <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full justify-start mb-0">
-            <TabsTrigger value="details">
-              Details
+        <TabsList className="w-full justify-start mb-0">
+          <TabsTrigger value="details">
+            Details
+          </TabsTrigger>
+          {relatedObjects.map((relObj) => (
+            <TabsTrigger key={relObj.name} value={relObj.name}>
+              {relObj.label}
             </TabsTrigger>
-            {relatedObjects.map((relObj) => (
-              <TabsTrigger key={relObj.name} value={relObj.name}>
-                {relObj.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          
-          <TabsContent value="details" className="w-full mt-0">
-            <DetailsTabContent 
-              objectDefinition={objectDefinition}
-              record={record} 
-              onRecordUpdate={onRecordUpdate || (() => {})} 
-              isLoading={isLoading}
+          ))}
+        </TabsList>
+
+        <TabsContent value="details" className="w-full mt-0">
+          <DetailsTabContent
+            objectDefinition={objectDefinition}
+            record={record}
+            onRecordUpdate={onRecordUpdate || (() => { })}
+            isLoading={isLoading}
+          />
+        </TabsContent>
+
+        {relatedObjects.map((relObj) => (
+          <TabsContent key={relObj.name} value={relObj.name} className="w-full mt-0">
+            <RelatedObjectTabContent
+              parentRecord={record}
+              relatedObjectDefinition={relObj}
             />
           </TabsContent>
-          
-          {relatedObjects.map((relObj) => (
-            <TabsContent key={relObj.name} value={relObj.name} className="w-full mt-0">
-              <RelatedObjectTabContent 
-                parentRecord={record}
-                relatedObjectDefinition={relObj} 
-              />
-            </TabsContent>
-          ))}
-        </Tabs>
+        ))}
+      </Tabs>
     </div>
   );
 }

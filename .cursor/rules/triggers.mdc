@@ -1,0 +1,29 @@
+---
+description: Triggers location, helpers, and best practices
+globs: backend/triggers/**/*.ts
+alwaysApply: false
+---
+
+# Triggers
+
+Triggers run before/after create, update, and delete. They live in `backend/triggers/`.
+
+## Location
+
+- **Triggers**: `backend/triggers/{objectName}.ts` (e.g. `customer.ts` for object `customer`)
+- **Helpers**: `backend/triggers/helpers/`
+  - `utils.ts` — general logic (e.g. `validateEmail`) reused across helpers
+  - `{objectName}.ts` — **one helper per object** (e.g. `customer.ts` for customer-specific logic)
+
+## Best Practices
+
+1. **One helper per object**: Put object-specific logic in `helpers/{objectName}.ts`. Import from `helpers/utils.ts` for general utilities.
+2. **before* vs after***: `before*` receives `(oldValue?, newValue?)` and returns modified payload (or throws to abort). `after*` receives `(oldValue?, newValue?)` and has no return (side effects only).
+3. **Throw to abort**: In `beforeInsert` / `beforeUpdate` / `beforeDelete`, throw an error to abort the operation.
+4. **Keep triggers fast**: Avoid heavy I/O. Use queues or background jobs for email, webhooks, etc.
+5. **No DB writes in before***: Avoid extra DB writes in `before*`; they run inside the same transaction.
+
+## References
+
+- [docs/USAGE.md](../docs/USAGE.md) — Triggers section
+- [docs/TRIGGER_TESTING.md](../docs/TRIGGER_TESTING.md) — Testing guide
