@@ -29,6 +29,8 @@ const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
 
+type SidebarBehavior = 'hover' | 'locked'
+
 type SidebarContextProps = {
   state: 'expanded' | 'collapsed'
   open: boolean
@@ -37,6 +39,8 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void
   isMobile: boolean
   toggleSidebar: () => void
+  sidebarBehavior: SidebarBehavior
+  setHoverExpanded: (expanded: boolean) => void
 }
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null)
@@ -54,6 +58,7 @@ function SidebarProvider({
   defaultOpen = true,
   open: openProp,
   onOpenChange: setOpenProp,
+  sidebarBehavior = 'hover',
   className,
   style,
   children,
@@ -62,9 +67,11 @@ function SidebarProvider({
   defaultOpen?: boolean
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  sidebarBehavior?: SidebarBehavior
 }) {
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = React.useState(false)
+  const [hoverExpanded, setHoverExpanded] = React.useState(false)
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -108,7 +115,11 @@ function SidebarProvider({
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
-  const state = open ? 'expanded' : 'collapsed'
+  // When sidebarBehavior is 'hover', we show expanded on hover even when collapsed.
+  const state =
+    open || (sidebarBehavior === 'hover' && hoverExpanded)
+      ? 'expanded'
+      : 'collapsed'
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
@@ -119,8 +130,20 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      sidebarBehavior,
+      setHoverExpanded,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+    [
+      state,
+      open,
+      setOpen,
+      isMobile,
+      openMobile,
+      setOpenMobile,
+      toggleSidebar,
+      sidebarBehavior,
+      setHoverExpanded,
+    ]
   )
 
   return (
@@ -160,7 +183,27 @@ function Sidebar({
   variant?: 'sidebar' | 'floating' | 'inset'
   collapsible?: 'offcanvas' | 'icon' | 'none'
 }) {
-  const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const {
+    isMobile,
+    state,
+    openMobile,
+    setOpenMobile,
+    open,
+    sidebarBehavior,
+    setHoverExpanded,
+  } = useSidebar()
+
+  const handleMouseEnter = React.useCallback(() => {
+    if (!open && sidebarBehavior === 'hover') {
+      setHoverExpanded(true)
+    }
+  }, [open, sidebarBehavior, setHoverExpanded])
+
+  const handleMouseLeave = React.useCallback(() => {
+    if (!open && sidebarBehavior === 'hover') {
+      setHoverExpanded(false)
+    }
+  }, [open, sidebarBehavior, setHoverExpanded])
 
   if (collapsible === 'none') {
     return (
@@ -225,6 +268,8 @@ function Sidebar({
       />
       <div
         data-slot='sidebar-container'
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         className={cn(
           'fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex',
           side === 'left'

@@ -3,6 +3,7 @@ import Cookies from 'js-cookie'
 import { Outlet, useLocation } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { SearchProvider } from '@/context/search-context'
+import { useSidebarBehavior } from '@/context/sidebar-behavior-context'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { Header } from '@/components/layout/header'
@@ -30,6 +31,7 @@ export function AuthenticatedLayout({ children }: Props) {
   const isSettings = location.pathname.startsWith('/settings')
   const { data: defs } = useObjectDefinitionsQuery()
   const { canRead } = usePermissions()
+  const { sidebarBehavior } = useSidebarBehavior()
   const topNav = useMemo(() => {
     if (!defs?.length) return staticTopNav
     const withNav = defs.filter((d) => d.basePath && (d.sidebar?.showInSidebar !== false) && canRead(d.name))
@@ -42,7 +44,7 @@ export function AuthenticatedLayout({ children }: Props) {
 
   return (
     <SearchProvider>
-      <SidebarProvider defaultOpen={defaultOpen}>
+      <SidebarProvider defaultOpen={defaultOpen} sidebarBehavior={sidebarBehavior}>
         <SkipToMain />
         <AppSidebar />
         <div

@@ -13,6 +13,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { handleServerError } from '@/utils/handle-server-error'
 import { FontProvider } from './context/font-context'
 import { FontSizeProvider } from './context/font-size-context'
+import { SidebarBehaviorProvider } from './context/sidebar-behavior-context'
 import { ThemeProvider } from './context/theme-context'
 import './index.css'
 // Generated Routes
@@ -99,7 +100,9 @@ if (!rootElement.innerHTML) {
         <ThemeProvider defaultTheme='light' storageKey='vite-ui-theme'>
           <FontProvider>
             <FontSizeProvider>
-              <RouterProvider router={router} />
+              <SidebarBehaviorProvider>
+                <RouterProvider router={router} />
+              </SidebarBehaviorProvider>
             </FontSizeProvider>
           </FontProvider>
         </ThemeProvider>

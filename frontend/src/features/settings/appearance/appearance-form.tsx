@@ -2,11 +2,15 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { ChevronDownIcon } from '@radix-ui/react-icons'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
 import { fonts } from '@/config/fonts'
 import { cn } from '@/lib/utils'
-import { showSubmittedData } from '@/utils/show-submitted-data'
 import { useFont } from '@/context/font-context'
 import { useFontSize } from '@/context/font-size-context'
+import {
+  useSidebarBehavior,
+  type SidebarBehavior,
+} from '@/context/sidebar-behavior-context'
 import { useTheme } from '@/context/theme-context'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,6 +29,7 @@ const appearanceFormSchema = z.object({
   theme: z.enum(['light', 'dark']),
   font: z.enum(fonts),
   fontSize: z.number().min(12).max(24),
+  sidebarBehavior: z.enum(['hover', 'locked']),
 })
 
 type AppearanceFormValues = z.infer<typeof appearanceFormSchema>
@@ -33,12 +38,14 @@ export function AppearanceForm() {
   const { font, setFont } = useFont()
   const { fontSize, setFontSize } = useFontSize()
   const { theme, setTheme } = useTheme()
+  const { sidebarBehavior, setSidebarBehavior } = useSidebarBehavior()
 
   // This can come from your database or API.
   const defaultValues: Partial<AppearanceFormValues> = {
     theme: theme as 'light' | 'dark',
     font,
     fontSize,
+    sidebarBehavior,
   }
 
   const form = useForm<AppearanceFormValues>({
@@ -50,8 +57,13 @@ export function AppearanceForm() {
     if (data.font != font) setFont(data.font)
     if (data.theme != theme) setTheme(data.theme)
     if (data.fontSize != fontSize) setFontSize(data.fontSize)
+    if (data.sidebarBehavior != sidebarBehavior)
+      setSidebarBehavior(data.sidebarBehavior as SidebarBehavior)
 
-    showSubmittedData(data)
+    toast.success('Preferences saved successfully', {
+      description: 'Your appearance settings have been updated.',
+      duration: 3000,
+    })
   }
 
   return (
@@ -154,6 +166,56 @@ export function AppearanceForm() {
                     <span className='block w-full p-2 text-center font-normal'>
                       Dark
                     </span>
+                  </FormLabel>
+                </FormItem>
+              </RadioGroup>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name='sidebarBehavior'
+          render={({ field }) => (
+            <FormItem className='space-y-1'>
+              <FormLabel>Sidebar behavior</FormLabel>
+              <FormDescription>
+                When collapsed, the sidebar can expand on hover or stay locked
+                until you click to toggle.
+              </FormDescription>
+              <FormMessage />
+              <RadioGroup
+                onValueChange={field.onChange}
+                value={field.value ?? sidebarBehavior}
+                className='grid max-w-md grid-cols-2 gap-4 pt-2'
+              >
+                <FormItem>
+                  <FormLabel className='[&:has([data-state=checked])>div]:border-primary'>
+                    <FormControl>
+                      <RadioGroupItem value='hover' className='sr-only' />
+                    </FormControl>
+                    <div className='border-muted hover:border-accent items-center rounded-md border-2 p-1'>
+                      <span className='block w-full p-2 text-center font-normal'>
+                        Expand on hover
+                      </span>
+                      <p className='text-muted-foreground px-2 pb-2 text-center text-xs'>
+                        Sidebar expands when you hover over it
+                      </p>
+                    </div>
+                  </FormLabel>
+                </FormItem>
+                <FormItem>
+                  <FormLabel className='[&:has([data-state=checked])>div]:border-primary'>
+                    <FormControl>
+                      <RadioGroupItem value='locked' className='sr-only' />
+                    </FormControl>
+                    <div className='border-muted hover:border-accent items-center rounded-md border-2 p-1'>
+                      <span className='block w-full p-2 text-center font-normal'>
+                        Lock position
+                      </span>
+                      <p className='text-muted-foreground px-2 pb-2 text-center text-xs'>
+                        Sidebar stays collapsed until you click to toggle
+                      </p>
+                    </div>
                   </FormLabel>
                 </FormItem>
               </RadioGroup>

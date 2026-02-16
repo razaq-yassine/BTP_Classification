@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from '@tanstack/react-router'
 import type { FieldDefinition, GenericRecord } from '@/types/object-definition'
+import { ExpandableText } from '@/components/expandable-text'
 import { evaluateFormula } from './evaluateFormula'
 
 const linkClass = 'text-primary hover:underline'
@@ -99,12 +100,10 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
         return dt.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
       }
       return '(Empty)'
-    case 'text':
-      return (
-        <div className="whitespace-pre-wrap break-words">
-          {typeof val === 'object' ? JSON.stringify(val) : String(val)}
-        </div>
-      )
+    case 'text': {
+      const text = typeof val === 'object' ? JSON.stringify(val) : String(val)
+      return <ExpandableText maxLines={3}>{text}</ExpandableText>
+    }
     case 'select':
       if (field.options?.length) {
         const opt = field.options.find((o) => o.value === val)
