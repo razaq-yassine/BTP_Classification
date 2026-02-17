@@ -61,6 +61,17 @@ function pluralize(name: string): string {
   return name + 's'
 }
 
+function getProfileNames(metadataPath: string): Set<string> {
+  const names = new Set<string>(['admin']) // admin is synthetic, always valid
+  const profilesPath = path.join(metadataPath, 'profiles')
+  if (!fs.existsSync(profilesPath)) return names
+  const files = fs.readdirSync(profilesPath).filter((f) => f.endsWith('.json'))
+  for (const file of files) {
+    names.add(file.replace(/\.json$/, ''))
+  }
+  return names
+}
+
 function validateAutoNumberPattern(pattern: string): string | null {
   const match = pattern.match(/\{0+\}/g)
   if (!match || match.length !== 1) {
@@ -325,7 +336,8 @@ function validateListViewFile(
   objectName: string,
   data: Record<string, unknown>,
   fieldKeys: string[],
-  errors: ValidationError[]
+  errors: ValidationError[],
+  metadataPath?: string
 ): void {
   const pathPrefix = `${objectName}/listView.json`
   const keySet = new Set(fieldKeys)
@@ -409,6 +421,26 @@ function validateListViewFile(
       const type = view.type as string | undefined
       if (type && type !== 'standard' && type !== 'recentlyViewed') {
         addError(errors, viewPath, `Invalid type "${type}". Must be "standard" or "recentlyViewed"`, 'VIEW_INVALID_TYPE')
+      }
+
+      // Validate profiles if present
+      const profiles = view.profiles as string[] | undefined
+      if (profiles !== undefined) {
+        if (!Array.isArray(profiles)) {
+          addError(errors, viewPath, 'profiles must be an array', 'VIEW_INVALID_PROFILES')
+        } else if (profiles.length === 0) {
+          addError(errors, viewPath, 'profiles must be non-empty when specified', 'VIEW_EMPTY_PROFILES')
+        } else if (metadataPath) {
+          const validProfiles = getProfileNames(metadataPath)
+          for (let j = 0; j < profiles.length; j++) {
+            const p = profiles[j]
+            if (typeof p !== 'string' || !p.trim()) {
+              addError(errors, `${viewPath}.profiles[${j}]`, 'Profile name must be a non-empty string', 'VIEW_INVALID_PROFILE_ITEM')
+            } else if (!validProfiles.has(p)) {
+              addError(errors, `${viewPath}.profiles[${j}]`, `Profile "${p}" does not exist in metadata/profiles/`, 'VIEW_UNKNOWN_PROFILE')
+            }
+          }
+        }
       }
     }
   } else {
@@ -697,7 +729,7 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
     }
     try {
       const listViewData = JSON.parse(fs.readFileSync(path.join(objPath, 'listView.json'), 'utf-8')) as Record<string, unknown>
-      validateListViewFile(objectName, listViewData, fieldsList, errors)
+      validateListViewFile(objectName, listViewData, fieldsList, errors, metadataPath)
     } catch (e) {
       addError(errors, `${objectName}/listView.json`, `Failed to parse: ${(e as Error).message}`, 'PARSE_ERROR')
     }
@@ -758,15 +790,31 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
     }
   }
 
+  // Validate sidebars
+  const sidebarsPath = path.join(metadataPath, 'sidebars')
+  if (fs.existsSync(sidebarsPath)) {
+    const sidebarFiles = fs.readdirSync(sidebarsPath).filter((f) => f.endsWith('.json') && f !== 'index.json')
+    for (const file of sidebarFiles) {
+      const sidebarId = file.replace(/\.json$/, '')
+      try {
+        const sidebarData = JSON.parse(fs.readFileSync(path.join(sidebarsPath, file), 'utf-8')) as Record<string, unknown>
+        validateSidebarFile(sidebarId, sidebarData, errors)
+      } catch (e) {
+        addError(errors, `sidebars/${file}`, `Failed to parse: ${(e as Error).message}`, 'PARSE_ERROR')
+      }
+    }
+  }
+
   // Validate profiles
   const profilesPath = path.join(metadataPath, 'profiles')
   if (fs.existsSync(profilesPath)) {
     const profileFiles = fs.readdirSync(profilesPath).filter((f) => f.endsWith('.json'))
+    const sidebarIds = getSidebarIds(metadataPath)
     for (const file of profileFiles) {
       const profileName = file.replace(/\.json$/, '')
       try {
         const profileData = JSON.parse(fs.readFileSync(path.join(profilesPath, file), 'utf-8')) as Record<string, unknown>
-        validateProfileFile(profileName, profileData, allObjectNames, objectsPath, errors, metadataPath)
+        validateProfileFile(profileName, profileData, allObjectNames, objectsPath, errors, metadataPath, sidebarIds)
       } catch (e) {
         addError(errors, `profiles/${file}`, `Failed to parse: ${(e as Error).message}`, 'PARSE_ERROR')
       }
@@ -813,14 +861,16 @@ export function validateObject(
 
 /**
  * Validate listView.json with context - used by API when saving listView.json.
+ * Pass metadataPath to validate profiles array references.
  */
 export function validateListView(
   objectName: string,
   listViewData: Record<string, unknown>,
-  fieldKeys: string[]
+  fieldKeys: string[],
+  metadataPath?: string
 ): ValidationResult {
   const errors: ValidationError[] = []
-  validateListViewFile(objectName, listViewData, fieldKeys, errors)
+  validateListViewFile(objectName, listViewData, fieldKeys, errors, metadataPath)
   return { valid: errors.length === 0, errors }
 }
 
@@ -894,13 +944,100 @@ function loadGlobalActionIds(metadataPath: string): string[] {
   }
 }
 
+function getSidebarIds(metadataPath: string): Set<string> {
+  const ids = new Set<string>()
+  const sidebarsPath = path.join(metadataPath, 'sidebars')
+  if (!fs.existsSync(sidebarsPath)) return ids
+  const files = fs.readdirSync(sidebarsPath).filter((f) => f.endsWith('.json') && f !== 'index.json')
+  for (const file of files) {
+    ids.add(file.replace(/\.json$/, ''))
+  }
+  return ids
+}
+
+function validateSidebarFile(
+  sidebarId: string,
+  sidebarData: Record<string, unknown>,
+  errors: ValidationError[]
+): void {
+  const pathPrefix = `sidebars/${sidebarId}.json`
+  if (!sidebarData.id || typeof sidebarData.id !== 'string' || !sidebarData.id.trim()) {
+    addError(errors, pathPrefix, 'Missing required: id', 'SIDEBAR_MISSING_ID')
+  }
+  if (sidebarData.id && sidebarData.id !== sidebarId) {
+    addError(errors, pathPrefix, `Sidebar id "${sidebarData.id}" does not match filename "${sidebarId}"`, 'SIDEBAR_ID_MISMATCH')
+  }
+  if (!sidebarData.label || typeof sidebarData.label !== 'string' || !sidebarData.label.trim()) {
+    addError(errors, pathPrefix, 'Missing required: label', 'SIDEBAR_MISSING_LABEL')
+  }
+  if (!sidebarData.navGroups || !Array.isArray(sidebarData.navGroups)) {
+    addError(errors, pathPrefix, 'Missing required: navGroups (must be an array)', 'SIDEBAR_MISSING_NAV_GROUPS')
+    return
+  }
+  const navGroups = sidebarData.navGroups as Array<Record<string, unknown>>
+  for (let i = 0; i < navGroups.length; i++) {
+    const group = navGroups[i]
+    if (!group || typeof group !== 'object') {
+      addError(errors, `${pathPrefix}.navGroups[${i}]`, 'Nav group must be an object', 'SIDEBAR_INVALID_NAV_GROUP')
+      continue
+    }
+    if (!group.title || typeof group.title !== 'string' || !group.title.trim()) {
+      addError(errors, `${pathPrefix}.navGroups[${i}]`, 'Nav group must have a title', 'SIDEBAR_NAV_GROUP_MISSING_TITLE')
+    }
+    if (!group.items || !Array.isArray(group.items)) {
+      addError(errors, `${pathPrefix}.navGroups[${i}]`, 'Nav group must have items array', 'SIDEBAR_NAV_GROUP_MISSING_ITEMS')
+      continue
+    }
+    const items = group.items as Array<Record<string, unknown>>
+    for (let j = 0; j < items.length; j++) {
+      const item = items[j]
+      if (!item || typeof item !== 'object') {
+        addError(errors, `${pathPrefix}.navGroups[${i}].items[${j}]`, 'Item must be an object', 'SIDEBAR_INVALID_ITEM')
+        continue
+      }
+      const itemType = item.type as string | undefined
+      if (itemType === 'link') {
+        if (!item.title || typeof item.title !== 'string') {
+          addError(errors, `${pathPrefix}.navGroups[${i}].items[${j}]`, 'Link item must have title', 'SIDEBAR_LINK_MISSING_TITLE')
+        }
+        if (!item.url || typeof item.url !== 'string') {
+          addError(errors, `${pathPrefix}.navGroups[${i}].items[${j}]`, 'Link item must have url', 'SIDEBAR_LINK_MISSING_URL')
+        }
+      } else if (itemType === 'collapsible') {
+        if (!item.title || typeof item.title !== 'string') {
+          addError(errors, `${pathPrefix}.navGroups[${i}].items[${j}]`, 'Collapsible item must have title', 'SIDEBAR_COLLAPSIBLE_MISSING_TITLE')
+        }
+        if (!item.items || !Array.isArray(item.items)) {
+          addError(errors, `${pathPrefix}.navGroups[${i}].items[${j}]`, 'Collapsible item must have items array', 'SIDEBAR_COLLAPSIBLE_MISSING_ITEMS')
+        } else {
+          const subItems = item.items as Array<Record<string, unknown>>
+          for (let k = 0; k < subItems.length; k++) {
+            const sub = subItems[k]
+            if (sub && typeof sub === 'object' && sub.type === 'link') {
+              if (!sub.title || typeof sub.title !== 'string') {
+                addError(errors, `${pathPrefix}.navGroups[${i}].items[${j}].items[${k}]`, 'Link item must have title', 'SIDEBAR_LINK_MISSING_TITLE')
+              }
+              if (!sub.url || typeof sub.url !== 'string') {
+                addError(errors, `${pathPrefix}.navGroups[${i}].items[${j}].items[${k}]`, 'Link item must have url', 'SIDEBAR_LINK_MISSING_URL')
+              }
+            }
+          }
+        }
+      } else if (!itemType || (itemType !== 'link' && itemType !== 'collapsible')) {
+        addError(errors, `${pathPrefix}.navGroups[${i}].items[${j}]`, 'Item must have type "link" or "collapsible"', 'SIDEBAR_INVALID_ITEM_TYPE')
+      }
+    }
+  }
+}
+
 function validateProfileFile(
   profileName: string,
   profileData: Record<string, unknown>,
   objectNames: string[],
   objectsPath: string,
   errors: ValidationError[],
-  metadataPath?: string
+  metadataPath?: string,
+  sidebarIds?: Set<string>
 ): void {
   const pathPrefix = `profiles/${profileName}.json`
   
@@ -913,6 +1050,13 @@ function validateProfileFile(
   }
   if (!profileData.label || typeof profileData.label !== 'string' || !profileData.label.trim()) {
     addError(errors, pathPrefix, 'Missing required: label', 'PROFILE_MISSING_LABEL')
+  }
+  if (profileData.sidebar !== undefined) {
+    if (typeof profileData.sidebar !== 'string' || !profileData.sidebar.trim()) {
+      addError(errors, pathPrefix, 'sidebar must be a non-empty string', 'PROFILE_INVALID_SIDEBAR')
+    } else if (sidebarIds && !sidebarIds.has(profileData.sidebar as string)) {
+      addError(errors, pathPrefix, `Sidebar "${profileData.sidebar}" does not exist in metadata/sidebars/`, 'PROFILE_UNKNOWN_SIDEBAR')
+    }
   }
   if (!profileData.objectPermissions || typeof profileData.objectPermissions !== 'object') {
     addError(errors, pathPrefix, 'Missing required: objectPermissions', 'PROFILE_MISSING_OBJECT_PERMISSIONS')
@@ -998,6 +1142,7 @@ export function validateProfile(
 ): ValidationResult {
   const errors: ValidationError[] = []
   const objectNames = getObjectNames(objectsPath)
-  validateProfileFile(profileName, profileData, objectNames, objectsPath, errors, metadataPath)
+  const sidebarIds = metadataPath ? getSidebarIds(metadataPath) : undefined
+  validateProfileFile(profileName, profileData, objectNames, objectsPath, errors, metadataPath, sidebarIds)
   return { valid: errors.length === 0, errors }
 }

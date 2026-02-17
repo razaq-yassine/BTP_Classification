@@ -7,13 +7,16 @@ interface GenericObjectManagerProps {
   view: 'list' | 'detail'
   recordId?: string | number
   basePath?: string
+  /** View key from URL search (e.g. ?view=openOrders) for deep-linking */
+  initialViewKey?: string
 }
 
 export function GenericObjectManager({
   objectDefinition,
   view,
   recordId,
-  basePath
+  basePath,
+  initialViewKey,
 }: GenericObjectManagerProps) {
 
   if (view === 'detail' && recordId) {
@@ -32,6 +35,7 @@ export function GenericObjectManager({
       <GenericListView
         objectDefinition={objectDefinition}
         basePath={basePath}
+        initialViewKey={initialViewKey}
       />
   )
 }

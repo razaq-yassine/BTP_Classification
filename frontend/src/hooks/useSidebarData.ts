@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { useLocation } from '@tanstack/react-router'
+import { IconLayoutDashboard, IconSettings } from '@tabler/icons-react'
 import type { ObjectDefinition } from '@/types/object-definition'
 import type { SidebarData, NavGroup, NavItem, NavLink, NavCollapsible } from '@/components/layout/types'
 import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
@@ -7,13 +8,12 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { useAuthStore, selectUser } from '@/stores/authStore'
 import { sidebarData as staticSidebarData, settingsNavGroups } from '@/components/layout/data/sidebar-data'
 
-function buildDataNavGroup(defs: ObjectDefinition[], canRead: (objectName: string) => boolean): NavGroup | null {
+function buildDataNavItems(defs: ObjectDefinition[], canRead: (objectName: string) => boolean): NavItem[] {
   const withSidebar = defs.filter(
     (d) => d.basePath && (d.sidebar?.showInSidebar !== false) && canRead(d.name)
   )
-  if (withSidebar.length === 0) return null
+  if (withSidebar.length === 0) return []
 
-  const groupTitle = 'Data'
   const objectNavItems: NavItem[] = []
   const withParent = new Map<string, ObjectDefinition[]>()
   const noParent: ObjectDefinition[] = []
@@ -48,10 +48,7 @@ function buildDataNavGroup(defs: ObjectDefinition[], canRead: (objectName: strin
     } as NavCollapsible)
   }
 
-  return {
-    title: groupTitle,
-    items: objectNavItems,
-  }
+  return objectNavItems
 }
 
 function filterSettingsNavForProfile(groups: NavGroup[], isAdmin: boolean): NavGroup[] {
@@ -74,12 +71,24 @@ export function useSidebarData(): SidebarData {
 
   const navGroups = useMemo(() => {
     if (isSettings) return filterSettingsNavForProfile(settingsNavGroups, isAdmin)
-    if (!defs) return staticSidebarData.navGroups
-    const dataGroup = buildDataNavGroup(defs, canRead)
-    if (!dataGroup) return staticSidebarData.navGroups
-    const existing = staticSidebarData.navGroups.filter((g) => g.title !== dataGroup.title)
-    return [dataGroup, ...existing]
-  }, [defs, isSettings, canRead, isAdmin])
+
+    const dashboardItem: NavLink = {
+      title: 'Dashboard',
+      url: '/dashboard',
+      icon: IconLayoutDashboard
+    }
+    const settingsItem: NavLink = {
+      title: 'Settings',
+      url: '/settings',
+      icon: IconSettings,
+      external: true
+    }
+    const dataItems = defs ? buildDataNavItems(defs, canRead) : []
+
+    const allItems: NavItem[] = [dashboardItem, ...dataItems, settingsItem]
+
+    return [{ title: '', items: allItems }]
+  }, [defs, isSettings, canRead])
 
   return {
     ...staticSidebarData,

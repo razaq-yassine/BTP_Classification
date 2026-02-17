@@ -86,6 +86,7 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
         statistics: resolveStatistics(viewStatistics).length > 0 ? resolveStatistics(viewStatistics) : undefined,
         filters: viewConfig.filters as Record<string, any> | undefined,
         type: (viewConfig.type as 'standard' | 'recentlyViewed') || 'standard',
+        profiles: viewConfig.profiles as string[] | undefined,
       }
     })
     defaultView = (listViewData.defaultView as string) || resolvedViews[0]?.key

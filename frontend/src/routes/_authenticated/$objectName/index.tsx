@@ -4,11 +4,16 @@ import { useObjectDefinition } from '@/hooks/useObjectDefinition'
 import { Loader2 } from 'lucide-react'
 
 export const Route = createFileRoute('/_authenticated/$objectName/')({
+  validateSearch: (search: Record<string, unknown>): { view?: string } => {
+    const view = search.view
+    return { view: typeof view === 'string' && view.trim() ? view.trim() : undefined }
+  },
   component: ObjectListPage,
 })
 
 function ObjectListPage() {
   const { objectName: pathSegment } = Route.useParams()
+  const { view: viewFromSearch } = Route.useSearch()
   const { definition, loading, error } = useObjectDefinition(pathSegment, {
     resolveFromPath: true,
   })
@@ -36,6 +41,7 @@ function ObjectListPage() {
       objectDefinition={definition}
       view="list"
       basePath={basePath}
+      initialViewKey={viewFromSearch}
     />
   )
 }

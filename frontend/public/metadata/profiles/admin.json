@@ -2,6 +2,7 @@
   "name": "admin",
   "label": "Administrator",
   "description": "Full access to all objects and fields",
+  "sidebar": "admin",
   "objectPermissions": {
     "category": {
       "create": true,

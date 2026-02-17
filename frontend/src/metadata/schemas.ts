@@ -84,6 +84,8 @@ export const listViewDefinitionSchema = z.object({
   statistics: z.array(statisticsCardSchema).optional(),
   filters: z.record(z.string(), z.any()).optional(), // Filter criteria (e.g., { status: { $in: ['Open'] } })
   type: z.enum(['standard', 'recentlyViewed']).optional().default('standard'),
+  /** Profile names; if omitted, view visible to all users who can read the object */
+  profiles: z.array(z.string()).optional(),
 })
 
 export const listViewSchema = z.object({

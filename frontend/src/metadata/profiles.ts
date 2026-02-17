@@ -22,6 +22,8 @@ export interface Profile {
   name: string
   label: string
   description?: string
+  /** Sidebar ID from metadata/sidebars/. If omitted, uses "default". */
+  sidebar?: string
   objectPermissions: Record<string, ObjectPermission>
   globalActionPermissions?: Record<string, boolean>
 }

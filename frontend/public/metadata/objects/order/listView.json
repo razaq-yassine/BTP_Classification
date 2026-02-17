@@ -1,5 +1,5 @@
 {
-  "defaultView": "all",
+  "defaultView": "openOrders",
   "views": [
     {
       "key": "all",
@@ -9,37 +9,12 @@
       "defaultSortOrder": "desc",
       "pageSize": 10,
       "statistics": [
-        {
-          "key": "totalOrders",
-          "label": "Total Orders",
-          "type": "count",
-          "icon": "ShoppingCart"
-        },
-        {
-          "key": "totalRevenue",
-          "label": "Total Revenue",
-          "type": "sum",
-          "field": "totalAmount",
-          "format": "currency",
-          "icon": "DollarSign"
-        },
-        {
-          "key": "averageOrder",
-          "label": "Average Order",
-          "type": "avg",
-          "field": "totalAmount",
-          "format": "currency",
-          "icon": "TrendingUp"
-        },
-        {
-          "key": "largestOrder",
-          "label": "Largest Order",
-          "type": "max",
-          "field": "totalAmount",
-          "format": "currency",
-          "icon": "ArrowUp"
-        }
-      ]
+        {"key": "totalOrders", "label": "Total Orders", "type": "count", "icon": "ShoppingCart"},
+        {"key": "totalRevenue", "label": "Total Revenue", "type": "sum", "field": "totalAmount", "format": "currency", "icon": "DollarSign"},
+        {"key": "averageOrder", "label": "Average Order", "type": "avg", "field": "totalAmount", "format": "currency", "icon": "TrendingUp"},
+        {"key": "largestOrder", "label": "Largest Order", "type": "max", "field": "totalAmount", "format": "currency", "icon": "ArrowUp"}
+      ],
+      "profiles": ["org-user", "admin"]
     },
     {
       "key": "recentlyViewed",
@@ -48,7 +23,8 @@
       "fields": ["name", "customer", "status", "totalAmount", "orderDate"],
       "defaultSort": "orderDate",
       "defaultSortOrder": "desc",
-      "pageSize": 10
+      "pageSize": 10,
+      "profiles": ["tenant-user", "org-user", "admin"]
     },
     {
       "key": "openOrders",
@@ -57,27 +33,12 @@
       "defaultSort": "orderDate",
       "defaultSortOrder": "desc",
       "pageSize": 10,
-      "filters": {
-        "status": {
-          "$in": ["Pending", "Processing", "Confirmed"]
-        }
-      },
+      "filters": {"status": {"$in": ["Pending", "Processing", "Confirmed"]}},
       "statistics": [
-        {
-          "key": "openCount",
-          "label": "Open Orders",
-          "type": "count",
-          "icon": "Clock"
-        },
-        {
-          "key": "openRevenue",
-          "label": "Open Revenue",
-          "type": "sum",
-          "field": "totalAmount",
-          "format": "currency",
-          "icon": "DollarSign"
-        }
-      ]
+        {"key": "openCount", "label": "Open Orders", "type": "count", "icon": "Clock"},
+        {"key": "openRevenue", "label": "Open Revenue", "type": "sum", "field": "totalAmount", "format": "currency", "icon": "DollarSign"}
+      ],
+      "profiles": ["tenant-user", "org-user", "admin"]
     }
   ]
 }

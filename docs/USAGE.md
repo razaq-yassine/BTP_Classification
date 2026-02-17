@@ -25,6 +25,8 @@ This project is **metadata-driven**. The UI, API routes, and database schema are
 17. [Record History](#record-history)
 18. [Detail View Side Section](#detail-view-side-section)
 19. [Global Actions Bar](#global-actions-bar)
+20. [Sidebars](#sidebars)
+21. [Dashboard](#dashboard)
 
 ---
 
@@ -365,6 +367,47 @@ Use `editableForProfiles` when a field should be read-only for most users but ed
 ```
 
 **Statistics types**: `count`, `sum`, `avg`, `min`, `max`. For `sum`, `avg`, `min`, `max`, `field` is required.
+
+### Multiple list views
+
+You can define multiple list views per object using the `views` array. Each view has its own fields, filters, statistics, and sort. Use `defaultView` to specify which view loads first.
+
+**Profile-specific views**: Add `profiles` to a view to restrict visibility. When omitted, the view is visible to all users who can read the object. When set, only users with one of those profiles see the view.
+
+| Property   | Type     | Description                                                                 |
+| ---------- | -------- | --------------------------------------------------------------------------- |
+| `profiles` | string[] | Optional. Profile names (e.g. `org-user`, `tenant-user`). Omit = visible to all. |
+
+Example:
+
+```json
+{
+  "defaultView": "all",
+  "views": [
+    {
+      "key": "all",
+      "label": "All Orders",
+      "fields": ["name", "customer", "status", "totalAmount", "orderDate"],
+      "profiles": ["org-user", "admin"]
+    },
+    {
+      "key": "myOrders",
+      "label": "My Orders",
+      "fields": ["name", "customer", "status", "totalAmount"],
+      "filters": { "assignedTo": "$currentUser" },
+      "profiles": ["tenant-user"]
+    },
+    {
+      "key": "recentlyViewed",
+      "label": "Recently Viewed",
+      "type": "recentlyViewed",
+      "fields": ["name", "customer", "status"]
+    }
+  ]
+}
+```
+
+Views with no `profiles` (e.g. `recentlyViewed` above) are visible to everyone. List views support deep-linking via `?view=openOrders` in the URL.
 
 ---
 
@@ -856,3 +899,85 @@ Global actions are **not** tied to objects—they can be tools (Export, Sync) or
 | Admin-only | `user?.profile === 'admin'` | `adminOnlyMiddleware` |
 
 See `.cursor/rules/global-actions-bar.mdc` for AI guidance when adding global actions.
+
+---
+
+## Sidebars
+
+The sidebar shows three types of items in a single list (no group separations):
+
+1. **Dashboard** — Top link. Routes to `/dashboard`.
+2. **Data** — Object list links (Orders, Customers, etc.) built from object definitions and `canRead` permissions.
+3. **Settings** — Bottom link. Routes to `/settings`.
+
+### Sidebar metadata
+
+Sidebar metadata lives in `metadata/sidebars/`. Each profile can reference a sidebar via `sidebar` in `metadata/profiles/{name}.json`. Sidebar files can have empty `navGroups` when only Dashboard, Data, and Settings are needed.
+
+| Property   | Required | Description                                      |
+| --------- | -------- | ------------------------------------------------ |
+| `id`      | Yes      | Must match filename (e.g. `default`, `admin`)   |
+| `label`   | Yes      | Display label for the sidebar                    |
+| `navGroups` | Yes    | Array of navigation groups (can be empty)        |
+
+When `navGroups` is non-empty, each group can add custom links. See sidebar validation in `backend/src/metadata/validate.ts` for the full schema.
+
+### Profile link
+
+Add `sidebar` to a profile to use a specific sidebar:
+
+```json
+{
+  "name": "admin",
+  "label": "Administrator",
+  "sidebar": "admin",
+  "objectPermissions": { ... }
+}
+```
+
+- If `sidebar` is omitted, the profile uses `default`.
+- The sidebar ID must exist in `metadata/sidebars/` (validated on deploy).
+
+### Data items
+
+Data items (object list links) are built automatically from object definitions and `canRead` permissions. Object visibility is controlled by `object.json` → `sidebar.showInSidebar` and profile object permissions.
+
+---
+
+## Dashboard
+
+The dashboard is a **single page** at `/dashboard`. Content can vary by profile.
+
+### Profile-driven content
+
+Each profile can have its own dashboard configuration via `metadata/dashboards/{profileName}.json` (optional). When no dashboard metadata exists for a profile, a default tab set is used.
+
+### Tabs for multiple dashboards and reports
+
+Use the **top tabs** to provide multiple dashboards and reports for a single profile. For example, a sales rep might have:
+
+- **Overview** — Summary cards and recent activity
+- **Analytics** — Charts and trends
+- **Reports** — Saved reports list
+
+Configure tabs in dashboard metadata:
+
+```json
+{
+  "profile": "sales-rep",
+  "tabs": [
+    { "key": "overview", "label": "Overview", "default": true },
+    { "key": "analytics", "label": "Analytics" },
+    { "key": "reports", "label": "Reports" }
+  ],
+  "defaultTab": "overview"
+}
+```
+
+| Property     | Required | Description                                  |
+| ----------- | -------- | -------------------------------------------- |
+| `profile`   | Yes      | Profile name (must match filename)           |
+| `tabs`      | Yes      | Array of `{ key, label, default? }`          |
+| `defaultTab`| No       | Key of the initial tab (defaults to first)   |
+
+When `metadata/dashboards/{profile}.json` does not exist, the dashboard uses built-in default tabs (e.g. Overview, Analytics, Reports, Notifications).

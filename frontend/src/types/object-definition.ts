@@ -41,6 +41,8 @@ export interface ListViewDefinition {
   statistics?: StatisticsCardDefinition[]
   filters?: Record<string, any> // Filter criteria (e.g., { status: { $in: ['Open', 'Pending'] } })
   type?: 'standard' | 'recentlyViewed' // Special view types
+  /** If set, only users with one of these profiles see this view */
+  profiles?: string[]
 }
 
 export interface FieldDefinition {

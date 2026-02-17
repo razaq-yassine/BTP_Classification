@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { ObjectDefinition, GenericRecord } from '@/types/object-definition'
 import { pluralize } from '@/metadata/utils'
@@ -22,10 +22,13 @@ import { useAuthStore, selectUser } from '@/stores/authStore'
 import { usePermissions } from '@/hooks/usePermissions'
 import { getObjectAvatarClasses, getObjectButtonClasses } from '@/utils/object-color'
 import { cn } from '@/lib/utils'
+import { filterViewsByProfile } from '@/utils/list-view-utils'
 
 interface GenericListViewProps {
   objectDefinition: ObjectDefinition
   basePath?: string
+  /** Initial view key from URL (e.g. ?view=openOrders); overrides stored/pinned when valid */
+  initialViewKey?: string
 }
 
 // Helper to get/set active view from localStorage
@@ -66,10 +69,12 @@ function setPinnedViewKey(objectName: string, viewKey: string | null): void {
   }
 }
 
-export function GenericListView({ objectDefinition, basePath }: GenericListViewProps) {
+export function GenericListView({ objectDefinition, basePath, initialViewKey }: GenericListViewProps) {
   const navigate = useNavigate()
   const user = useAuthStore(selectUser)
   const { canCreate, canDelete, isFieldVisible } = usePermissions()
+  const profileName = user?.profile ?? 'standard-user'
+  const isAdmin = profileName === 'admin'
   const [records, setRecords] = useState<GenericRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -82,20 +87,34 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
   const [deleteCounter, setDeleteCounter] = useState(0)
   const initialLoadDone = useRef(false)
 
-  // Determine active view
+  // Determine active view - filter by profile (admin sees all)
   const views = objectDefinition.listView?.views
-  const hasMultipleViews = views && views.length > 1
-  const metadataDefaultView = objectDefinition.listView?.defaultView || (views?.[0]?.key)
+  const visibleViews = useMemo(
+    () => filterViewsByProfile(views ?? [], profileName, isAdmin),
+    [views, profileName, isAdmin]
+  )
+  const hasMultipleViews = visibleViews.length > 1
+  const metadataDefaultView =
+    (objectDefinition.listView?.defaultView && visibleViews.some((v) => v.key === objectDefinition.listView?.defaultView))
+      ? objectDefinition.listView.defaultView
+      : visibleViews[0]?.key
   const pinnedViewKey = getPinnedViewKey(objectDefinition.name)
   const storedViewKey = getStoredViewKey(objectDefinition.name)
-  const defaultViewKey = pinnedViewKey || metadataDefaultView || (views?.[0]?.key)
-  const [activeViewKey, setActiveViewKey] = useState<string>(
-    storedViewKey || defaultViewKey || ''
-  )
-  const [pinnedView, setPinnedView] = useState<string | null>(pinnedViewKey)
+  const pinnedInVisible = pinnedViewKey && visibleViews.some((v) => v.key === pinnedViewKey)
+  const storedInVisible = storedViewKey && visibleViews.some((v) => v.key === storedViewKey)
+  const initialInVisible = initialViewKey && visibleViews.some((v) => v.key === initialViewKey)
+  const defaultViewKey = pinnedInVisible ? pinnedViewKey : metadataDefaultView ?? visibleViews[0]?.key
+  const resolvedDefault = initialInVisible
+    ? initialViewKey!
+    : storedInVisible
+      ? storedViewKey!
+      : defaultViewKey ?? visibleViews[0]?.key ?? ''
+  const [activeViewKey, setActiveViewKey] = useState<string>(resolvedDefault)
+  const [pinnedView, setPinnedView] = useState<string | null>(pinnedInVisible ? pinnedViewKey : null)
 
-  // Get active view configuration
-  const activeView: ListViewDefinition | undefined = views?.find((v) => v.key === activeViewKey)
+  // Get active view configuration (from visible views; fallback to first if current key not visible)
+  const activeView: ListViewDefinition | undefined =
+    visibleViews.find((v) => v.key === activeViewKey) ?? visibleViews[0]
   const baseListView = activeView || {
     fields: objectDefinition.listView?.fields || [],
     defaultSort: objectDefinition.listView?.defaultSort,
@@ -113,6 +132,16 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
     }) as ListViewDefinition['fields'],
   }
 
+  // Sync activeViewKey when it's not in visibleViews (e.g. profile changed, config updated)
+  useEffect(() => {
+    if (visibleViews.length > 0 && !visibleViews.some((v) => v.key === activeViewKey)) {
+      const fallback = initialViewKey && visibleViews.some((v) => v.key === initialViewKey)
+        ? initialViewKey
+        : visibleViews[0]?.key
+      if (fallback) setActiveViewKey(fallback)
+    }
+  }, [visibleViews, activeViewKey, initialViewKey])
+
   // Debounce search to avoid refetch on every keystroke (prevents focus loss)
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300)
@@ -126,19 +155,29 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
     if (prevObjectName.current !== objectDefinition.name) {
       initialLoadDone.current = false
       prevObjectName.current = objectDefinition.name
-      // Reset to stored/pinned/default view when switching objects
+      // Reset to stored/pinned/default view when switching objects (use visible views)
       const stored = getStoredViewKey(objectDefinition.name)
       const pinned = getPinnedViewKey(objectDefinition.name)
-      const defaultKey = pinned || objectDefinition.listView?.defaultView || (views?.[0]?.key)
-      setActiveViewKey(stored || defaultKey || '')
-      setPinnedView(pinned)
+      const metaDefault =
+        objectDefinition.listView?.defaultView && visibleViews.some((v) => v.key === objectDefinition.listView?.defaultView)
+          ? objectDefinition.listView.defaultView
+          : visibleViews[0]?.key
+      const defaultKey = pinned && visibleViews.some((v) => v.key === pinned) ? pinned : metaDefault
+      const keyToUse =
+        initialViewKey && visibleViews.some((v) => v.key === initialViewKey)
+          ? initialViewKey
+          : stored && visibleViews.some((v) => v.key === stored)
+            ? stored
+            : defaultKey ?? ''
+      setActiveViewKey(keyToUse)
+      setPinnedView(pinned && visibleViews.some((v) => v.key === pinned) ? pinned : null)
     }
     if (prevViewKey.current !== activeViewKey) {
       prevViewKey.current = activeViewKey
       initialLoadDone.current = false
     }
     fetchRecords()
-  }, [objectDefinition, debouncedSearch, activeViewKey])
+  }, [objectDefinition, debouncedSearch, activeViewKey, visibleViews, initialViewKey])
 
   const fetchRecords = async () => {
     try {
@@ -299,6 +338,10 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
   const handleViewChange = (viewKey: string) => {
     setActiveViewKey(viewKey)
     setStoredViewKey(objectDefinition.name, viewKey)
+    // Update URL for shareable deep-links
+    if (basePath) {
+      navigate({ to: basePath, search: { view: viewKey }, replace: true })
+    }
   }
 
   const handlePinChange = (viewKey: string | null) => {
@@ -384,7 +427,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
               <ListViewSwitcher
                 objectIcon={objectDefinition.icon}
                 objectColor={objectDefinition.color}
-                views={views!}
+                views={visibleViews}
                 activeViewKey={activeViewKey}
                 recordCount={records.length}
                 onViewChange={handleViewChange}
@@ -406,7 +449,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
                   </div>
                   <div className="min-w-0">
                     <h1 className="text-lg sm:text-2xl font-bold tracking-tight truncate">
-                      {views?.[0]?.label ?? objectDefinition.labelPlural}
+                      {visibleViews[0]?.label ?? objectDefinition.labelPlural}
                     </h1>
                     <p className="text-xs sm:text-sm text-muted-foreground">
                       {records.length === 1 ? '1 item' : `${records.length} items`}

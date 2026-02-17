@@ -340,7 +340,7 @@ metadataRoutes.put('/objects/:name/:file', async (c) => {
       result = validateFieldsIndex(safeName, body)
     } else if (file === 'listView.json') {
       const fieldKeys = loadFieldKeys(safeName)
-      result = validateListView(safeName, body as Record<string, unknown>, fieldKeys)
+      result = validateListView(safeName, body as Record<string, unknown>, fieldKeys, METADATA_PATH)
     } else if (file === 'detailView.json') {
       const fieldKeys = loadFieldKeys(safeName)
       result = validateDetailView(safeName, body as Record<string, unknown>, fieldKeys)
