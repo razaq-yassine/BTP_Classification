@@ -1,5 +1,9 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "./styles/_variables.scss";
+@import "./styles/_keyframe-animations.scss";
+
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -66,8 +70,8 @@
 }
 
 @theme inline {
-  --font-inter: 'Inter', 'sans-serif';
-  --font-manrope: 'Manrope', 'sans-serif';
+  --font-inter: "Inter", "sans-serif";
+  --font-manrope: "Manrope", "sans-serif";
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -121,7 +125,7 @@
   }
 
   button:not(:disabled),
-  [role='button']:not(:disabled) {
+  [role="button"]:not(:disabled) {
     cursor: pointer;
   }
 
@@ -158,10 +162,10 @@
 .CollapsibleContent {
   overflow: hidden;
 }
-.CollapsibleContent[data-state='open'] {
+.CollapsibleContent[data-state="open"] {
   animation: slideDown 300ms ease-out;
 }
-.CollapsibleContent[data-state='closed'] {
+.CollapsibleContent[data-state="closed"] {
   animation: slideUp 300ms ease-out;
 }
 
@@ -181,4 +185,61 @@
   to {
     height: 0;
   }
+}
+
+/* Detail View Related Tabs: Apply smaller font size (85% of base) for content readability */
+/* This scales text content in related object tabs while preserving component-specific sizing for buttons/inputs */
+.detail-view-related-tabs {
+  --detail-view-font-size: calc(var(--base-font-size, 16px) * 0.85);
+  font-size: var(--detail-view-font-size);
+}
+
+/* Scale text utilities proportionally, but preserve button/input sizing */
+.detail-view-related-tabs
+  .text-xs:not(button):not([role="button"]):not(input):not(select):not(
+    textarea
+  ) {
+  font-size: calc(var(--detail-view-font-size) * 0.75) !important;
+}
+
+.detail-view-related-tabs
+  .text-sm:not(button):not([role="button"]):not(input):not(select):not(
+    textarea
+  ) {
+  font-size: calc(var(--detail-view-font-size) * 0.875) !important;
+}
+
+.detail-view-related-tabs
+  .text-base:not(button):not([role="button"]):not(input):not(select):not(
+    textarea
+  ) {
+  font-size: var(--detail-view-font-size) !important;
+}
+
+.detail-view-related-tabs
+  .text-lg:not(button):not([role="button"]):not(input):not(select):not(
+    textarea
+  ) {
+  font-size: calc(var(--detail-view-font-size) * 1.125) !important;
+}
+
+.detail-view-related-tabs
+  .text-xl:not(button):not([role="button"]):not(input):not(select):not(
+    textarea
+  ) {
+  font-size: calc(var(--detail-view-font-size) * 1.25) !important;
+}
+
+.detail-view-related-tabs
+  .text-2xl:not(button):not([role="button"]):not(input):not(select):not(
+    textarea
+  ) {
+  font-size: calc(var(--detail-view-font-size) * 1.5) !important;
+}
+
+.detail-view-related-tabs
+  .text-3xl:not(button):not([role="button"]):not(input):not(select):not(
+    textarea
+  ) {
+  font-size: calc(var(--detail-view-font-size) * 1.875) !important;
 }

@@ -35,6 +35,7 @@ import { Route as AuthenticatedSettingsProfilesRouteImport } from './routes/_aut
 import { Route as AuthenticatedSettingsObjectManagerRouteImport } from './routes/_authenticated/settings/object-manager'
 import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
+import { Route as AuthenticatedSettingsCurrencyRouteImport } from './routes/_authenticated/settings/currency'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedDevComponentsSalesforcePathRouteImport } from './routes/_authenticated/dev-components/salesforce-path'
@@ -47,6 +48,7 @@ import { Route as AuthenticatedSettingsProfilesProfileNameRouteImport } from './
 import { Route as AuthenticatedSettingsObjectManagerObjectNameRouteImport } from './routes/_authenticated/settings/object-manager/$objectName'
 import { Route as AuthenticatedSettingsProfilesProfileNameIndexRouteImport } from './routes/_authenticated/settings/profiles/$profileName/index'
 import { Route as AuthenticatedSettingsProfilesProfileNameObjectsRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects'
+import { Route as AuthenticatedSettingsProfilesProfileNameGlobalActionsRouteImport } from './routes/_authenticated/settings/profiles/$profileName/global-actions'
 import { Route as AuthenticatedSettingsProfilesProfileNameObjectsIndexRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects/index'
 import { Route as AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects/$objectName'
 
@@ -187,6 +189,12 @@ const AuthenticatedSettingsDisplayRoute =
     path: '/display',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
+const AuthenticatedSettingsCurrencyRoute =
+  AuthenticatedSettingsCurrencyRouteImport.update({
+    id: '/currency',
+    path: '/currency',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedSettingsAppearanceRoute =
   AuthenticatedSettingsAppearanceRouteImport.update({
     id: '/appearance',
@@ -259,6 +267,12 @@ const AuthenticatedSettingsProfilesProfileNameObjectsRoute =
     path: '/objects',
     getParentRoute: () => AuthenticatedSettingsProfilesProfileNameRoute,
   } as any)
+const AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute =
+  AuthenticatedSettingsProfilesProfileNameGlobalActionsRouteImport.update({
+    id: '/global-actions',
+    path: '/global-actions',
+    getParentRoute: () => AuthenticatedSettingsProfilesProfileNameRoute,
+  } as any)
 const AuthenticatedSettingsProfilesProfileNameObjectsIndexRoute =
   AuthenticatedSettingsProfilesProfileNameObjectsIndexRouteImport.update({
     id: '/',
@@ -293,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/settings/currency': typeof AuthenticatedSettingsCurrencyRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/object-manager': typeof AuthenticatedSettingsObjectManagerRouteWithChildren
@@ -308,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameRouteWithChildren
   '/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/settings/profiles/': typeof AuthenticatedSettingsProfilesIndexRoute
+  '/settings/profiles/$profileName/global-actions': typeof AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute
   '/settings/profiles/$profileName/objects': typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren
   '/settings/profiles/$profileName/': typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
   '/settings/profiles/$profileName/objects/$objectName': typeof AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute
@@ -333,6 +349,7 @@ export interface FileRoutesByTo {
   '/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/settings/currency': typeof AuthenticatedSettingsCurrencyRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/$objectName': typeof AuthenticatedObjectNameIndexRoute
@@ -345,6 +362,7 @@ export interface FileRoutesByTo {
   '/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
   '/settings/object-manager': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/settings/profiles': typeof AuthenticatedSettingsProfilesIndexRoute
+  '/settings/profiles/$profileName/global-actions': typeof AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute
   '/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
   '/settings/profiles/$profileName/objects/$objectName': typeof AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute
   '/settings/profiles/$profileName/objects': typeof AuthenticatedSettingsProfilesProfileNameObjectsIndexRoute
@@ -372,6 +390,7 @@ export interface FileRoutesById {
   '/_authenticated/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/_authenticated/settings/currency': typeof AuthenticatedSettingsCurrencyRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/_authenticated/settings/object-manager': typeof AuthenticatedSettingsObjectManagerRouteWithChildren
@@ -387,6 +406,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameRouteWithChildren
   '/_authenticated/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/_authenticated/settings/profiles/': typeof AuthenticatedSettingsProfilesIndexRoute
+  '/_authenticated/settings/profiles/$profileName/global-actions': typeof AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute
   '/_authenticated/settings/profiles/$profileName/objects': typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren
   '/_authenticated/settings/profiles/$profileName/': typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
   '/_authenticated/settings/profiles/$profileName/objects/$objectName': typeof AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute
@@ -415,6 +435,7 @@ export interface FileRouteTypes {
     | '/dev-components/salesforce-path'
     | '/settings/account'
     | '/settings/appearance'
+    | '/settings/currency'
     | '/settings/display'
     | '/settings/notifications'
     | '/settings/object-manager'
@@ -430,6 +451,7 @@ export interface FileRouteTypes {
     | '/settings/profiles/$profileName'
     | '/settings/object-manager/'
     | '/settings/profiles/'
+    | '/settings/profiles/$profileName/global-actions'
     | '/settings/profiles/$profileName/objects'
     | '/settings/profiles/$profileName/'
     | '/settings/profiles/$profileName/objects/$objectName'
@@ -455,6 +477,7 @@ export interface FileRouteTypes {
     | '/dev-components/salesforce-path'
     | '/settings/account'
     | '/settings/appearance'
+    | '/settings/currency'
     | '/settings/display'
     | '/settings/notifications'
     | '/$objectName'
@@ -467,6 +490,7 @@ export interface FileRouteTypes {
     | '/settings/object-manager/$objectName'
     | '/settings/object-manager'
     | '/settings/profiles'
+    | '/settings/profiles/$profileName/global-actions'
     | '/settings/profiles/$profileName'
     | '/settings/profiles/$profileName/objects/$objectName'
     | '/settings/profiles/$profileName/objects'
@@ -493,6 +517,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dev-components/salesforce-path'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
+    | '/_authenticated/settings/currency'
     | '/_authenticated/settings/display'
     | '/_authenticated/settings/notifications'
     | '/_authenticated/settings/object-manager'
@@ -508,6 +533,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/profiles/$profileName'
     | '/_authenticated/settings/object-manager/'
     | '/_authenticated/settings/profiles/'
+    | '/_authenticated/settings/profiles/$profileName/global-actions'
     | '/_authenticated/settings/profiles/$profileName/objects'
     | '/_authenticated/settings/profiles/$profileName/'
     | '/_authenticated/settings/profiles/$profileName/objects/$objectName'
@@ -714,6 +740,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsDisplayRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
+    '/_authenticated/settings/currency': {
+      id: '/_authenticated/settings/currency'
+      path: '/currency'
+      fullPath: '/settings/currency'
+      preLoaderRoute: typeof AuthenticatedSettingsCurrencyRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/appearance': {
       id: '/_authenticated/settings/appearance'
       path: '/appearance'
@@ -798,6 +831,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteImport
       parentRoute: typeof AuthenticatedSettingsProfilesProfileNameRoute
     }
+    '/_authenticated/settings/profiles/$profileName/global-actions': {
+      id: '/_authenticated/settings/profiles/$profileName/global-actions'
+      path: '/global-actions'
+      fullPath: '/settings/profiles/$profileName/global-actions'
+      preLoaderRoute: typeof AuthenticatedSettingsProfilesProfileNameGlobalActionsRouteImport
+      parentRoute: typeof AuthenticatedSettingsProfilesProfileNameRoute
+    }
     '/_authenticated/settings/profiles/$profileName/objects/': {
       id: '/_authenticated/settings/profiles/$profileName/objects/'
       path: '/'
@@ -852,12 +892,15 @@ const AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren =
   )
 
 interface AuthenticatedSettingsProfilesProfileNameRouteChildren {
+  AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute: typeof AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute
   AuthenticatedSettingsProfilesProfileNameObjectsRoute: typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren
   AuthenticatedSettingsProfilesProfileNameIndexRoute: typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
 }
 
 const AuthenticatedSettingsProfilesProfileNameRouteChildren: AuthenticatedSettingsProfilesProfileNameRouteChildren =
   {
+    AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute:
+      AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute,
     AuthenticatedSettingsProfilesProfileNameObjectsRoute:
       AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren,
     AuthenticatedSettingsProfilesProfileNameIndexRoute:
@@ -890,6 +933,7 @@ const AuthenticatedSettingsProfilesRouteWithChildren =
 interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
+  AuthenticatedSettingsCurrencyRoute: typeof AuthenticatedSettingsCurrencyRoute
   AuthenticatedSettingsDisplayRoute: typeof AuthenticatedSettingsDisplayRoute
   AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
   AuthenticatedSettingsObjectManagerRoute: typeof AuthenticatedSettingsObjectManagerRouteWithChildren
@@ -901,6 +945,7 @@ const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteCh
   {
     AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
     AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
+    AuthenticatedSettingsCurrencyRoute: AuthenticatedSettingsCurrencyRoute,
     AuthenticatedSettingsDisplayRoute: AuthenticatedSettingsDisplayRoute,
     AuthenticatedSettingsNotificationsRoute:
       AuthenticatedSettingsNotificationsRoute,

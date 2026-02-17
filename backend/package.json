@@ -18,6 +18,7 @@
     "db:deploy": "pnpm exec tsc -p ../shared/tsconfig.json && pnpm run db:validate-metadata && pnpm run db:generate-from-metadata-temp && pnpm run db:generate-temp-noninteractive && pnpm run db:fix-pending-migrations && pnpm run db:migrate && pnpm run db:ensure-tables && pnpm run db:verify-schema && pnpm run db:sync-drops && cp drizzle-temp/db/schema.ts src/db/schema.ts && cp drizzle-temp/routes/entity-registry.generated.ts src/routes/entity-registry.generated.ts",
     "db:seed": "tsx src/seed.ts",
     "db:seed-customers": "tsx scripts/seed-customers.ts",
+    "db:seed-deploytest": "tsx scripts/seed-deploytest.ts",
     "db:seed-multi-tenant": "tsx scripts/seed-multi-tenant.ts",
     "db:validate-metadata": "tsx scripts/validate-metadata.ts",
     "db:verify-schema": "tsx scripts/verify-schema.ts"

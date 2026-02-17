@@ -5,8 +5,10 @@ import axios from 'axios'
  * Backend runs on http://localhost:8000 with context-path: /api
  * All endpoints are prefixed with /api automatically by Spring Boot
  */
+export const apiBaseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: apiBaseUrl,
   timeout: 10000, // 10 second timeout
   headers: {
     'Accept': 'application/json',
@@ -46,7 +48,7 @@ function isNetworkError(err: { response?: unknown; code?: string; message?: stri
     code === 'ERR_NETWORK' ||
     code === 'ECONNREFUSED' ||
     code === 'ETIMEDOUT' ||
-    (message && (message.includes('Network Error') || message.includes('Failed to fetch')))
+    Boolean(message && (message.includes('Network Error') || message.includes('Failed to fetch')))
   )
 }
 

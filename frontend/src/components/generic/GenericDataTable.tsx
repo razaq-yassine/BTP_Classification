@@ -114,7 +114,7 @@ export function GenericDataTable<TData extends GenericRecord>({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && hasMore) {
-          setDisplayedCount((prev) => Math.min(prev + pageSize, processedData.length))
+          setDisplayedCount((prev: number) => Math.min(prev + pageSize, processedData.length))
         }
       },
       { rootMargin: '100px', threshold: 0 }
@@ -252,7 +252,7 @@ export function GenericDataTable<TData extends GenericRecord>({
                     {/* Data cells */}
                     {fields.map((field: any, fieldIndex: number) => {
                       // Evaluate formula fields on the fly
-                      let value = row[field.key as keyof typeof row]
+                      let value: unknown = row[field.key as keyof typeof row]
                       if (field.type === 'formula' && field.formulaExpression) {
                         value = evaluateFormula(field.formulaExpression, row as any)
                       }

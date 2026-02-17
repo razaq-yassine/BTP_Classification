@@ -16,7 +16,77 @@ import { SearchableSelect, SearchableSelectOption } from '@/components/ui/search
 import { MultiSelect, MultiSelectOption } from '@/components/ui/multi-select'
 import { DateTimePicker } from '@/components/ui/datetime-picker'
 import { RecordLookup } from '@/components/ui/record-lookup'
+import { PasswordInput } from '@/components/password-input'
+import { RichTextEditor } from '@/components/rich-text-editor'
 import { useAuthStore, selectUser } from '@/stores/authStore'
+import api from '@/services/api'
+import { toast } from 'sonner'
+
+function FileFieldInput({
+  value,
+  onChange,
+  disabled,
+  objectName,
+  recordId,
+  fieldKey,
+  label: _label,
+  className,
+}: {
+  value: any
+  onChange: (value: string) => void
+  disabled: boolean
+  objectName?: string
+  recordId?: string | number
+  fieldKey: string
+  label: string
+  className?: string
+}) {
+  const [uploading, setUploading] = useState(false)
+  const canUpload = objectName && recordId != null && !disabled
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !canUpload) return
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const rid = recordId === 'temp' ? `temp-${Date.now()}` : String(recordId)
+      const { data } = await api.post<{ path: string }>(
+        `/api/upload/${objectName}/${rid}/${fieldKey}`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      )
+      onChange(data.path)
+      toast.success('File uploaded')
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Upload failed'
+      toast.error(msg)
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      {value && (
+        <div className="text-sm text-muted-foreground">
+          Current: {typeof value === 'string' ? value.split('/').pop() : value}
+        </div>
+      )}
+      <Input
+        type="file"
+        onChange={handleFileChange}
+        disabled={disabled || !canUpload || uploading}
+        className={className}
+      />
+      {!canUpload && objectName && (
+        <p className="text-xs text-muted-foreground">Save the record first to upload files.</p>
+      )}
+    </div>
+  )
+}
 
 interface GenericDetailInputFormatterProps {
   fieldDefinition: FieldDefinition
@@ -25,6 +95,10 @@ interface GenericDetailInputFormatterProps {
   disabled?: boolean
   className?: string
   showLabel?: boolean // Whether to show the field label
+  /** For file upload: object name (e.g. 'customer') */
+  objectName?: string
+  /** For file upload: record id, or 'temp' for create flow */
+  recordId?: string | number
 }
 
 export function GenericDetailInputFormatter({
@@ -33,7 +107,9 @@ export function GenericDetailInputFormatter({
   onChange,
   disabled = false,
   className,
-  showLabel = true
+  showLabel = true,
+  objectName: objectNameProp,
+  recordId,
 }: GenericDetailInputFormatterProps) {
   const user = useAuthStore(selectUser)
   const { type, label, required, isRequired, isImportant, options } = fieldDefinition
@@ -48,9 +124,11 @@ export function GenericDetailInputFormatter({
   const [emailError, setEmailError] = useState('')
   const [phoneError, setPhoneError] = useState('')
 
-  const isAutoNumber = type === 'autoNumber' || type === 'autonumber'
+  const isAutoNumber = type === 'autoNumber'
   const isNameField = fieldDefinition.key === 'name'
-  const isMasterDetail = fieldDefinition.relationshipType === 'masterDetail'
+  const isMasterDetail =
+    fieldDefinition.type === 'masterDetail' ||
+    fieldDefinition.relationshipType === 'masterDetail'
   const isFieldRequired = (required || isRequired || (isNameField && !isAutoNumber) || isMasterDetail)
   const isFieldImportant = isImportant
 
@@ -169,11 +247,22 @@ export function GenericDetailInputFormatter({
       case 'url':
         return (
           <Input
-            type="url"
+            type="text"
             value={value || ''}
             onChange={(e) => onChange(e.target.value)}
             disabled={disabled}
-            placeholder="https://"
+            placeholder="e.g. example.com"
+            className={className}
+          />
+        )
+
+      case 'password':
+        return (
+          <PasswordInput
+            value={value || ''}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={disabled}
+            placeholder={`Enter ${label.toLowerCase()}`}
             className={className}
           />
         )
@@ -299,6 +388,7 @@ export function GenericDetailInputFormatter({
         )
 
       case 'reference':
+      case 'masterDetail': {
         const { objectName, additionalFields = [], apiEndpoint, searchBy } = fieldDefinition as any
         if (!objectName) {
           return (
@@ -334,6 +424,7 @@ export function GenericDetailInputFormatter({
             userId={user?.id}
           />
         )
+      }
 
       case 'select':
         if (!options || options.length === 0) {
@@ -400,6 +491,111 @@ export function GenericDetailInputFormatter({
               {value ? 'Yes' : 'No'}
             </Label>
           </div>
+        )
+
+      case 'geolocation': {
+        let parsed: { latitude?: number; longitude?: number } = {}
+        try {
+          parsed = typeof value === 'string' ? JSON.parse(value || '{}') : value || {}
+        } catch {
+          parsed = {}
+        }
+        const lat = parsed.latitude ?? ''
+        const lng = parsed.longitude ?? ''
+        return (
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Label className="text-xs text-muted-foreground">Latitude</Label>
+              <Input
+                type="number"
+                step="any"
+                min={-90}
+                max={90}
+                value={lat}
+                onChange={(e) => {
+                  const v = e.target.value
+                  const num = v === '' ? undefined : parseFloat(v)
+                  onChange(JSON.stringify({ ...parsed, latitude: num }))
+                }}
+                disabled={disabled}
+                placeholder="-90 to 90"
+                className={className}
+              />
+            </div>
+            <div className="flex-1">
+              <Label className="text-xs text-muted-foreground">Longitude</Label>
+              <Input
+                type="number"
+                step="any"
+                min={-180}
+                max={180}
+                value={lng}
+                onChange={(e) => {
+                  const v = e.target.value
+                  const num = v === '' ? undefined : parseFloat(v)
+                  onChange(JSON.stringify({ ...parsed, longitude: num }))
+                }}
+                disabled={disabled}
+                placeholder="-180 to 180"
+                className={className}
+              />
+            </div>
+          </div>
+        )
+      }
+
+      case 'address': {
+        const addrFields = ['street', 'city', 'state', 'zip', 'country']
+        let parsed: Record<string, string> = {}
+        try {
+          parsed = typeof value === 'string' ? JSON.parse(value || '{}') : value || {}
+        } catch {
+          parsed = {}
+        }
+        return (
+          <div className="space-y-2">
+            {addrFields.map((key) => (
+              <div key={key}>
+                <Label className="text-xs text-muted-foreground capitalize">{key}</Label>
+                <Input
+                  value={parsed[key] ?? ''}
+                  onChange={(e) => {
+                    const next = { ...parsed, [key]: e.target.value }
+                    onChange(JSON.stringify(next))
+                  }}
+                  disabled={disabled}
+                  placeholder={`Enter ${key}`}
+                  className={cn('mt-0.5', className)}
+                />
+              </div>
+            ))}
+          </div>
+        )
+      }
+
+      case 'richText':
+        return (
+          <RichTextEditor
+            value={value || ''}
+            onChange={onChange}
+            disabled={disabled}
+            placeholder={`Enter ${label.toLowerCase()}`}
+            className={className}
+          />
+        )
+
+      case 'file':
+        return (
+          <FileFieldInput
+            value={value}
+            onChange={onChange}
+            disabled={disabled}
+            objectName={objectNameProp}
+            recordId={recordId}
+            fieldKey={fieldDefinition.key}
+            label={label}
+            className={className}
+          />
         )
 
       default:

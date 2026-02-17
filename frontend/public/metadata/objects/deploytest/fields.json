@@ -1,1 +1,1 @@
-["name","fString","fNumber","fBoolean","fDate","fDatetime","fEmail","fPhone","fText","fUrl","fSelect","fMultiselect","fReference","fFormula","fComputed"]
+["name","fString","fNumber","fBoolean","fDate","fDatetime","fEmail","fPhone","fText","fUrl","fPassword","fGeolocation","fAddress","fRichText","fFile","fSelect","fMultiselect","fReference","fFormula","fComputed"]

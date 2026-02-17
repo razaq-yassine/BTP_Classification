@@ -3,15 +3,22 @@
   "label": "Tenant User",
   "description": "Full access to tenant-scoped objects (customers, orders, order items) and read access to platform-wide objects",
   "objectPermissions": {
-    "customer": { "create": true, "read": true, "update": true, "delete": true },
-    "order": { "create": true, "read": true, "update": true, "delete": true },
-    "orderitem": { "create": true, "read": true, "update": true, "delete": true },
-    "product": { "create": false, "read": true, "update": false, "delete": false },
-    "category": { "create": false, "read": true, "update": false, "delete": false },
-    "supplier": { "create": false, "read": true, "update": false, "delete": false },
-    "warehouse": { "create": false, "read": true, "update": false, "delete": false },
-    "opportunity": { "create": true, "read": true, "update": true, "delete": true },
-    "organization": { "create": false, "read": true, "update": false, "delete": false },
-    "tenant": { "create": false, "read": true, "update": false, "delete": false }
+    "customer": {"create": true, "read": true, "update": true, "delete": true},
+    "order": {"create": true, "read": true, "update": true, "delete": true},
+    "orderitem": {"create": true, "read": true, "update": true, "delete": true},
+    "product": {"create": false, "read": true, "update": false, "delete": false},
+    "category": {"create": false, "read": true, "update": false, "delete": false},
+    "supplier": {"create": false, "read": true, "update": false, "delete": false},
+    "warehouse": {"create": false, "read": true, "update": false, "delete": false},
+    "opportunity": {"create": true, "read": true, "update": true, "delete": true},
+    "organization": {"create": false, "read": true, "update": false, "delete": false},
+    "tenant": {"create": false, "read": true, "update": false, "delete": false}
+  },
+  "globalActionPermissions": {
+    "quick-create-order": true,
+    "quick-create-customer": true,
+    "quick-create-product": true,
+    "quick-create-opportunity": true,
+    "quick-create-category": true
   }
 }

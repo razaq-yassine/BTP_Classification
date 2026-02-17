@@ -36,6 +36,7 @@ export function validateFormData(
     const isRequired =
       field.required ||
       field.isRequired ||
+      field.type === "masterDetail" ||
       field.relationshipType === "masterDetail";
     if (isRequired && isEmpty) {
       errors.push({
@@ -88,6 +89,42 @@ export function validateFormData(
             });
           }
           break;
+
+        case "url":
+          if (typeof value === "string" && !isValidUrl(value)) {
+            errors.push({
+              field: field.key,
+              message: `${field.label} must be a valid URL`
+            });
+          }
+          break;
+
+        case "geolocation":
+          if (typeof value === "string" && value.trim() !== "") {
+            try {
+              const loc = JSON.parse(value);
+              const lat = loc?.latitude;
+              const lng = loc?.longitude;
+              if (lat != null && (typeof lat !== "number" || lat < -90 || lat > 90)) {
+                errors.push({
+                  field: field.key,
+                  message: `${field.label} latitude must be between -90 and 90`
+                });
+              }
+              if (lng != null && (typeof lng !== "number" || lng < -180 || lng > 180)) {
+                errors.push({
+                  field: field.key,
+                  message: `${field.label} longitude must be between -180 and 180`
+                });
+              }
+            } catch {
+              errors.push({
+                field: field.key,
+                message: `${field.label} must be valid geolocation data`
+              });
+            }
+          }
+          break;
       }
     }
   });
@@ -123,6 +160,20 @@ function isValidPhone(phone: string): boolean {
 function isValidDate(dateString: string): boolean {
   const date = new Date(dateString);
   return !isNaN(date.getTime());
+}
+
+/**
+ * Validates a URL string: must have a domain (at least one dot) and no spaces.
+ * Does not require http/https.
+ */
+function isValidUrl(url: string): boolean {
+  const trimmed = url.trim();
+  if (trimmed.includes(" ")) return false;
+  if (!trimmed.includes(".")) return false;
+  if (!/\w/.test(trimmed)) return false;
+  const parts = trimmed.split(".");
+  const lastPart = parts[parts.length - 1];
+  return lastPart.length >= 2 && /^[a-zA-Z0-9-]+$/.test(lastPart);
 }
 
 /**

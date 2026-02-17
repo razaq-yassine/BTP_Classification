@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -8,49 +7,13 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Header } from '@/components/layout/header'
 import { Main } from '@/components/layout/main'
-import { TopNav } from '@/components/layout/top-nav'
-import { ProfileDropdown } from '@/components/profile-dropdown'
-import { Search } from '@/components/search'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { Overview } from './components/overview'
 import { RecentSales } from './components/recent-sales'
-import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
-
-const staticTopNav = [
-  { title: 'Overview', href: 'dashboard/overview', isActive: true, disabled: false },
-  { title: 'Settings', href: 'dashboard/settings', isActive: false, disabled: true },
-]
 
 export default function Dashboard() {
-  const { data: defs } = useObjectDefinitionsQuery()
-  const topNav = useMemo(() => {
-    if (!defs?.length) return staticTopNav
-    const withNav = defs.filter((d) => d.basePath && (d.sidebar?.showInSidebar !== false))
-    const dataLinks = withNav.slice(0, 2).map((d) => ({
-      title: d.labelPlural,
-      href: d.basePath!,
-      isActive: false,
-      disabled: true,
-    }))
-    return [staticTopNav[0], ...dataLinks, staticTopNav[1]]
-  }, [defs])
-
   return (
-    <>
-      {/* ===== Top Heading ===== */}
-      <Header>
-        <TopNav links={topNav} />
-        <div className='ml-auto flex items-center space-x-4'>
-          <Search />
-          <ThemeSwitch />
-          <ProfileDropdown />
-        </div>
-      </Header>
-
-      {/* ===== Main ===== */}
-      <Main>
+    <Main>
         <div className='mb-2 flex items-center justify-between space-y-2'>
           <h1 className='text-2xl font-bold tracking-tight'>Dashboard</h1>
           <div className='flex items-center space-x-2'>
@@ -203,8 +166,7 @@ export default function Dashboard() {
             </div>
           </TabsContent>
         </Tabs>
-      </Main>
-    </>
+    </Main>
   )
 }
 

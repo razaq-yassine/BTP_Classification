@@ -47,6 +47,17 @@ export function usePermissions() {
     }
 
     /**
+     * Check if user has permission to use a global action (tool, quick create, etc.)
+     */
+    const canUseGlobalAction = (actionId: string): boolean => {
+      if (isAdmin) return true
+      if (!profile) return false
+      const perms = profile.globalActionPermissions
+      if (!perms) return false
+      return perms[actionId] === true
+    }
+
+    /**
      * Check if user has field permission (visible or editable)
      */
     const hasFieldPermission = (
@@ -93,6 +104,7 @@ export function usePermissions() {
       canRead: (objectName: string) => hasObjectPermission(objectName, 'read'),
       canUpdate: (objectName: string) => hasObjectPermission(objectName, 'update'),
       canDelete: (objectName: string) => hasObjectPermission(objectName, 'delete'),
+      canUseGlobalAction,
       isFieldVisible: (objectName: string, fieldKey: string) =>
         hasFieldPermission(objectName, fieldKey, 'visible'),
       canEditField: (objectName: string, fieldKey: string) =>

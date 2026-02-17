@@ -1,11 +1,1 @@
-{
-  "key": "order",
-  "label": "Order",
-  "type": "reference",
-  "objectName": "order",
-  "relationshipType": "masterDetail",
-  "required": true,
-  "editable": true,
-  "sortable": true,
-  "searchable": true
-}
+{"key":"order","label":"Order","type":"masterDetail","objectName":"order","required":true,"editable":true,"sortable":true,"searchable":true}

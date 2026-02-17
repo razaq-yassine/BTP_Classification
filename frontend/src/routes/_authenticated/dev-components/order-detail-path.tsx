@@ -100,7 +100,7 @@ function OrderDetailDemo({ definition }: { definition: ObjectDefinition }) {
           colorHover: s.colorHover,
         }))
       : []
-  const pathFieldValue = path?.enabled ? String(record[path.field] ?? '') : ''
+  const pathFieldValue = path?.enabled ? String((record as Record<string, unknown>)[path.field] ?? '') : ''
   const showPath = path?.enabled && pathSteps.length > 0
 
   // We need to render the detail view layout. For demo we'll use a simplified version

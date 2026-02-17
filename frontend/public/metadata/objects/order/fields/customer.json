@@ -1,1 +1,1 @@
-{"key":"customer","label":"Customer","type":"reference","objectName":"customer","apiEndpoint":"/api/customers","searchBy":"fullName","editable":true}
+{"key":"customer","label":"Customer","type":"masterDetail","objectName":"customer","apiEndpoint":"/api/customers","searchBy":"fullName","required":true,"editable":true}

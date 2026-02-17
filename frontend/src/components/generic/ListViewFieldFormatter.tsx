@@ -1,6 +1,7 @@
 import React from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { format, isValid } from 'date-fns'
+import { formatCurrency } from '@/stores/appConfigStore'
 
 export interface SelectOption {
   value: string
@@ -10,7 +11,7 @@ export interface SelectOption {
 }
 
 export interface FieldFormatterProps {
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'formula'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'masterDetail' | 'formula' | 'password' | 'geolocation' | 'address' | 'richText' | 'file'
   value: any
   format?: string
   options?: SelectOption[]
@@ -93,6 +94,48 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
         </span>
       )
 
+    case 'password':
+      return <span className="text-sm">••••••••</span>
+
+    case 'geolocation': {
+      let loc: { latitude?: number; longitude?: number }
+      try {
+        loc = typeof value === 'string' ? JSON.parse(value) : value
+      } catch {
+        return EMPTY
+      }
+      if (loc?.latitude == null && loc?.longitude == null) return EMPTY
+      const label = [loc.latitude, loc.longitude].filter((x) => x != null).join(', ')
+      return <span className="text-sm">{label}</span>
+    }
+
+    case 'address': {
+      let addr: Record<string, string>
+      try {
+        addr = typeof value === 'string' ? JSON.parse(value) : value
+      } catch {
+        return EMPTY
+      }
+      if (!addr || typeof addr !== 'object') return EMPTY
+      const parts = [addr.street, addr.city, addr.state, addr.zip, addr.country].filter(Boolean)
+      const display = parts.length > 0 ? parts.join(', ') : ''
+      const truncated = display.length > 40 ? `${display.substring(0, 40)}...` : display
+      return truncated ? <span className="text-sm" title={display}>{truncated}</span> : EMPTY
+    }
+
+    case 'richText': {
+      const str = typeof value === 'string' ? value : String(value ?? '')
+      const stripped = str.replace(/<[^>]*>/g, '').trim()
+      const truncated = stripped.length > 50 ? `${stripped.substring(0, 50)}...` : stripped
+      return truncated ? <span className="text-sm" title={stripped}>{truncated}</span> : EMPTY
+    }
+
+    case 'file': {
+      const path = typeof value === 'string' ? value : String(value ?? '')
+      const filename = path.split('/').pop() || path
+      return filename ? <span className="text-sm">{filename}</span> : EMPTY
+    }
+
     case 'select':
       return (
         <SelectColoredDiv value={value} options={options ?? []} />
@@ -146,7 +189,8 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
         return EMPTY
       }
 
-    case 'reference': {
+    case 'reference':
+    case 'masterDetail': {
       const refId = typeof value === 'object' ? value?.id : value
       const displayName =
         typeof value === 'object'
@@ -176,7 +220,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
       const isCurrency = renderType === 'currency'
       const isPercent = renderType === 'percent'
       const formatted = isCurrency
-        ? `$${numValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        ? formatCurrency(numValue)
         : isPercent
           ? `${(numValue * 100).toFixed(1)}%`
           : numValue.toLocaleString()
@@ -208,9 +252,9 @@ function SelectColoredDiv({ value, options }: { value: string; options: SelectOp
       style={
         color
           ? {
-              backgroundColor: `${color}20`,
-              color: color,
-            }
+            backgroundColor: `${color}20`,
+            color: color,
+          }
           : undefined
       }
     >

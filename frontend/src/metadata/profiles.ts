@@ -23,6 +23,7 @@ export interface Profile {
   label: string
   description?: string
   objectPermissions: Record<string, ObjectPermission>
+  globalActionPermissions?: Record<string, boolean>
 }
 
 async function fetchJson<T>(path: string): Promise<T> {

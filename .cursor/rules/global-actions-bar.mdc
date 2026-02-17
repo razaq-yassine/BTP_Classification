@@ -1,0 +1,42 @@
+---
+description: Use the Global Actions Bar for custom global actions; enforce security via profiles and permissions
+globs: frontend/src/components/layout/authenticated-layout.tsx, frontend/src/components/layout/global-actions-bar.tsx, frontend/src/components/layout/global-actions.tsx
+alwaysApply: false
+---
+
+# Global Actions Bar
+
+The area between the sidebar collapse button and the search bar (in the top header) is the **Global Actions Bar**. It is reserved for **custom global actions**—project-specific shortcuts like quick create, export, or commonly used actions.
+
+**Responsive**: On mobile/tablet (768px, same as sidebar) or when there are more than 4 actions, they collapse into a star icon button that opens a dropdown. `GlobalActionsBar` accepts an explicit `actions` prop; `GlobalActions` computes the actions and passes them in.
+
+## When Adding Global Actions
+
+1. **Location**: Edit [global-actions.tsx](frontend/src/components/layout/global-actions.tsx). Add entries to `QUICK_CREATE_CONFIG` and ensure the action is defined in `metadata/global-actions.json` and permitted in the profile. `GlobalActions` renders `GlobalActionsBar` with the computed actions.
+
+2. **Examples**:
+   - Quick create buttons: "New Order", "New Customer", "New Invoice"
+   - Frequently used actions: "Export", "Sync", "Refresh"
+   - Contextual shortcuts: "Go to Dashboard", links to key objects
+
+3. **Do not** use this area for navigation links (Overview, Analytics, Categories, etc.). Use the sidebar for navigation. The Global Actions Bar is for **actions**, not navigation.
+
+## Security (Required)
+
+**Always enforce security for global actions:**
+
+| Action type | Frontend check | Backend |
+|-------------|----------------|---------|
+| Global action (tool, quick create) | `canUseGlobalAction(actionId)` from `usePermissions()` | `hasGlobalActionPermission(profile, actionId)` |
+| Object create (if also using object perm) | `canCreate(objectName)` | Entity API checks profile permissions |
+| Admin-only action | `user?.profile === 'admin'` | Use `adminOnlyMiddleware` or profile check |
+
+- **Global action permissions**: Define actions in `metadata/global-actions.json`. Configure per profile at Settings → Administration → Profiles → [Profile] → Global action permissions.
+- **Profiles**: Object permissions (create, read, update, delete) and global action permissions are managed separately. Use global action permissions for tools and non-object actions.
+- **Never trust the frontend**: Backend APIs must validate permissions. Hiding a button does not prevent API calls.
+
+## References
+
+- [usePermissions](frontend/src/hooks/usePermissions.ts) — `canCreate`, `canRead`, `canUpdate`, `canDelete` per object
+- [settings-differentiation.mdc](.cursor/rules/settings-differentiation.mdc) — Admin vs personal; `adminOnly` pattern
+- [docs/USAGE.md](docs/USAGE.md) — Global Actions Bar section

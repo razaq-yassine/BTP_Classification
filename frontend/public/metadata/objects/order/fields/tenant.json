@@ -1,1 +1,1 @@
-{"key":"tenant","label":"Tenant","type":"reference","objectName":"tenant","basePath":"/tenants","required":true,"editable":false,"sortable":true,"searchable":false,"relationshipType":"masterDetail"}
+{"key":"tenant","label":"Tenant","type":"masterDetail","objectName":"tenant","basePath":"/tenants","required":true,"editable":false,"sortable":true,"searchable":false}

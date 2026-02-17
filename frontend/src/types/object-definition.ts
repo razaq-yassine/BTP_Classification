@@ -46,7 +46,7 @@ export interface ListViewDefinition {
 export interface FieldDefinition {
   key: string
   label: string
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'autoNumber' | 'formula'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'masterDetail' | 'autoNumber' | 'formula' | 'password' | 'geolocation' | 'address' | 'richText' | 'file'
   required?: boolean
   isRequired?: boolean // Alternative to required for compatibility
   isImportant?: boolean // Important fields show popup if empty on submit

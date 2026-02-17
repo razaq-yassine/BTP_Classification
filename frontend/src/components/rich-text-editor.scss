@@ -1,0 +1,28 @@
+/* Scoped overrides for RichTextEditor when used as a form field (not full-page).
+   Fixed height, scrollable, manually extendable via resize handle. */
+.rich-text-field-editor {
+  .simple-editor-content {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    height: 200px;
+    min-height: 150px;
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    resize: vertical;
+    display: block;
+    flex: none;
+  }
+
+  .simple-editor-content .tiptap.ProseMirror.simple-editor {
+    padding: 0.5rem 0.75rem;
+    flex: none;
+    min-height: auto;
+
+    /* Tighter line spacing in form field context */
+    p:not(:first-child):not(td p):not(th p) {
+      margin-top: 0.375rem;
+    }
+  }
+}

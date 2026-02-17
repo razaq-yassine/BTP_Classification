@@ -44,7 +44,7 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
       const response = await api.get(`${objectDefinition.apiEndpoint}/${recordId}`)
       const fetchedRecord = response.data
       setRecord(fetchedRecord)
-      
+
       // Track this record as recently viewed
       if (fetchedRecord?.id) {
         trackRecentlyViewed(objectDefinition.name, fetchedRecord.id, user?.id)
@@ -146,11 +146,11 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
   const pathSteps: SalesforcePathStep[] | undefined =
     path?.enabled && path?.steps
       ? path.steps.map((s) => ({
-          value: s.value,
-          label: s.label,
-          color: s.color,
-          colorHover: s.colorHover,
-        }))
+        value: s.value,
+        label: s.label,
+        color: s.color,
+        colorHover: s.colorHover,
+      }))
       : undefined
   const pathFieldValue = path?.enabled ? String(record[path.field] ?? '') : ''
   const showPath = path?.enabled && pathSteps && pathSteps.length > 0
@@ -182,19 +182,19 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
       )}
 
       {/* Main Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
+      <div className={`grid grid-cols-1 lg:grid-cols-5 gap-2 ${showPath ? '!mt-0' : ''}`}>
         {/* Main Content - 3 columns on large screens */}
         <div className="lg:col-span-3">
-          <GenericObjectDetailViewMainSection 
-            objectDefinition={objectDefinition} 
-            record={record} 
+          <GenericObjectDetailViewMainSection
+            objectDefinition={objectDefinition}
+            record={record}
             onRecordUpdate={setRecord}
             isLoading={loading}
           />
         </div>
-        
-        {/* Side Section - 1 column on large screens */}
-        <div className="lg:col-span-1">
+
+        {/* Side Section - 2 columns on large screens (Activity, History, Communication, Files) */}
+        <div className="lg:col-span-2">
           <GenericObjectDetailViewSideSection objectDefinition={objectDefinition} record={record} />
         </div>
       </div>

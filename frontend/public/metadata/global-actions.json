@@ -1,0 +1,10 @@
+{
+  "actions": [
+    {"id": "quick-create-order", "label": "Quick create order", "description": "Create a new order from the header bar"},
+    {"id": "quick-create-customer", "label": "Quick create customer", "description": "Create a new customer from the header bar"},
+    {"id": "quick-create-product", "label": "Quick create product", "description": "Create a new product from the header bar"},
+    {"id": "quick-create-opportunity", "label": "Quick create opportunity", "description": "Create a new opportunity from the header bar"},
+    {"id": "quick-create-category", "label": "Quick create category", "description": "Create a new category from the header bar"},
+    {"id": "export-data", "label": "Export data", "description": "Export list view data to CSV or Excel"}
+  ]
+}

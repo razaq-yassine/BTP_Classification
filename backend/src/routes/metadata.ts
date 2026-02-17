@@ -592,6 +592,21 @@ metadataRoutes.put('/objects/system-extensions/:objectName/fields/:fieldKey', as
   }
 })
 
+// ============ Global Actions API ============
+const GLOBAL_ACTIONS_PATH = path.join(METADATA_PATH, 'global-actions.json')
+metadataRoutes.get('/global-actions', (c) => {
+  try {
+    if (!fs.existsSync(GLOBAL_ACTIONS_PATH)) {
+      return c.json({ actions: [] })
+    }
+    const data = JSON.parse(fs.readFileSync(GLOBAL_ACTIONS_PATH, 'utf-8'))
+    return c.json(data)
+  } catch (err) {
+    console.error('Global actions read error:', err)
+    return c.json({ message: 'Failed to read global actions' }, 500)
+  }
+})
+
 // ============ Profiles API ============
 metadataRoutes.get('/profiles', (c) => {
   try {
@@ -646,8 +661,9 @@ metadataRoutes.post('/profiles', async (c) => {
       label: body.label || name,
       description: body.description || '',
       objectPermissions: body.objectPermissions || {},
+      globalActionPermissions: body.globalActionPermissions || {},
     }
-    const result = validateProfile(name, profileData, OBJECTS_PATH)
+    const result = validateProfile(name, profileData, OBJECTS_PATH, METADATA_PATH)
     if (!result.valid) {
       const message = result.errors[0]?.message ?? 'Validation failed'
       return c.json({ message, errors: result.errors }, 400)
@@ -677,7 +693,7 @@ metadataRoutes.put('/profiles/:name', async (c) => {
       return c.json({ message: 'Profile name cannot be changed' }, 400)
     }
     const profileData = { ...body, name: safeName }
-    const result = validateProfile(safeName, profileData, OBJECTS_PATH)
+    const result = validateProfile(safeName, profileData, OBJECTS_PATH, METADATA_PATH)
     if (!result.valid) {
       const message = result.errors[0]?.message ?? 'Validation failed'
       return c.json({ message, errors: result.errors }, 400)

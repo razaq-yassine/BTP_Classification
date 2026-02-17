@@ -25,6 +25,9 @@ venv/
 *.sqlite3
 *.db
 
+# Uploads (user-uploaded files)
+backend/uploads/
+
 # IDE / OS
 .DS_Store
 *.log

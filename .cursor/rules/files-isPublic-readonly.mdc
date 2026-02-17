@@ -1,0 +1,17 @@
+---
+description: Files table and isPublic behavior
+globs: backend/src/routes/upload.ts, backend/src/routes/files.ts
+alwaysApply: false
+---
+
+# Files: isPublic
+
+The `isPublic` column on the `files` table controls whether a file is accessible without authentication.
+
+## Rules
+
+1. **Set at upload time**: `isPublic` is set via the "Make new uploads public" checkbox when uploading.
+
+2. **Toggle per-file**: Users with update permission on the parent record can toggle `isPublic` for each file via `PATCH /api/files/:fileId` with `{ isPublic: boolean }`.
+
+3. **Public files**: Accessible without authentication. Private files require auth and read permission on the parent record.

@@ -20,7 +20,7 @@ export interface CalculatedDataDefinition {
 export interface FieldDefinition {
   key: string
   label: string
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'select' | 'multiselect' | 'reference'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'password' | 'geolocation' | 'address' | 'richText' | 'file' | 'select' | 'multiselect' | 'reference'
   required?: boolean
   isRequired?: boolean // Alternative to required for compatibility
   isImportant?: boolean // Important fields show popup if empty on submit

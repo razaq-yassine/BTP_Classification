@@ -1,1 +1,1 @@
-{"fields":["name","fString","fNumber","fBoolean","fReference","fFormula","fComputed","createdAt"],"defaultSort":"createdAt","defaultSortOrder":"desc","pageSize":10}
+{"fields":["name","fString","fNumber","fBoolean","fUrl","fAddress","fReference","fFormula","fComputed","createdAt"],"defaultSort":"createdAt","defaultSortOrder":"desc","pageSize":10}

@@ -4,6 +4,7 @@ import {
   IconBrowserCheck,
   IconBug,
   IconChecklist,
+  IconCurrencyDollar,
   IconError404,
   IconHelp,
   IconLayoutDashboard,
@@ -18,179 +19,204 @@ import {
   IconTool,
   IconUserCog,
   IconUserOff,
-  IconUsers,
-} from '@tabler/icons-react'
-import { AudioWaveform, Command, GalleryVerticalEnd, Layers } from 'lucide-react'
+  IconUsers
+} from "@tabler/icons-react";
+import {
+  AudioWaveform,
+  Command,
+  GalleryVerticalEnd,
+  Layers
+} from "lucide-react";
 
-import { type SidebarData, type NavGroup } from '../types'
+import { type SidebarData, type NavGroup } from "../types";
 
 export const settingsNavGroups: NavGroup[] = [
   {
-    title: 'Personal',
+    title: "Personal",
     items: [
-      { title: 'Profile', url: '/settings', icon: IconUserCog },
-      { title: 'Account', url: '/settings/account', icon: IconTool },
-      { title: 'Appearance', url: '/settings/appearance', icon: IconPalette },
-      { title: 'Notifications', url: '/settings/notifications', icon: IconNotification },
-      { title: 'Display', url: '/settings/display', icon: IconBrowserCheck },
-    ],
+      { title: "Profile", url: "/settings", icon: IconUserCog },
+      { title: "Account", url: "/settings/account", icon: IconTool },
+      { title: "Appearance", url: "/settings/appearance", icon: IconPalette },
+      {
+        title: "Notifications",
+        url: "/settings/notifications",
+        icon: IconNotification
+      },
+      { title: "Display", url: "/settings/display", icon: IconBrowserCheck }
+    ]
   },
   {
-    title: 'Administration',
+    title: "Administration",
     items: [
-      { title: 'Object Manager', url: '/settings/object-manager', icon: IconBox, adminOnly: true },
-      { title: 'Permission Profiles', url: '/settings/profiles', icon: IconLockAccess, adminOnly: true },
-    ],
-  },
-]
+      {
+        title: "Object Manager",
+        url: "/settings/object-manager",
+        icon: IconBox,
+        adminOnly: true
+      },
+      {
+        title: "Permission Profiles",
+        url: "/settings/profiles",
+        icon: IconLockAccess,
+        adminOnly: true
+      },
+      {
+        title: "Default Currency",
+        url: "/settings/currency",
+        icon: IconCurrencyDollar,
+        adminOnly: true
+      }
+    ]
+  }
+];
 
 export const sidebarData: SidebarData = {
   user: {
-    name: 'satnaing',
-    email: 'satnaingdev@gmail.com',
-    avatar: '/avatars/shadcn.jpg',
+    name: "satnaing",
+    email: "satnaingdev@gmail.com",
+    avatar: "/avatars/shadcn.jpg"
   },
   teams: [
     {
-      name: 'Shadcn Admin',
+      name: "Shadcn Admin",
       logo: Command,
-      plan: 'Vite + ShadcnUI',
+      plan: "Vite + ShadcnUI"
     },
     {
-      name: 'Acme Inc',
+      name: "Acme Inc",
       logo: GalleryVerticalEnd,
-      plan: 'Enterprise',
+      plan: "Enterprise"
     },
     {
-      name: 'Acme Corp.',
+      name: "Acme Corp.",
       logo: AudioWaveform,
-      plan: 'Startup',
-    },
+      plan: "Startup"
+    }
   ],
   navGroups: [
     {
-      title: 'General',
+      title: "General",
       items: [
         {
-          title: 'Dashboard',
-          url: '/',
-          icon: IconLayoutDashboard,
+          title: "Dashboard",
+          url: "/",
+          icon: IconLayoutDashboard
         },
         {
-          title: 'Tasks',
-          url: '/tasks',
-          icon: IconChecklist,
+          title: "Tasks",
+          url: "/tasks",
+          icon: IconChecklist
         },
         {
-          title: 'Apps',
-          url: '/apps',
-          icon: IconPackages,
+          title: "Apps",
+          url: "/apps",
+          icon: IconPackages
         },
         {
-          title: 'Chats',
-          url: '/chats',
-          badge: '3',
-          icon: IconMessages,
+          title: "Chats",
+          url: "/chats",
+          badge: "3",
+          icon: IconMessages
         },
         {
-          title: 'Users',
-          url: '/users',
-          icon: IconUsers,
-        },
-      ],
+          title: "Users",
+          url: "/users",
+          icon: IconUsers
+        }
+      ]
     },
     {
-      title: 'Pages',
+      title: "Pages",
       items: [
         {
-          title: 'Auth',
+          title: "Auth",
           icon: IconLockAccess,
           items: [
             {
-              title: 'Sign In',
-              url: '/sign-in',
+              title: "Sign In",
+              url: "/sign-in"
             },
             {
-              title: 'Sign In (2 Col)',
-              url: '/sign-in-2',
+              title: "Sign In (2 Col)",
+              url: "/sign-in-2"
             },
             {
-              title: 'Sign Up',
-              url: '/sign-up',
+              title: "Sign Up",
+              url: "/sign-up"
             },
             {
-              title: 'Forgot Password',
-              url: '/forgot-password',
+              title: "Forgot Password",
+              url: "/forgot-password"
             },
             {
-              title: 'OTP',
-              url: '/otp',
-            },
-          ],
+              title: "OTP",
+              url: "/otp"
+            }
+          ]
         },
         {
-          title: 'Errors',
+          title: "Errors",
           icon: IconBug,
           items: [
             {
-              title: 'Unauthorized',
-              url: '/401',
-              icon: IconLock,
+              title: "Unauthorized",
+              url: "/401",
+              icon: IconLock
             },
             {
-              title: 'Forbidden',
-              url: '/403',
-              icon: IconUserOff,
+              title: "Forbidden",
+              url: "/403",
+              icon: IconUserOff
             },
             {
-              title: 'Not Found',
-              url: '/404',
-              icon: IconError404,
+              title: "Not Found",
+              url: "/404",
+              icon: IconError404
             },
             {
-              title: 'Internal Server Error',
-              url: '/500',
-              icon: IconServerOff,
+              title: "Internal Server Error",
+              url: "/500",
+              icon: IconServerOff
             },
             {
-              title: 'Maintenance Error',
-              url: '/503',
-              icon: IconBarrierBlock,
-            },
-          ],
-        },
-      ],
+              title: "Maintenance Error",
+              url: "/503",
+              icon: IconBarrierBlock
+            }
+          ]
+        }
+      ]
     },
     {
-      title: 'Dev components',
+      title: "Dev components",
       items: [
         {
-          title: 'Detail View Formatter Page',
-          url: '/dev-components/detail-view-formatter',
-          icon: Layers,
+          title: "Detail View Formatter Page",
+          url: "/dev-components/detail-view-formatter",
+          icon: Layers
         },
         {
-          title: 'Salesforce Path',
-          url: '/dev-components/salesforce-path',
-          icon: Layers,
-        },
-      ],
+          title: "Salesforce Path",
+          url: "/dev-components/salesforce-path",
+          icon: Layers
+        }
+      ]
     },
     {
-      title: 'Other',
+      title: "Other",
       items: [
         {
-          title: 'Settings',
-          url: '/settings',
+          title: "Settings",
+          url: "/settings",
           icon: IconSettings,
-          external: true,
+          external: true
         },
         {
-          title: 'Help Center',
-          url: '/help-center',
-          icon: IconHelp,
-        },
-      ],
-    },
-  ],
-}
+          title: "Help Center",
+          url: "/help-center",
+          icon: IconHelp
+        }
+      ]
+    }
+  ]
+};

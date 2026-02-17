@@ -24,6 +24,10 @@ function ProfileDetailPage() {
     navigate({ to: '/settings/profiles/$profileName/objects', params: { profileName } })
   }
 
+  const handleGlobalActionsClick = () => {
+    navigate({ to: '/settings/profiles/$profileName/global-actions', params: { profileName } })
+  }
+
   if (isLoading) {
     return (
       <Main>
@@ -78,6 +82,23 @@ function ProfileDetailPage() {
                 <p className='font-medium'>Object and field permissions</p>
                 <p className='text-sm text-muted-foreground'>
                   Set create, read, update, delete for objects. Configure visible and editable for fields.
+                </p>
+              </div>
+              <ChevronRight className='h-5 w-5 text-muted-foreground' />
+            </button>
+
+            <button
+              type='button'
+              onClick={handleGlobalActionsClick}
+              className={cn(
+                'flex w-full items-center justify-between rounded-lg border p-4 text-left transition-colors',
+                'hover:bg-accent hover:text-accent-foreground'
+              )}
+            >
+              <div>
+                <p className='font-medium'>Global action permissions</p>
+                <p className='text-sm text-muted-foreground'>
+                  Allow or deny global actions (quick create, tools, etc.) for this profile.
                 </p>
               </div>
               <ChevronRight className='h-5 w-5 text-muted-foreground' />

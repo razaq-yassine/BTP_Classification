@@ -245,25 +245,35 @@ function Sidebar({
     )
   }
 
+  // Layout: 'expanded' only when permanently open. When hover-expanded, layout stays
+  // 'collapsed' so content doesn't shift - the sidebar overlays instead.
+  const layout = open ? 'expanded' : 'collapsed'
+
   return (
     <div
       className='group peer text-sidebar-foreground hidden md:block'
       data-state={state}
+      data-layout={layout}
       data-collapsible={state === 'collapsed' ? collapsible : ''}
+      data-collapsible-mode={collapsible}
       data-variant={variant}
       data-side={side}
       data-slot='sidebar'
     >
-      {/* This is what handles the sidebar gap on desktop */}
+      {/* This is what handles the sidebar gap on desktop. Uses layout (not state) so
+          hover-expand doesn't push content - gap stays at collapsed width. */}
       <div
         data-slot='sidebar-gap'
         className={cn(
-          'relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear',
-          'group-data-[collapsible=offcanvas]:w-0',
+          'relative bg-transparent transition-[width] duration-200 ease-linear',
           'group-data-[side=right]:rotate-180',
+          // Expanded layout: full width
+          'group-data-[layout=expanded]:w-(--sidebar-width)',
+          // Collapsed layout: width depends on collapsible mode
+          'group-data-[layout=collapsed]:group-data-[collapsible-mode=offcanvas]:w-0',
           variant === 'floating' || variant === 'inset'
-            ? 'group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]'
-            : 'group-data-[collapsible=icon]:w-(--sidebar-width-icon)'
+            ? 'group-data-[layout=collapsed]:group-data-[collapsible-mode=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]'
+            : 'group-data-[layout=collapsed]:group-data-[collapsible-mode=icon]:w-(--sidebar-width-icon)'
         )}
       />
       <div

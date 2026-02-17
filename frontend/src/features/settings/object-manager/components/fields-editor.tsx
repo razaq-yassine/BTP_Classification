@@ -180,7 +180,7 @@ export function FieldsEditor({ objectName }: FieldsEditorProps) {
   }, [selectedField])
 
   const validateFieldByType = (data: FieldDef): string | null => {
-    if (data.type === 'reference') {
+    if (data.type === 'reference' || data.type === 'masterDetail') {
       if (!data.objectName?.trim()) return 'Reference object is required'
     }
     if (data.type === 'select' || data.type === 'multiselect') {
@@ -483,10 +483,16 @@ function FieldEditor({
               <Select
                 value={form.type}
                 onValueChange={(v) => {
-                  update({ 
-                    type: v, 
+                  const isMasterDetail = v === 'masterDetail'
+                  update({
+                    type: v,
                     options: v === 'select' || v === 'multiselect' ? form.options || [] : undefined,
                     editable: v === 'formula' ? false : form.editable, // Formula fields are read-only
+                    ...(isMasterDetail && {
+                      required: true,
+                      relationshipType: undefined,
+                      deleteOnCascade: undefined,
+                    }),
                   })
                 }}
               >
@@ -503,7 +509,13 @@ function FieldEditor({
                   <SelectItem value='email'>Email</SelectItem>
                   <SelectItem value='phone'>Phone</SelectItem>
                   <SelectItem value='url'>URL</SelectItem>
+                  <SelectItem value='password'>Password</SelectItem>
+                  <SelectItem value='geolocation'>Geolocation</SelectItem>
+                  <SelectItem value='address'>Address</SelectItem>
+                  <SelectItem value='richText'>Rich Text</SelectItem>
+                  <SelectItem value='file'>File</SelectItem>
                   <SelectItem value='reference'>Reference</SelectItem>
+                  <SelectItem value='masterDetail'>Master-detail</SelectItem>
                   <SelectItem value='select'>Select</SelectItem>
                   <SelectItem value='multiselect'>Multi-select</SelectItem>
                   <SelectItem value='formula'>Formula (calculated)</SelectItem>
@@ -535,14 +547,22 @@ function FieldEditor({
                 </div>
               </div>
             )}
-            {form.type === 'reference' && (
+            {(form.type === 'reference' || form.type === 'masterDetail') && (
               <div className='space-y-3 rounded-md border p-3'>
-                <Label className='text-sm font-medium'>Reference configuration</Label>
+                <Label className='text-sm font-medium'>
+                  {form.type === 'masterDetail' ? 'Master-detail configuration' : 'Reference configuration'}
+                </Label>
                 <div>
                   <Label className='text-xs'>Object to reference *</Label>
                   <Select
                     value={form.objectName || ''}
-                    onValueChange={(v) => update({ objectName: v, apiEndpoint: v ? `/api/${pluralize(v)}` : undefined })}
+                    onValueChange={(v) =>
+                      update({
+                        objectName: v,
+                        apiEndpoint: v ? `/api/${pluralize(v)}` : undefined,
+                        ...(form.type === 'masterDetail' && { required: true }),
+                      })
+                    }
                   >
                     <SelectTrigger className='mt-1'>
                       <SelectValue placeholder='Select object...' />
@@ -566,31 +586,39 @@ function FieldEditor({
                   />
                   <p className='text-muted-foreground mt-1 text-xs'>Field to display when searching/selecting.</p>
                 </div>
-                <div>
-                  <Label className='text-xs'>Relationship type</Label>
-                  <Select
-                    value={form.relationshipType === 'masterDetail' ? 'masterDetail' : 'reference'}
-                    onValueChange={(v) => {
-                      const isMasterDetail = v === 'masterDetail'
-                      update({
-                        relationshipType: isMasterDetail ? 'masterDetail' : undefined,
-                        deleteOnCascade: isMasterDetail ? true : undefined,
-                        ...(isMasterDetail && { required: true }),
-                      })
-                    }}
-                  >
-                    <SelectTrigger className='mt-1'>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='reference'>Reference (optional, no cascade)</SelectItem>
-                      <SelectItem value='masterDetail'>Master-detail (required + cascade delete)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className='text-muted-foreground mt-1 text-xs'>
-                    Use master-detail for junction/detail objects (e.g. order items). Child records are required and deleted when parent is deleted.
+                {form.type === 'reference' && (
+                  <div>
+                    <Label className='text-xs'>Relationship type</Label>
+                    <Select
+                      value={form.relationshipType === 'masterDetail' ? 'masterDetail' : 'reference'}
+                      onValueChange={(v) => {
+                        const isMasterDetail = v === 'masterDetail'
+                        update({
+                          relationshipType: isMasterDetail ? 'masterDetail' : undefined,
+                          deleteOnCascade: isMasterDetail ? true : undefined,
+                          ...(isMasterDetail && { required: true }),
+                        })
+                      }}
+                    >
+                      <SelectTrigger className='mt-1'>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value='reference'>Reference (optional, no cascade)</SelectItem>
+                        <SelectItem value='masterDetail'>Master-detail (required + cascade delete)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className='text-muted-foreground mt-1 text-xs'>
+                      Use master-detail for junction/detail objects (e.g. order items). Child records are required and
+                      deleted when parent is deleted.
+                    </p>
+                  </div>
+                )}
+                {form.type === 'masterDetail' && (
+                  <p className='text-muted-foreground text-xs'>
+                    Use for junction/detail objects. Child records are required and deleted when parent is deleted.
                   </p>
-                </div>
+                )}
               </div>
             )}
             {(form.type === 'select' || form.type === 'multiselect') && (
@@ -609,7 +637,7 @@ function FieldEditor({
                 />
               </div>
             )}
-            {(form.type === 'string' || form.type === 'text') && (
+            {(form.type === 'string' || form.type === 'text' || form.type === 'password') && (
               <div>
                 <Label className='text-xs'>Max length (optional)</Label>
                 <Input
@@ -630,7 +658,7 @@ function FieldEditor({
                 <Label className='text-xs'>Default to true</Label>
               </div>
             )}
-            {(form.type === 'string' || form.type === 'text' || form.type === 'email' || form.type === 'phone' || form.type === 'url' || form.type === 'date' || form.type === 'datetime') && (
+            {(form.type === 'string' || form.type === 'text' || form.type === 'email' || form.type === 'phone' || form.type === 'url' || form.type === 'password' || form.type === 'date' || form.type === 'datetime') && (
               <div>
                 <Label className='text-xs'>Default value (optional)</Label>
                 <Input

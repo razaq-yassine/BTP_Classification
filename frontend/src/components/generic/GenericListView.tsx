@@ -108,7 +108,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
     fields: baseListView.fields.filter((field) => {
       const fieldKey = typeof field === 'string' ? field : field.key
       return isFieldVisible(objectDefinition.name, fieldKey)
-    }),
+    }) as ListViewDefinition['fields'],
   }
 
   // Debounce search to avoid refetch on every keystroke (prevents focus loss)
@@ -185,7 +185,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
         
         // Sort by recently viewed order
         const idOrder = new Map(recentIds.map((id, idx) => [id, idx]))
-        fetchedRecords.sort((a, b) => {
+        fetchedRecords.sort((a: GenericRecord, b: GenericRecord) => {
           const aIdx = idOrder.get(String(a.id)) ?? Infinity
           const bIdx = idOrder.get(String(b.id)) ?? Infinity
           return aIdx - bIdx

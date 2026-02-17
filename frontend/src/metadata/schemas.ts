@@ -25,7 +25,8 @@ export const fieldSchema = z.object({
   label: z.string(),
   type: z.enum([
     'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text', 'url',
-    'select', 'multiselect', 'reference', 'lookup', 'autoNumber', 'formula' // lookup maps to reference
+    'select', 'multiselect', 'reference', 'lookup', 'masterDetail', 'autoNumber', 'formula', // lookup maps to reference
+    'password', 'geolocation', 'address', 'richText', 'file'
   ]),
   required: z.boolean().optional(),
   editable: z.boolean().optional(),
@@ -81,7 +82,7 @@ export const listViewDefinitionSchema = z.object({
   defaultSortOrder: z.enum(['asc', 'desc']).optional(),
   pageSize: z.number().optional(),
   statistics: z.array(statisticsCardSchema).optional(),
-  filters: z.record(z.any()).optional(), // Filter criteria (e.g., { status: { $in: ['Open'] } })
+  filters: z.record(z.string(), z.any()).optional(), // Filter criteria (e.g., { status: { $in: ['Open'] } })
   type: z.enum(['standard', 'recentlyViewed']).optional().default('standard'),
 })
 

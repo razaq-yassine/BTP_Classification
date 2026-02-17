@@ -82,13 +82,14 @@ function FieldDisplay({
   if (isEditing && field.type !== 'formula') {
     const hasChanged = formValue !== value
 
-    const isMasterDetail = field.relationshipType === 'masterDetail'
+    const isMasterDetail =
+      field.type === 'masterDetail' || field.relationshipType === 'masterDetail'
     const isFieldRequired = field.required || isMasterDetail
 
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-1">
-          <span className="text-sm font-medium text-gray-700">{field.label}</span>
+          <span className="text-sm font-bold text-gray-900">{field.label}</span>
           {isFieldRequired && <span className="text-red-500 text-sm">*</span>}
           {field.isImportant && <span className="text-orange-500 text-sm" title="Important field">!</span>}
           {hasChanged && onRevertField && (
@@ -108,6 +109,8 @@ function FieldDisplay({
           showLabel={false}
           disabled={!effectiveEditable}
           className={error ? 'border-red-500' : ''}
+          objectName={objectName}
+          recordId={record?.id != null ? record.id : undefined}
         />
         {error && (
           <p className="text-sm text-red-600 mt-1">{error}</p>
@@ -130,8 +133,10 @@ function FieldDisplay({
       onClick={canEdit && onStartEdit ? onStartEdit : undefined}
     >
       <div className="flex items-center gap-1">
-        <span className="text-sm font-medium text-gray-700">{field.label}</span>
-        {(field.required || field.relationshipType === 'masterDetail') && <span className="text-red-500 text-sm">*</span>}
+        <span className="text-sm font-bold text-gray-900">{field.label}</span>
+        {(field.required || field.type === 'masterDetail' || field.relationshipType === 'masterDetail') && (
+          <span className="text-red-500 text-sm">*</span>
+        )}
         {field.isImportant && <span className="text-orange-500 text-sm" title="Important field">!</span>}
         {canEdit && onStartEdit && (
           <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
@@ -204,7 +209,10 @@ function DetailsTabContent({
   // Validate individual field
   const validateField = (fieldDefinition: FieldDefinition, value: any): FieldValidation => {
     // Check if field is required and empty (master-detail fields are always required)
-    const isRequired = fieldDefinition.required || fieldDefinition.relationshipType === 'masterDetail'
+    const isRequired =
+      fieldDefinition.required ||
+      fieldDefinition.type === 'masterDetail' ||
+      fieldDefinition.relationshipType === 'masterDetail'
     if (isRequired) {
       if (value === null || value === undefined || value === '') {
         return {
@@ -243,6 +251,39 @@ function DetailsTabContent({
           isValid: false,
           errorMessage: 'Please enter a valid number'
         }
+      }
+    }
+
+    // URL validation (domain required, no spaces)
+    if (fieldDefinition.type === 'url' && value && value.toString().trim() !== '') {
+      const url = value.toString().trim()
+      if (url.includes(' ')) {
+        return { isValid: false, errorMessage: 'URL must not contain spaces' }
+      }
+      if (!url.includes('.') || !/\w/.test(url)) {
+        return { isValid: false, errorMessage: 'Please enter a valid URL with a domain' }
+      }
+      const parts = url.split('.')
+      const lastPart = parts[parts.length - 1]
+      if (lastPart.length < 2 || !/^[a-zA-Z0-9-]+$/.test(lastPart)) {
+        return { isValid: false, errorMessage: 'Please enter a valid URL with a domain' }
+      }
+    }
+
+    // Geolocation validation
+    if (fieldDefinition.type === 'geolocation' && value && value.toString().trim() !== '') {
+      try {
+        const loc = typeof value === 'string' ? JSON.parse(value) : value
+        const lat = loc?.latitude
+        const lng = loc?.longitude
+        if (lat != null && (typeof lat !== 'number' || lat < -90 || lat > 90)) {
+          return { isValid: false, errorMessage: 'Latitude must be between -90 and 90' }
+        }
+        if (lng != null && (typeof lng !== 'number' || lng < -180 || lng > 180)) {
+          return { isValid: false, errorMessage: 'Longitude must be between -180 and 180' }
+        }
+      } catch {
+        return { isValid: false, errorMessage: 'Please enter valid geolocation data' }
       }
     }
 
@@ -306,7 +347,7 @@ function DetailsTabContent({
 
           // Transform reference fields to the format expected by backend: { id: <value> }
           // Also set the idField (e.g. tenantId) so it overwrites stale values from record spread
-          if (fieldDefinition?.type === 'reference') {
+          if (fieldDefinition?.type === 'reference' || fieldDefinition?.type === 'masterDetail') {
             const refValue = updateData[fieldKey]
             const idField = `${fieldKey}Id` // Convention: tenant -> tenantId, customer -> customerId
             let resolvedId: number | string | null = null
@@ -434,7 +475,10 @@ function DetailsTabContent({
             const isEmpty = value === null || value === undefined || value === ''
 
             // Check important fields (for confirmation) - only if not required
-            const isRequired = fieldDefinition.required || fieldDefinition.relationshipType === 'masterDetail'
+            const isRequired =
+      fieldDefinition.required ||
+      fieldDefinition.type === 'masterDetail' ||
+      fieldDefinition.relationshipType === 'masterDetail'
             if (fieldDefinition.isImportant && !isRequired && isEmpty) {
               emptyImportantFields.push(fieldDefinition.label || fieldKey)
             }
@@ -833,7 +877,7 @@ export function GenericObjectDetailViewMainSection({ objectDefinition, record, o
         </TabsContent>
 
         {relatedObjects.map((relObj) => (
-          <TabsContent key={relObj.name} value={relObj.name} className="w-full mt-0">
+          <TabsContent key={relObj.name} value={relObj.name} className="w-full mt-0 detail-view-related-tabs">
             <RelatedObjectTabContent
               parentRecord={record}
               relatedObjectDefinition={relObj}

@@ -11,6 +11,7 @@ import api from '@/services/api'
 import { toast } from 'sonner'
 import { isNetworkError } from '@/utils/handle-server-error'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useTenantConfig } from '@/hooks/useTenantConfig'
 
 // Field validation result
 interface FieldValidation {
@@ -33,6 +34,7 @@ function CreateFieldDisplay({
   error,
   canEditField,
   profileName,
+  objectName,
 }: {
   field: FieldDefinition
   formData: Record<string, any>
@@ -40,6 +42,7 @@ function CreateFieldDisplay({
   error?: string
   canEditField: (fieldKey: string) => boolean
   profileName?: string
+  objectName?: string
 }) {
   const value = formData[field.key] || ''
   const fieldEditable = canEditField(field.key)
@@ -50,7 +53,6 @@ function CreateFieldDisplay({
     (field.key === 'tenant' && profileName === 'org-user')
   const isReadOnly =
     field.type === 'autoNumber' ||
-    field.type === 'autonumber' ||
     (field.editable === false && !profileCanEdit) ||
     (!fieldEditable && !profileCanEdit)
 
@@ -63,6 +65,8 @@ function CreateFieldDisplay({
         disabled={isReadOnly}
         showLabel={true}
         className={error ? 'border-red-500' : ''}
+        objectName={objectName}
+        recordId="temp"
       />
       {error && (
         <p className="text-sm text-red-600 mt-1">{error}</p>
@@ -78,6 +82,14 @@ export function GenericCreateDialog({
   onRecordCreated
 }: GenericCreateDialogProps) {
   const { isFieldVisible, canEditField, profile } = usePermissions()
+  const { data: tenantConfig } = useTenantConfig()
+  const tenantMode = tenantConfig?.mode ?? 'none'
+  const isTenantModeNone = tenantMode === 'none'
+
+  // When mode is "none", org/tenant fields don't exist in schema - skip them
+  const isTenantScopeFieldSkipped = (fieldKey: string) =>
+    isTenantModeNone && (fieldKey === 'organization' || fieldKey === 'tenant')
+
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [, setHasChanges] = useState(false)
   const [error, setError] = useState('')
@@ -91,7 +103,7 @@ export function GenericCreateDialog({
   useEffect(() => {
     if (open) {
       const initialSectionStates: Record<string, boolean> = {}
-      objectDefinition.detailView?.sections?.forEach((section, index) => {
+      objectDefinition.detailView?.sections?.forEach((_section, index) => {
         // In create modal, always open all sections (ignore layout defaultOpen)
         initialSectionStates[`section_${index}`] = true
       })
@@ -112,17 +124,23 @@ export function GenericCreateDialog({
             if (!fieldDefinition || !isFieldVisible(objectDefinition.name, fieldKey)) {
               return
             }
+            // Skip org/tenant when tenant mode is none
+            if (isTenantScopeFieldSkipped(fieldKey)) {
+              return
+            }
 
-            // Filter out non-editable fields in create modal
+            // Filter out non-editable fields in create modal.
+            // Admin always sees and can edit all fields (including org/tenant for tenant-scoped objects).
+            const isAdmin = profile?.name === 'admin'
             const fieldEditable = canEditField(objectDefinition.name, fieldKey)
             const editableForProfiles = fieldDefinition.editableForProfiles
             const profileCanEdit =
+              isAdmin ||
               (editableForProfiles?.length && profile?.name && editableForProfiles.includes(profile.name)) ||
               // Tenant field: org-user must select tenant when creating (edit not allowed)
               (fieldKey === 'tenant' && profile?.name === 'org-user')
             const isReadOnly =
               fieldDefinition.type === 'autoNumber' ||
-              fieldDefinition.type === 'autonumber' ||
               (fieldDefinition.editable === false && !profileCanEdit) ||
               (!fieldEditable && !profileCanEdit)
 
@@ -154,14 +172,17 @@ export function GenericCreateDialog({
       setFormData(initialFormData)
       setHasChanges(false)
       setError('')
+      setFieldErrors({})
     }
-  }, [open, objectDefinition, isFieldVisible, canEditField, profile])
+  }, [open, objectDefinition, isFieldVisible, canEditField, profile, isTenantModeNone])
 
   // Validate individual field
   const validateField = (fieldDefinition: FieldDefinition, value: any): FieldValidation => {
-    const isAutoNumber = fieldDefinition.type === 'autoNumber' || fieldDefinition.type === 'autonumber'
+    const isAutoNumber = fieldDefinition.type === 'autoNumber'
     const isNameField = fieldDefinition.key === 'name'
-    const isMasterDetail = fieldDefinition.relationshipType === 'masterDetail'
+    const isMasterDetail =
+      fieldDefinition.type === 'masterDetail' ||
+      fieldDefinition.relationshipType === 'masterDetail'
     // AutoNumber fields are never required - they're generated on save
     // Master-detail fields are always required
     const isRequired = !isAutoNumber && (fieldDefinition.required || isNameField || isMasterDetail)
@@ -204,6 +225,39 @@ export function GenericCreateDialog({
           isValid: false,
           errorMessage: 'Please enter a valid number'
         }
+      }
+    }
+
+    // URL validation (domain required, no spaces)
+    if (fieldDefinition.type === 'url' && value && value.toString().trim() !== '') {
+      const url = value.toString().trim()
+      if (url.includes(' ')) {
+        return { isValid: false, errorMessage: 'URL must not contain spaces' }
+      }
+      if (!url.includes('.') || !/\w/.test(url)) {
+        return { isValid: false, errorMessage: 'Please enter a valid URL with a domain' }
+      }
+      const parts = url.split('.')
+      const lastPart = parts[parts.length - 1]
+      if (lastPart.length < 2 || !/^[a-zA-Z0-9-]+$/.test(lastPart)) {
+        return { isValid: false, errorMessage: 'Please enter a valid URL with a domain' }
+      }
+    }
+
+    // Geolocation validation
+    if (fieldDefinition.type === 'geolocation' && value && value.toString().trim() !== '') {
+      try {
+        const loc = typeof value === 'string' ? JSON.parse(value) : value
+        const lat = loc?.latitude
+        const lng = loc?.longitude
+        if (lat != null && (typeof lat !== 'number' || lat < -90 || lat > 90)) {
+          return { isValid: false, errorMessage: 'Latitude must be between -90 and 90' }
+        }
+        if (lng != null && (typeof lng !== 'number' || lng < -180 || lng > 180)) {
+          return { isValid: false, errorMessage: 'Longitude must be between -180 and 180' }
+        }
+      } catch {
+        return { isValid: false, errorMessage: 'Please enter valid geolocation data' }
       }
     }
 
@@ -264,6 +318,14 @@ export function GenericCreateDialog({
       // Prepare create data
       const createData = { ...formData }
 
+      // When mode is "none", don't send org/tenant - backend doesn't expect them
+      if (isTenantModeNone) {
+        delete createData.organization
+        delete createData.organizationId
+        delete createData.tenant
+        delete createData.tenantId
+      }
+
       objectDefinition.detailView?.sections?.forEach(section => {
         section.fields.forEach(field => {
           const fieldKey = typeof field === 'string' ? field : field.key
@@ -271,10 +333,15 @@ export function GenericCreateDialog({
             ? objectDefinition.fields?.find(f => f.key === fieldKey)
             : field
 
-          const isAutoNumber = fieldDefinition?.type === 'autoNumber' || fieldDefinition?.type === 'autonumber'
+          if (isTenantScopeFieldSkipped(fieldKey)) return
+
+          const isAutoNumber = fieldDefinition?.type === 'autoNumber'
           if (isAutoNumber) {
             delete createData[fieldKey]
-          } else if (fieldDefinition?.type === 'reference' && createData[fieldKey] != null) {
+          } else if (
+            (fieldDefinition?.type === 'reference' || fieldDefinition?.type === 'masterDetail') &&
+            createData[fieldKey] != null
+          ) {
             // Transform reference fields to the format expected by backend: { id: <value> }
             // Backend expects either body[ref.key]?.id or body[ref.idField]
             const refValue = createData[fieldKey]
@@ -350,7 +417,7 @@ export function GenericCreateDialog({
           ? objectDefinition.fields?.find(f => f.key === fieldKey)
           : field
 
-        if (fieldDefinition) {
+        if (fieldDefinition && !isTenantScopeFieldSkipped(fieldKey)) {
           const value = formData[fieldKey]
           const validation = validateField(fieldDefinition, value)
           if (!validation.isValid) {
@@ -386,12 +453,15 @@ export function GenericCreateDialog({
             ? objectDefinition.fields?.find(f => f.key === fieldKey)
             : field
 
-          if (fieldDefinition) {
+          if (fieldDefinition && !isTenantScopeFieldSkipped(fieldKey)) {
             const value = formData[fieldKey]
             const isEmpty = value === null || value === undefined || value === ''
 
             // Check important fields (for confirmation) - only if not required
-            const isRequired = fieldDefinition.required || fieldDefinition.relationshipType === 'masterDetail'
+            const isRequired =
+              fieldDefinition.required ||
+              fieldDefinition.type === 'masterDetail' ||
+              fieldDefinition.relationshipType === 'masterDetail'
             if (fieldDefinition.isImportant && !isRequired && isEmpty) {
               emptyImportantFields.push(fieldDefinition.label || fieldKey)
             }
@@ -512,21 +582,26 @@ export function GenericCreateDialog({
 
                             if (!fieldDefinition) return null
 
+                            // Skip org/tenant when tenant mode is none
+                            if (isTenantScopeFieldSkipped(fieldKey)) return null
+
                             // Filter fields based on permissions
                             if (!isFieldVisible(objectDefinition.name, fieldKey)) {
                               return null
                             }
 
-                            // Filter out non-editable fields in create modal
+                            // Filter out non-editable fields in create modal.
+                            // Admin always sees and can edit all fields (including org/tenant for tenant-scoped objects).
+                            const isAdmin = profile?.name === 'admin'
                             const fieldEditable = canEditField(objectDefinition.name, fieldKey)
                             const editableForProfiles = fieldDefinition.editableForProfiles
                             const profileCanEdit =
+                              isAdmin ||
                               (editableForProfiles?.length && profile?.name && editableForProfiles.includes(profile.name)) ||
                               // Tenant field: org-user must select tenant when creating (edit not allowed)
                               (fieldKey === 'tenant' && profile?.name === 'org-user')
                             const isReadOnly =
                               fieldDefinition.type === 'autoNumber' ||
-                              fieldDefinition.type === 'autonumber' ||
                               (fieldDefinition.editable === false && !profileCanEdit) ||
                               (!fieldEditable && !profileCanEdit)
 
@@ -544,6 +619,7 @@ export function GenericCreateDialog({
                                 error={fieldErrors[fieldDefinition.key]}
                                 canEditField={(fieldKey) => canEditField(objectDefinition.name, fieldKey)}
                                 profileName={profile?.name}
+                                objectName={objectDefinition.name}
                               />
                             )
                           })}

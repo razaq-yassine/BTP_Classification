@@ -1,9 +1,10 @@
 import React from 'react'
 import { Badge } from '@/components/ui/badge'
+import { RichTextView } from '@/components/rich-text-view'
 import { format } from 'date-fns'
 
 export interface DetailFieldFormatterProps {
-  type: 'string' | 'number' | 'boolean' | 'date' | 'email' | 'phone' | 'text' | 'url' | 'select'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'password' | 'geolocation' | 'address' | 'richText' | 'file'
   value: any
   format?: string // For date formatting, etc.
   options?: { value: string; label: string }[] // For select fields
@@ -72,6 +73,49 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
           {value}
         </div>
       )
+
+    case 'password':
+      return <span>••••••••</span>
+
+    case 'geolocation': {
+      let loc: { latitude?: number; longitude?: number }
+      try {
+        loc = typeof value === 'string' ? JSON.parse(value) : value
+      } catch {
+        return <span className="text-gray-400">Not provided</span>
+      }
+      if (loc?.latitude == null && loc?.longitude == null) return <span className="text-gray-400">Not provided</span>
+      return <span>{[loc.latitude, loc.longitude].filter((x) => x != null).join(', ')}</span>
+    }
+
+    case 'address': {
+      let addr: Record<string, string>
+      try {
+        addr = typeof value === 'string' ? JSON.parse(value) : value
+      } catch {
+        return <span className="text-gray-400">Not provided</span>
+      }
+      if (!addr || typeof addr !== 'object') return <span className="text-gray-400">Not provided</span>
+      const parts = [addr.street, addr.city, addr.state, addr.zip, addr.country].filter(Boolean)
+      return <span>{parts.join(', ')}</span>
+    }
+
+    case 'richText': {
+      const html = typeof value === 'string' ? value : String(value ?? '')
+      return <RichTextView html={html} />
+    }
+
+    case 'file': {
+      const path = typeof value === 'string' ? value : String(value ?? '')
+      const filename = path.split('/').pop() || path
+      return path ? (
+        <a href={path.startsWith('/') ? path : `/${path}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+          {filename}
+        </a>
+      ) : (
+        <span className="text-gray-400">Not provided</span>
+      )
+    }
 
     case 'select':
       // Find the label for the value from options

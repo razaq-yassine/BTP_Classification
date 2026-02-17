@@ -1,1 +1,1 @@
-{"key":"organization","label":"Organization","type":"reference","objectName":"organization","basePath":"/organizations","editable":false,"sortable":true,"searchable":false}
+{"key":"organization","label":"Organization","type":"masterDetail","objectName":"organization","basePath":"/organizations","required":true,"editable":false,"sortable":true,"searchable":false}

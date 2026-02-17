@@ -16,7 +16,8 @@ import {
 
 const VALID_FIELD_TYPES = new Set([
   'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text', 'url',
-  'select', 'multiselect', 'reference', 'lookup', 'autoNumber', 'formula'
+  'select', 'multiselect', 'reference', 'lookup', 'masterdetail', 'autonumber', 'formula',
+  'password', 'geolocation', 'address', 'richtext', 'file'
 ])
 
 const VALID_TENANT_MODES = new Set(['none', 'tenant', 'org_and_tenant'])
@@ -203,8 +204,9 @@ function validateComputedField(
       return
     }
     const refDef = loadFieldDefinition(objectsPath, objectName, refField)
-    if (!refDef || (refDef.type as string)?.toLowerCase() !== 'reference') {
-      addError(errors, pathPrefix, `referenceField "${refField}" must be a reference type`, 'COMPUTED_REFERENCE_INVALID_TYPE')
+    const refType = (refDef?.type as string)?.toLowerCase()
+    if (!refDef || (refType !== 'reference' && refType !== 'masterdetail')) {
+      addError(errors, pathPrefix, `referenceField "${refField}" must be a reference or masterDetail type`, 'COMPUTED_REFERENCE_INVALID_TYPE')
       return
     }
     const refObjectName = (refDef.objectName as string)?.trim()
@@ -274,7 +276,7 @@ function validateFieldFile(
       addError(errors, pathPrefix, 'Name field type must be string or autoNumber', 'NAME_FIELD_INVALID_TYPE')
     }
   }
-  if (type === 'reference') {
+  if (type === 'reference' || type === 'masterdetail') {
     if (!data.objectName || typeof data.objectName !== 'string' || !(data.objectName as string).trim()) {
       addError(errors, pathPrefix, 'Reference object is required', 'REFERENCE_MISSING_OBJECT')
     } else {
@@ -286,8 +288,13 @@ function validateFieldFile(
         addError(errors, pathPrefix, 'Reference cannot point to the same object', 'REFERENCE_SELF_REFERENCE')
       }
     }
+    if (type === 'masterdetail') {
+      if (data.required === false) {
+        addError(errors, pathPrefix, 'masterDetail type implies required: true', 'MASTER_DETAIL_REQUIRED')
+      }
+    }
     const relType = data.relationshipType as string | undefined
-    if (relType === 'masterDetail') {
+    if (type === 'reference' && relType === 'masterDetail') {
       if (data.required !== true) {
         addError(errors, pathPrefix, 'Master-detail relationship requires required: true', 'MASTER_DETAIL_REQUIRED')
       }
@@ -484,6 +491,52 @@ function validateRelatedObjectsFile(
   }
 }
 
+/**
+ * Validate that junction/detail objects use masterDetail type for parent references.
+ * When parent has relatedObjects with foreignKey "parentField.id", the child's parentField must be masterDetail.
+ */
+function validateJunctionParentReferences(
+  objectsPath: string,
+  objectNames: string[],
+  errors: ValidationError[]
+): void {
+  for (const parentObjectName of objectNames) {
+    const relatedPath = path.join(objectsPath, parentObjectName, 'relatedObjects.json')
+    if (!fs.existsSync(relatedPath)) continue
+    let relatedData: unknown
+    try {
+      relatedData = JSON.parse(fs.readFileSync(relatedPath, 'utf-8'))
+    } catch {
+      continue
+    }
+    if (!Array.isArray(relatedData)) continue
+    for (let i = 0; i < relatedData.length; i++) {
+      const item = relatedData[i] as Record<string, unknown>
+      const fk = item.foreignKey as string
+      const childObjectName = item.objectDefinition as string
+      if (!fk || typeof fk !== 'string' || !childObjectName) continue
+      const fkMatch = fk.match(/^(\w+)\.id$/)
+      if (!fkMatch) continue
+      const parentFieldName = fkMatch[1]
+      const childFieldDef = loadFieldDefinition(objectsPath, childObjectName, parentFieldName)
+      if (!childFieldDef) continue
+      const fieldType = (childFieldDef.type as string)?.toLowerCase()
+      const relType = childFieldDef.relationshipType as string | undefined
+      const objectName = (childFieldDef.objectName as string)?.trim()
+      const isMasterDetail = fieldType === 'masterdetail' || relType === 'masterDetail'
+      const referencesParent = objectName === parentObjectName
+      if (referencesParent && !isMasterDetail) {
+        addError(
+          errors,
+          `${childObjectName}/fields/${parentFieldName}.json`,
+          `Junction/detail object "${childObjectName}" must use masterDetail type for parent reference "${parentFieldName}" (referenced by ${parentObjectName}/relatedObjects.json)`,
+          'JUNCTION_MUST_USE_MASTER_DETAIL'
+        )
+      }
+    }
+  }
+}
+
 function getObjectNames(objectsPath: string): string[] {
   try {
     if (fs.existsSync(objectsPath)) {
@@ -497,6 +550,20 @@ function getObjectNames(objectsPath: string): string[] {
     // ignore
   }
   return []
+}
+
+/** System objects from metadata/system/ that exist and are enabled by tenant config. Used for reference validation. */
+function getSystemObjectNames(metadataPath: string, tenantConfig: TenantConfig | null): string[] {
+  const systemPath = path.join(metadataPath, 'system')
+  if (!fs.existsSync(systemPath) || !tenantConfig || tenantConfig.mode === 'none') return []
+  const names: string[] = []
+  if (tenantConfig.mode === 'tenant' || tenantConfig.mode === 'org_and_tenant') {
+    if (fs.existsSync(path.join(systemPath, 'organization', 'object.json'))) names.push('organization')
+  }
+  if (tenantConfig.mode === 'org_and_tenant') {
+    if (fs.existsSync(path.join(systemPath, 'tenant', 'object.json'))) names.push('tenant')
+  }
+  return names
 }
 
 export function validateSystemExtensionField(
@@ -525,8 +592,8 @@ export function validateSystemExtensionField(
   if (!VALID_FIELD_TYPES.has(type) && type !== 'autonumber') {
     addError(errors, pathPrefix, `Invalid field type: ${data.type}`, 'FIELD_INVALID_TYPE')
   }
-  if (type === 'reference' && (!data.objectName || typeof data.objectName !== 'string')) {
-    addError(errors, pathPrefix, 'objectName is required for reference type', 'FIELD_REFERENCE_MISSING_OBJECT')
+  if ((type === 'reference' || type === 'masterdetail') && (!data.objectName || typeof data.objectName !== 'string')) {
+    addError(errors, pathPrefix, 'objectName is required for reference/masterDetail type', 'FIELD_REFERENCE_MISSING_OBJECT')
   }
 }
 
@@ -557,13 +624,15 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
     return { valid: errors.length === 0, errors }
   }
   const objectNames = getObjectNames(objectsPath)
+  const tenantConfig = loadTenantConfig(metadataPath)
+  const systemObjectNames = getSystemObjectNames(metadataPath, tenantConfig)
+  const allObjectNames = [...objectNames, ...systemObjectNames]
   const objectDirs = fs.readdirSync(objectsPath).filter((d) => {
     const p = path.join(objectsPath, d)
     return fs.statSync(p).isDirectory()
   })
 
   // Validate tenant config
-  const tenantConfig = loadTenantConfig(metadataPath)
   validateTenantConfig(tenantConfig, metadataPath, objectNames, errors)
 
   // Check tableName uniqueness across objects
@@ -617,7 +686,7 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
         }
         try {
           const fieldData = JSON.parse(fs.readFileSync(path.join(fieldsDir, file), 'utf-8')) as Record<string, unknown>
-          validateFieldFile(objectName, fieldKey, fieldData, objectNames, errors, {
+          validateFieldFile(objectName, fieldKey, fieldData, allObjectNames, errors, {
             objectsPath,
             fieldKeys: fieldsList,
           })
@@ -642,13 +711,15 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
     if (fs.existsSync(relatedPath)) {
       try {
         const relatedData = JSON.parse(fs.readFileSync(relatedPath, 'utf-8'))
-        validateRelatedObjectsFile(objectName, relatedData, objectNames, errors)
+        validateRelatedObjectsFile(objectName, relatedData, allObjectNames, errors)
       } catch (e) {
         addError(errors, `${objectName}/relatedObjects.json`, `Failed to parse: ${(e as Error).message}`, 'PARSE_ERROR')
       }
     }
   }
-  
+
+  validateJunctionParentReferences(objectsPath, allObjectNames, errors)
+
   // Validate system extensions (add-only fields for user, organization, tenant)
   const extensionsPath = path.join(metadataPath, 'system-extensions')
   if (fs.existsSync(extensionsPath)) {
@@ -695,7 +766,7 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
       const profileName = file.replace(/\.json$/, '')
       try {
         const profileData = JSON.parse(fs.readFileSync(path.join(profilesPath, file), 'utf-8')) as Record<string, unknown>
-        validateProfileFile(profileName, profileData, objectNames, objectsPath, errors)
+        validateProfileFile(profileName, profileData, allObjectNames, objectsPath, errors, metadataPath)
       } catch (e) {
         addError(errors, `profiles/${file}`, `Failed to parse: ${(e as Error).message}`, 'PARSE_ERROR')
       }
@@ -810,12 +881,26 @@ function loadFieldKeysForProfile(objectsPath: string, objectName: string): strin
   }
 }
 
+function loadGlobalActionIds(metadataPath: string): string[] {
+  try {
+    const filePath = path.join(metadataPath, 'global-actions.json')
+    if (!fs.existsSync(filePath)) return []
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8')) as { actions?: Array<{ id: string }> }
+    const actions = data?.actions
+    if (!Array.isArray(actions)) return []
+    return actions.map((a) => a.id).filter((id): id is string => typeof id === 'string')
+  } catch {
+    return []
+  }
+}
+
 function validateProfileFile(
   profileName: string,
   profileData: Record<string, unknown>,
   objectNames: string[],
   objectsPath: string,
-  errors: ValidationError[]
+  errors: ValidationError[],
+  metadataPath?: string
 ): void {
   const pathPrefix = `profiles/${profileName}.json`
   
@@ -882,6 +967,24 @@ function validateProfileFile(
       }
     }
   }
+
+  // Validate globalActionPermissions if present
+  if (profileData.globalActionPermissions !== undefined) {
+    if (typeof profileData.globalActionPermissions !== 'object' || profileData.globalActionPermissions === null) {
+      addError(errors, pathPrefix, 'globalActionPermissions must be an object', 'PROFILE_INVALID_GLOBAL_ACTION_PERMISSIONS')
+    } else if (metadataPath) {
+      const validActionIds = loadGlobalActionIds(metadataPath)
+      const globalActionPermissions = profileData.globalActionPermissions as Record<string, unknown>
+      for (const [actionId, allowed] of Object.entries(globalActionPermissions)) {
+        if (!validActionIds.includes(actionId)) {
+          addError(errors, pathPrefix, `Global action "${actionId}" does not exist in metadata/global-actions.json`, 'PROFILE_INVALID_GLOBAL_ACTION')
+        }
+        if (typeof allowed !== 'boolean') {
+          addError(errors, pathPrefix, `globalActionPermissions.${actionId} must be a boolean`, 'PROFILE_INVALID_GLOBAL_ACTION_VALUE')
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -890,10 +993,11 @@ function validateProfileFile(
 export function validateProfile(
   profileName: string,
   profileData: Record<string, unknown>,
-  objectsPath: string
+  objectsPath: string,
+  metadataPath?: string
 ): ValidationResult {
   const errors: ValidationError[] = []
   const objectNames = getObjectNames(objectsPath)
-  validateProfileFile(profileName, profileData, objectNames, objectsPath, errors)
+  validateProfileFile(profileName, profileData, objectNames, objectsPath, errors, metadataPath)
   return { valid: errors.length === 0, errors }
 }

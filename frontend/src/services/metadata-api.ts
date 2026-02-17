@@ -82,3 +82,15 @@ export async function saveField(
 export async function bumpVersion(): Promise<void> {
   await api.post(`${METADATA_BASE}/bump-version`)
 }
+
+export interface GlobalAction {
+  id: string
+  label: string
+  description?: string
+}
+
+export async function getGlobalActions(): Promise<GlobalAction[]> {
+  const res = await api.get<{ actions: GlobalAction[] }>(`${METADATA_BASE}/global-actions`)
+  const data = res.data
+  return Array.isArray(data?.actions) ? data.actions : []
+}

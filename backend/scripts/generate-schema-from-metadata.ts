@@ -35,9 +35,10 @@ function loadTenantConfig(): { mode: TenantMode } {
   const configPath = path.join(METADATA_PATH, "tenant-config.json");
   if (!fs.existsSync(configPath)) return { mode: "none" };
   try {
-    const data = JSON.parse(
-      fs.readFileSync(configPath, "utf-8")
-    ) as Record<string, unknown>;
+    const data = JSON.parse(fs.readFileSync(configPath, "utf-8")) as Record<
+      string,
+      unknown
+    >;
     const mode = (data.mode as string) || "none";
     return { mode: mode as TenantMode };
   } catch {
@@ -202,14 +203,21 @@ function loadAllSystemFields(objectName: string): FieldDef[] {
 }
 
 function loadExtensionFields(objectName: string): FieldDef[] {
-  if (!SYSTEM_OBJECTS_WITH_EXTENSIONS.includes(objectName as "user" | "organization" | "tenant")) return [];
+  if (
+    !SYSTEM_OBJECTS_WITH_EXTENSIONS.includes(
+      objectName as "user" | "organization" | "tenant"
+    )
+  )
+    return [];
   const extPath = path.join(SYSTEM_EXTENSIONS_PATH, objectName);
   if (!fs.existsSync(extPath)) return [];
   const fieldsPath = path.join(extPath, "fields.json");
   if (!fs.existsSync(fieldsPath)) return [];
   const baseFields = SYSTEM_OBJECT_BASE_FIELDS[objectName];
   if (!baseFields) return [];
-  const fieldsIndex = JSON.parse(fs.readFileSync(fieldsPath, "utf-8")) as string[];
+  const fieldsIndex = JSON.parse(
+    fs.readFileSync(fieldsPath, "utf-8")
+  ) as string[];
   const fields: FieldDef[] = [];
   for (const key of fieldsIndex) {
     if (baseFields.has(key)) continue;
@@ -222,18 +230,30 @@ function loadExtensionFields(objectName: string): FieldDef[] {
   return fields;
 }
 
-function generateExtensionColumnLines(fields: FieldDef[], dialect: Dialect): string {
+function generateExtensionColumnLines(
+  fields: FieldDef[],
+  dialect: Dialect
+): string {
   if (fields.length === 0) return "";
   const lines: string[] = [];
   for (const field of fields) {
     const colName = toSnakeCase(field.key);
     const notNull = field.required ? ".notNull()" : "";
-    if (field.type === "reference") {
+    if (field.type === "reference" || field.type === "masterDetail") {
       const refTable = pluralize(field.objectName || field.key);
-      const refCall = `references(() => ${refTable}.id)`;
-      const refNotNull = field.required ? ".notNull()" : "";
+      const cascade =
+        field.type === "masterDetail" ||
+        field.relationshipType === "masterDetail" ||
+        field.deleteOnCascade === true;
+      const refCall = cascade
+        ? `references(() => ${refTable}.id, { onDelete: 'cascade' })`
+        : `references(() => ${refTable}.id, { onDelete: 'set null' })`;
+      const refNotNull =
+        field.type === "masterDetail" || field.required ? ".notNull()" : "";
       lines.push(
-        `  ${field.key}Id: ${dialect === "mysql" ? "int" : "integer"}('${colName}_id')${refNotNull}.${refCall},`
+        `  ${field.key}Id: ${
+          dialect === "mysql" ? "int" : "integer"
+        }('${colName}_id')${refNotNull}.${refCall},`
       );
     } else if (dialect === "mysql") {
       if (field.type === "boolean") {
@@ -241,17 +261,25 @@ function generateExtensionColumnLines(fields: FieldDef[], dialect: Dialect): str
       } else if (field.type === "date" || field.type === "datetime") {
         lines.push(`  ${field.key}: datetime('${colName}')${notNull},`);
       } else if (field.type === "number") {
-        lines.push(`  ${field.key}: decimal('${colName}', { precision: 10, scale: 2 })${notNull},`);
+        lines.push(
+          `  ${field.key}: decimal('${colName}', { precision: 10, scale: 2 })${notNull},`
+        );
       } else if (field.type === "text") {
         lines.push(`  ${field.key}: text('${colName}')${notNull},`);
       } else {
-        lines.push(`  ${field.key}: varchar('${colName}', { length: 255 })${notNull},`);
+        lines.push(
+          `  ${field.key}: varchar('${colName}', { length: 255 })${notNull},`
+        );
       }
     } else {
       if (field.type === "boolean") {
-        lines.push(`  ${field.key}: integer('${colName}', { mode: 'boolean' }).default(true),`);
+        lines.push(
+          `  ${field.key}: integer('${colName}', { mode: 'boolean' }).default(true),`
+        );
       } else if (field.type === "date" || field.type === "datetime") {
-        lines.push(`  ${field.key}: integer('${colName}', { mode: 'timestamp' })${notNull},`);
+        lines.push(
+          `  ${field.key}: integer('${colName}', { mode: 'timestamp' })${notNull},`
+        );
       } else if (field.type === "number") {
         lines.push(`  ${field.key}: real('${colName}')${notNull},`);
       } else {
@@ -306,17 +334,18 @@ function generateTable(
     const colName = toSnakeCase(field.key);
     const refTable = references.get(field.key) || pluralize(field.key);
     const cascade =
+      field.type === "masterDetail" ||
       field.relationshipType === "masterDetail" ||
       field.deleteOnCascade === true;
     const refCall = cascade
       ? `references(() => ${refTable}.id, { onDelete: 'cascade' })`
-      : `references(() => ${refTable}.id)`;
+      : `references(() => ${refTable}.id, { onDelete: 'set null' })`;
     const notNull = field.required ? ".notNull()" : "";
     const isAutoNum =
       field.type === "autoNumber" || field.type === "autonumber";
     const unique = field.unique || isAutoNum ? ".unique()" : "";
 
-    if (field.type === "reference") {
+    if (field.type === "reference" || field.type === "masterDetail") {
       // Skip organization/tenant columns - already added by tenant scope
       const isTenantScopeRef =
         (field.key === "organization" || field.key === "tenant") &&
@@ -324,7 +353,8 @@ function generateTable(
         tenantMode !== "none" &&
         !isMaster;
       if (isTenantScopeRef) continue;
-      const refNotNull = field.required ? ".notNull()" : "";
+      const refNotNull =
+        field.type === "masterDetail" || field.required ? ".notNull()" : "";
       lines.push(
         `  ${field.key}Id: ${
           dialect === "mysql" ? "int" : "integer"
@@ -341,7 +371,13 @@ function generateTable(
         lines.push(
           `  ${field.key}: decimal('${colName}', { precision: 10, scale: 2 })${notNull}${unique},`
         );
-      } else if (field.type === "text") {
+      } else if (
+        field.type === "text" ||
+        field.type === "geolocation" ||
+        field.type === "address" ||
+        field.type === "richText" ||
+        field.type === "file"
+      ) {
         lines.push(`  ${field.key}: text('${colName}')${notNull}${unique},`);
       } else {
         lines.push(
@@ -440,7 +476,10 @@ function main() {
         ? "\n  tenantId: int('tenant_id').references(() => tenants.id),"
         : "\n  tenantId: integer('tenant_id').references(() => tenants.id),"
       : "";
-  const userExtCols = generateExtensionColumnLines(loadExtensionFields("user"), dialect);
+  const userExtCols = generateExtensionColumnLines(
+    loadExtensionFields("user"),
+    dialect
+  );
 
   const usersTable =
     dialect === "mysql"
@@ -472,7 +511,10 @@ function main() {
 
   // Emit organizations table when tenant mode != none (system object, not from metadata/objects)
   if (tenantMode !== "none") {
-    const orgExtCols = generateExtensionColumnLines(loadExtensionFields("organization"), dialect);
+    const orgExtCols = generateExtensionColumnLines(
+      loadExtensionFields("organization"),
+      dialect
+    );
     const orgTable =
       dialect === "mysql"
         ? `export const organizations = mysqlTable('organizations', {
@@ -495,7 +537,10 @@ function main() {
 
   // Emit tenants table when tenant mode is org_and_tenant (system object)
   if (tenantMode === "org_and_tenant") {
-    const tenantExtCols = generateExtensionColumnLines(loadExtensionFields("tenant"), dialect);
+    const tenantExtCols = generateExtensionColumnLines(
+      loadExtensionFields("tenant"),
+      dialect
+    );
     const tenantTable =
       dialect === "mysql"
         ? `export const tenants = mysqlTable('tenants', {
@@ -516,22 +561,119 @@ function main() {
     tableNames.push("tenants");
   }
 
+  // Internal files table (no metadata, managed via upload/download APIs)
+  const filesOrgRef =
+    tenantMode !== "none" && dialect === "mysql"
+      ? "int('organization_id').references(() => organizations.id, { onDelete: 'set null' })"
+      : tenantMode !== "none" && dialect === "sqlite"
+        ? "integer('organization_id').references(() => organizations.id, { onDelete: 'set null' })"
+        : dialect === "mysql"
+          ? "int('organization_id')"
+          : "integer('organization_id')";
+  const filesTenantRef =
+    tenantMode === "org_and_tenant" && dialect === "mysql"
+      ? "int('tenant_id').references(() => tenants.id, { onDelete: 'set null' })"
+      : tenantMode === "org_and_tenant" && dialect === "sqlite"
+        ? "integer('tenant_id').references(() => tenants.id, { onDelete: 'set null' })"
+        : dialect === "mysql"
+          ? "int('tenant_id')"
+          : "integer('tenant_id')";
+  const filesTable =
+    dialect === "mysql"
+      ? `export const files = mysqlTable('files', {
+  id: int('id').autoincrement().primaryKey(),
+  objectName: varchar('object_name', { length: 255 }).notNull(),
+  recordId: int('record_id').notNull(),
+  filename: varchar('filename', { length: 255 }).notNull(),
+  storagePath: varchar('storage_path', { length: 512 }).notNull(),
+  mimeType: varchar('mime_type', { length: 128 }),
+  size: int('size').notNull(),
+  isPublic: boolean('is_public').default(false).notNull(),
+  uploadedById: int('uploaded_by_id').references(() => users.id, { onDelete: 'set null' }),
+  uploadedAt: datetime('uploaded_at'),
+  organizationId: ${filesOrgRef},
+  tenantId: ${filesTenantRef},
+})`
+      : `export const files = sqliteTable('files', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  objectName: text('object_name').notNull(),
+  recordId: integer('record_id').notNull(),
+  filename: text('filename').notNull(),
+  storagePath: text('storage_path').notNull(),
+  mimeType: text('mime_type'),
+  size: integer('size').notNull(),
+  isPublic: integer('is_public', { mode: 'boolean' }).default(false).notNull(),
+  uploadedById: integer('uploaded_by_id').references(() => users.id, { onDelete: 'set null' }),
+  uploadedAt: integer('uploaded_at', { mode: 'timestamp' }),
+  organizationId: ${filesOrgRef},
+  tenantId: ${filesTenantRef},
+})`;
+  tables.push(filesTable);
+  tableNames.push("files");
+
+  // Internal record_history table (field-level audit trail, no metadata)
+  const recordHistoryOrgRef =
+    tenantMode !== "none" && dialect === "mysql"
+      ? "int('organization_id').references(() => organizations.id, { onDelete: 'set null' })"
+      : tenantMode !== "none" && dialect === "sqlite"
+        ? "integer('organization_id').references(() => organizations.id, { onDelete: 'set null' })"
+        : dialect === "mysql"
+          ? "int('organization_id')"
+          : "integer('organization_id')";
+  const recordHistoryTenantRef =
+    tenantMode === "org_and_tenant" && dialect === "mysql"
+      ? "int('tenant_id').references(() => tenants.id, { onDelete: 'set null' })"
+      : tenantMode === "org_and_tenant" && dialect === "sqlite"
+        ? "integer('tenant_id').references(() => tenants.id, { onDelete: 'set null' })"
+        : dialect === "mysql"
+          ? "int('tenant_id')"
+          : "integer('tenant_id')";
+  const recordHistoryTable =
+    dialect === "mysql"
+      ? `export const recordHistory = mysqlTable('record_history', {
+  id: int('id').autoincrement().primaryKey(),
+  objectName: varchar('object_name', { length: 255 }).notNull(),
+  recordId: int('record_id').notNull(),
+  fieldKey: varchar('field_key', { length: 255 }).notNull(),
+  oldValue: text('old_value'),
+  newValue: text('new_value'),
+  changedById: int('changed_by_id').references(() => users.id, { onDelete: 'set null' }),
+  changedAt: datetime('changed_at'),
+  organizationId: ${recordHistoryOrgRef},
+  tenantId: ${recordHistoryTenantRef},
+})`
+      : `export const recordHistory = sqliteTable('record_history', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  objectName: text('object_name').notNull(),
+  recordId: integer('record_id').notNull(),
+  fieldKey: text('field_key').notNull(),
+  oldValue: text('old_value'),
+  newValue: text('new_value'),
+  changedById: integer('changed_by_id').references(() => users.id, { onDelete: 'set null' }),
+  changedAt: integer('changed_at', { mode: 'timestamp' }),
+  organizationId: ${recordHistoryOrgRef},
+  tenantId: ${recordHistoryTenantRef},
+})`;
+  tables.push(recordHistoryTable);
+  tableNames.push("recordHistory");
+
   const refs = new Map<string, string>();
 
   for (const objectName of objectDirs) {
     const { object, fields } = loadObjectMetadata(objectName);
     const tableName = (object.tableName as string) || pluralize(objectName);
-    const tenantScope = (object.tenantScope as string | null | undefined) ?? null;
+    const tenantScope =
+      (object.tenantScope as string | null | undefined) ?? null;
 
     for (const f of fields) {
-      if (f.type === "reference") {
+      if (f.type === "reference" || f.type === "masterDetail") {
         refs.set(f.key, tableName);
       }
     }
 
     const refMap = new Map<string, string>();
     for (const f of fields) {
-      if (f.type === "reference") {
+      if (f.type === "reference" || f.type === "masterDetail") {
         refMap.set(f.key, pluralize(f.objectName || f.key));
       }
     }
@@ -629,11 +771,15 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
     const { object, fields } = loadObjectMetadata(objectName);
     const allFields = loadAllFields(objectName);
     const tableName = (object.tableName as string) || pluralize(objectName);
-    const tenantScope = (object.tenantScope as string | null | undefined) ?? null;
+    const tenantScope =
+      (object.tenantScope as string | null | undefined) ?? null;
     imports.add(tableName);
 
     const searchableFields = fields.filter(
-      (f) => f.type !== "reference" && f.type !== "formula"
+      (f) =>
+        f.type !== "reference" &&
+        f.type !== "masterDetail" &&
+        f.type !== "formula"
     );
     const searchFieldRefs = searchableFields
       .filter((f) => (f as any).searchable !== false)
@@ -642,12 +788,21 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
       searchFieldRefs.length > 0 ? searchFieldRefs : [`${tableName}.id`];
 
     const insertFields = fields
-      .filter((f) => f.type !== "reference")
+      .filter(
+        (f) => f.type !== "reference" && f.type !== "masterDetail"
+      )
       .map((f) => f.key);
-    const referenceFields = fields.filter((f) => f.type === "reference");
+    const referenceFields = fields.filter(
+      (f) => f.type === "reference" || f.type === "masterDetail"
+    );
     const systemInsertFields = SYSTEM_FIELDS.filter((f) => f !== "id");
     const tenantScopeFields: string[] = [];
-    if (tenantScope && tenantConfig.mode !== "none" && objectName !== "organization" && objectName !== "tenant") {
+    if (
+      tenantScope &&
+      tenantConfig.mode !== "none" &&
+      objectName !== "organization" &&
+      objectName !== "tenant"
+    ) {
       tenantScopeFields.push("organizationId");
       if (tenantScope === "org_and_tenant") tenantScopeFields.push("tenantId");
     }
@@ -659,7 +814,9 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
         ...systemInsertFields
       ])
     ];
-    const updateFieldsArr = insertFieldsArr.filter((f) => f !== "createdAt" && !tenantScopeFields.includes(f));
+    const updateFieldsArr = insertFieldsArr.filter(
+      (f) => f !== "createdAt" && !tenantScopeFields.includes(f)
+    );
 
     let joinConfig = "";
     if (referenceFields.length > 0) {
@@ -726,7 +883,9 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
       .map((f) => `${f.key}Id`);
     const requiredRefsConfig =
       requiredRefIdFields.length > 0
-        ? `requiredRefIdFields: [${requiredRefIdFields.map((s) => `'${s}'`).join(", ")}]`
+        ? `requiredRefIdFields: [${requiredRefIdFields
+            .map((s) => `'${s}'`)
+            .join(", ")}]`
         : "";
 
     const dateFields = fields
@@ -774,7 +933,10 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
   if (tenantMode === "org_and_tenant") systemObjectsToAdd.push("tenant");
 
   for (const objectName of systemObjectsToAdd) {
-    if (!fs.existsSync(path.join(SYSTEM_OBJECTS_PATH, objectName, "object.json"))) continue;
+    if (
+      !fs.existsSync(path.join(SYSTEM_OBJECTS_PATH, objectName, "object.json"))
+    )
+      continue;
     const { object, fields } = loadSystemObjectMetadata(objectName);
     const extFields = loadExtensionFields(objectName);
     const combinedFields = [...fields, ...extFields];
@@ -782,7 +944,10 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
     imports.add(tableName);
 
     const searchableFields = combinedFields.filter(
-      (f) => f.type !== "reference" && f.type !== "formula"
+      (f) =>
+        f.type !== "reference" &&
+        f.type !== "masterDetail" &&
+        f.type !== "formula"
     );
     const searchFieldRefs = searchableFields
       .filter((f) => (f as any).searchable !== false)
@@ -791,9 +956,13 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
       searchFieldRefs.length > 0 ? searchFieldRefs : [`${tableName}.id`];
 
     const insertFields = combinedFields
-      .filter((f) => f.type !== "reference")
+      .filter(
+        (f) => f.type !== "reference" && f.type !== "masterDetail"
+      )
       .map((f) => f.key);
-    const referenceFields = combinedFields.filter((f) => f.type === "reference");
+    const referenceFields = combinedFields.filter(
+      (f) => f.type === "reference" || f.type === "masterDetail"
+    );
     const systemInsertFields = SYSTEM_FIELDS.filter((f) => f !== "id");
     const tenantScopeFields: string[] = [];
     const insertFieldsArr = [
@@ -804,7 +973,9 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
         ...systemInsertFields
       ])
     ];
-    const updateFieldsArr = insertFieldsArr.filter((f) => f !== "createdAt" && !tenantScopeFields.includes(f));
+    const updateFieldsArr = insertFieldsArr.filter(
+      (f) => f !== "createdAt" && !tenantScopeFields.includes(f)
+    );
 
     let joinConfig = "";
     if (referenceFields.length > 0) {
@@ -819,7 +990,9 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
       .map((f) => `${f.key}Id`);
     const requiredRefsConfig =
       requiredRefIdFields.length > 0
-        ? `requiredRefIdFields: [${requiredRefIdFields.map((s) => `'${s}'`).join(", ")}]`
+        ? `requiredRefIdFields: [${requiredRefIdFields
+            .map((s) => `'${s}'`)
+            .join(", ")}]`
         : "";
 
     const dateFields = combinedFields

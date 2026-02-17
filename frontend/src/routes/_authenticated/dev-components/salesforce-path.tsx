@@ -35,7 +35,7 @@ function SalesforcePathPage() {
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
-              <Link to="/orders/1">
+              <Link to="/$objectName/$recordId" params={{ objectName: 'orders', recordId: '1' }}>
                 Open Order #1 (generic detail view)
               </Link>
             </Button>

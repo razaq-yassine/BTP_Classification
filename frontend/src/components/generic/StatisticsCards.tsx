@@ -1,5 +1,6 @@
 import { GenericRecord, StatisticsCardDefinition } from '@/types/object-definition'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { formatCurrency } from '@/stores/appConfigStore'
 
 interface StatisticsCardsProps {
   statistics: StatisticsCardDefinition[]
@@ -8,9 +9,9 @@ interface StatisticsCardsProps {
 
 function formatValue(value: string | number, format?: 'currency' | 'percentage' | 'number' | 'text'): string {
   const numValue = typeof value === 'number' ? value : parseFloat(value?.toString() || '0')
-  
+
   if (format === 'currency') {
-    return `$${numValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    return formatCurrency(numValue)
   }
   if (format === 'percentage') {
     return `${(numValue * 100).toFixed(1)}%`

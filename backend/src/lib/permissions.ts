@@ -148,3 +148,19 @@ export function isFieldVisible(
 ): boolean {
   return hasFieldPermission(profile, objectName, fieldKey, 'visible')
 }
+
+/**
+ * Check if profile has permission to use a global action.
+ * Admin profile bypasses all checks and has access to all global actions.
+ */
+export function hasGlobalActionPermission(
+  profile: Profile | null,
+  actionId: string
+): boolean {
+  if (!profile) return false
+  if (profile.name === 'admin') return true
+
+  const perms = profile.globalActionPermissions
+  if (!perms) return false
+  return perms[actionId] === true
+}

@@ -1,0 +1,30 @@
+---
+description: Detail view side section structure and extensibility
+globs: frontend/src/components/generic/GenericObjectDetailViewSideSection.tsx
+alwaysApply: false
+---
+
+# Detail View Side Section
+
+The record detail view has a side section (right column on large screens) with two built-in tabs:
+
+- **History** — Field-level change tracking. Shows who changed what and when. Implemented by `RecordHistorySection`.
+- **Files** — File attachments. Implemented by `AttachmentsSection`.
+
+## Extension Point
+
+`frontend/src/components/generic/GenericObjectDetailViewSideSection.tsx` is the extension point for the side section.
+
+## Extensibility
+
+These sections are designed to be **extensible**. Adding custom content is **recommended**:
+
+- Add new tabs for domain-specific features (e.g., activity feed, notes, related documents)
+- Replace or wrap built-in content when needed
+- Keep History and Files as the baseline; extend with additional tabs or cards
+
+## References
+
+- `docs/USAGE.md` — [Detail View Side Section](#detail-view-side-section)
+- `RecordHistorySection.tsx` — History tab content
+- `AttachmentsSection.tsx` — Files tab content
