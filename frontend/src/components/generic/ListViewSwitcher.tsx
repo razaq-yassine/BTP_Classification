@@ -13,9 +13,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ChevronDown, Pin, Search, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getObjectAvatarClasses } from '@/utils/object-color'
 
 interface ListViewSwitcherProps {
   objectIcon?: React.ComponentType<{ className?: string }>
+  objectColor?: string
   views: ListViewDefinition[]
   activeViewKey: string
   recordCount: number
@@ -26,6 +28,7 @@ interface ListViewSwitcherProps {
 
 export function ListViewSwitcher({
   objectIcon: ObjectIcon,
+  objectColor,
   views,
   activeViewKey,
   recordCount,
@@ -67,7 +70,7 @@ export function ListViewSwitcher({
       {/* Main heading: icon + name + count + arrow + pin */}
       <div className="flex items-center gap-2 sm:gap-3">
         {/* Icon */}
-        <div className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+        <div className={cn("flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full", getObjectAvatarClasses(objectColor))}>
           {ObjectIcon ? (
             <ObjectIcon className="h-4 w-4 sm:h-5 sm:w-5" />
           ) : (

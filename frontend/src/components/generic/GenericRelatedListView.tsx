@@ -158,7 +158,7 @@ export function GenericRelatedListView({
             <span>Loading...</span>
           </div>
         ) : error ? (
-          <div className="text-red-500 py-4">{error}</div>
+          <div className="text-destructive py-4">{error}</div>
         ) : (
           <GenericDataTable
             data={filteredRecords}

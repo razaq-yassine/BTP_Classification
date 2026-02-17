@@ -13,7 +13,7 @@ export interface DetailFieldFormatterProps {
 export function DetailViewFieldFormatter({ type, value, format: dateFormat, options }: DetailFieldFormatterProps) {
   // Handle null/undefined values
   if (value === null || value === undefined || value === '') {
-    return <span className="text-gray-400">Not provided</span>
+    return <span className="text-muted-foreground">Not provided</span>
   }
 
   switch (type) {
@@ -30,14 +30,14 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
         const formattedDate = dateFormat ? format(date, dateFormat) : format(date, 'MMM dd, yyyy HH:mm')
         return <span>{formattedDate}</span>
       } catch {
-        return <span className="text-gray-500">{value}</span>
+        return <span className="text-muted-foreground">{value}</span>
       }
 
     case 'email':
       return (
         <a 
           href={`mailto:${value}`} 
-          className="text-blue-600 hover:text-blue-800 hover:underline"
+          className="text-blue-600 dark:text-primary hover:underline"
         >
           {value}
         </a>
@@ -47,7 +47,7 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
       return (
         <a 
           href={`tel:${value}`} 
-          className="text-blue-600 hover:text-blue-800 hover:underline"
+          className="text-blue-600 dark:text-primary hover:underline"
         >
           {value}
         </a>
@@ -60,7 +60,7 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 hover:text-blue-800 hover:underline"
+          className="text-blue-600 dark:text-primary hover:underline"
         >
           {value}
         </a>
@@ -82,9 +82,9 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
       try {
         loc = typeof value === 'string' ? JSON.parse(value) : value
       } catch {
-        return <span className="text-gray-400">Not provided</span>
+        return <span className="text-muted-foreground">Not provided</span>
       }
-      if (loc?.latitude == null && loc?.longitude == null) return <span className="text-gray-400">Not provided</span>
+      if (loc?.latitude == null && loc?.longitude == null) return <span className="text-muted-foreground">Not provided</span>
       return <span>{[loc.latitude, loc.longitude].filter((x) => x != null).join(', ')}</span>
     }
 
@@ -93,9 +93,9 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
       try {
         addr = typeof value === 'string' ? JSON.parse(value) : value
       } catch {
-        return <span className="text-gray-400">Not provided</span>
+        return <span className="text-muted-foreground">Not provided</span>
       }
-      if (!addr || typeof addr !== 'object') return <span className="text-gray-400">Not provided</span>
+      if (!addr || typeof addr !== 'object') return <span className="text-muted-foreground">Not provided</span>
       const parts = [addr.street, addr.city, addr.state, addr.zip, addr.country].filter(Boolean)
       return <span>{parts.join(', ')}</span>
     }
@@ -109,11 +109,11 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
       const path = typeof value === 'string' ? value : String(value ?? '')
       const filename = path.split('/').pop() || path
       return path ? (
-        <a href={path.startsWith('/') ? path : `/${path}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+        <a href={path.startsWith('/') ? path : `/${path}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-primary hover:underline">
           {filename}
         </a>
       ) : (
-        <span className="text-gray-400">Not provided</span>
+        <span className="text-muted-foreground">Not provided</span>
       )
     }
 
@@ -130,7 +130,7 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
       // Format numbers with proper locale formatting
       const numValue = typeof value === 'number' ? value : parseFloat(value)
       if (isNaN(numValue)) {
-        return <span className="text-gray-500">{value}</span>
+        return <span className="text-muted-foreground">{value}</span>
       }
       return <span className="font-mono">{numValue.toLocaleString()}</span>
 

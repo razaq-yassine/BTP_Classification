@@ -4,7 +4,6 @@ import { GenericCreateDialog } from '@/components/generic/GenericCreateDialog'
 import { GlobalActionsBar } from '@/components/layout/global-actions-bar'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
-import type { GenericRecord } from '@/types/generic'
 
 /**
  * Example global actions for the header bar.

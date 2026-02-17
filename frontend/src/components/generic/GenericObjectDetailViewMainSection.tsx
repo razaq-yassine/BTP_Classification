@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ObjectDefinition, GenericRecord, FieldDefinition } from '@/types/object-definition'
 import { formatDetailValue } from '@/utils/formatDetailValue'
+import { ReferenceFieldValue } from './ReferenceFieldValue'
 import { evaluateFormula } from '@/utils/evaluateFormula'
 import { usePermissions } from '@/hooks/usePermissions'
 import { GenericRelatedListView } from './GenericRelatedListView'
@@ -12,6 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ImportantFieldsDialog } from '@/components/ui/important-fields-dialog'
 import { Edit2, ChevronDown, ChevronRight, Save, Undo2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getObjectBorderAccentClasses, getObjectButtonClasses } from '@/utils/object-color'
 import api from '@/services/api'
 import { isNetworkError } from '@/utils/handle-server-error'
 import { toast } from 'sonner'
@@ -89,13 +91,13 @@ function FieldDisplay({
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-1">
-          <span className="text-sm font-bold text-gray-900">{field.label}</span>
+          <span className="text-sm font-bold text-foreground">{field.label}</span>
           {isFieldRequired && <span className="text-red-500 text-sm">*</span>}
           {field.isImportant && <span className="text-orange-500 text-sm" title="Important field">!</span>}
           {hasChanged && onRevertField && (
             <button
               onClick={() => onRevertField(field.key)}
-              className="ml-auto p-1 text-gray-400 hover:text-orange-600 transition-colors"
+              className="ml-auto p-1 text-muted-foreground hover:text-orange-600 transition-colors"
               title="Revert this field to original value"
             >
               <Undo2 className="h-3 w-3" />
@@ -113,7 +115,7 @@ function FieldDisplay({
           recordId={record?.id != null ? record.id : undefined}
         />
         {error && (
-          <p className="text-sm text-red-600 mt-1">{error}</p>
+          <p className="text-sm text-destructive mt-1">{error}</p>
         )}
       </div>
     )
@@ -128,26 +130,30 @@ function FieldDisplay({
     <div
       className={cn(
         "space-y-1 group",
-        canEdit && "cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+        canEdit && "cursor-pointer hover:bg-muted/50 p-1.5 rounded-md transition-colors"
       )}
       onClick={canEdit && onStartEdit ? onStartEdit : undefined}
     >
       <div className="flex items-center gap-1">
-        <span className="text-sm font-bold text-gray-900">{field.label}</span>
+        <span className="text-sm font-bold text-foreground">{field.label}</span>
         {(field.required || field.type === 'masterDetail' || field.relationshipType === 'masterDetail') && (
           <span className="text-red-500 text-sm">*</span>
         )}
         {field.isImportant && <span className="text-orange-500 text-sm" title="Important field">!</span>}
         {canEdit && onStartEdit && (
-          <Edit2 className="h-3 w-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
+          <Edit2 className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
         )}
       </div>
       <div className={cn(
         "text-sm",
-        isEmpty ? "text-gray-400 italic" : "text-gray-900",
+        isEmpty ? "text-muted-foreground italic" : "text-foreground",
         isImportant && "text-orange-600 font-medium"
       )}>
-        {formatDetailValue(field, value, record)}
+        {(field.type === 'reference' || field.type === 'masterDetail') && !isEmpty ? (
+          <ReferenceFieldValue field={field} value={value} record={record} />
+        ) : (
+          formatDetailValue(field, value, record)
+        )}
       </div>
     </div>
   )
@@ -201,7 +207,7 @@ function DetailsTabContent({
   }, [tabKey, tabState])
 
   if (isLoading) {
-    return <GenericDetailsTabSkeleton />
+    return <GenericDetailsTabSkeleton objectColor={objectDefinition.color} />
   }
 
   if (!record) return null
@@ -668,18 +674,20 @@ function DetailsTabContent({
   }
 
   // Global save/cancel buttons
-  const GlobalButtons = ({ showUnsavedMessage = true }: { showUnsavedMessage?: boolean }) => (
-    <div className="flex items-center gap-2 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+  const GlobalButtons = ({ showUnsavedMessage = true }: { showUnsavedMessage?: boolean }) => {
+    const buttonClasses = getObjectButtonClasses(objectDefinition.color)
+    return (
+    <div className="flex items-center gap-2 p-3 bg-muted border border-border rounded-lg shadow-sm">
       {showUnsavedMessage && (
         <div className="flex-1">
-          <p className="text-sm font-medium text-blue-900">You have unsaved changes</p>
-          <p className="text-xs text-blue-700">Save your changes or cancel to discard them</p>
+          <p className="text-sm font-medium text-foreground">You have unsaved changes</p>
+          <p className="text-xs text-muted-foreground">Save your changes or cancel to discard them</p>
         </div>
       )}
       {!showUnsavedMessage && (
         <div className="flex-1">
-          <p className="text-sm font-medium text-blue-900">Edit mode</p>
-          <p className="text-xs text-blue-700">Make changes to the fields below</p>
+          <p className="text-sm font-medium text-foreground">Edit mode</p>
+          <p className="text-xs text-muted-foreground">Make changes to the fields below</p>
         </div>
       )}
       <div className="flex gap-2">
@@ -697,7 +705,7 @@ function DetailsTabContent({
           size="sm"
           onClick={handleSaveAll}
           disabled={saving || !tabState.hasChanges || hasValidationErrors()}
-          className="flex items-center gap-2"
+          className={cn("flex items-center gap-2", buttonClasses)}
         >
           <Save className="h-4 w-4" />
           {saving ? 'Saving...' : 'Save All'}
@@ -705,12 +713,13 @@ function DetailsTabContent({
       </div>
     </div>
   )
+  }
 
   // Render sections as accordions
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-3">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div className="bg-destructive/10 border border-destructive/30 text-destructive px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
@@ -732,20 +741,20 @@ function DetailsTabContent({
             open={isOpen}
             onOpenChange={() => toggleSection(sectionIndex)}
           >
-            <div className="border border-gray-200 rounded-lg">
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 text-left hover:bg-gray-50 transition-colors">
-                <h3 className="text-lg font-semibold text-gray-900">{section.title}</h3>
+            <div className="border border-border rounded-lg overflow-hidden shadow-sm">
+              <CollapsibleTrigger className={cn("flex items-center justify-between w-full p-2.5 text-left bg-muted hover:bg-muted/80 transition-colors", getObjectBorderAccentClasses(objectDefinition.color))}>
+                <h3 className="text-base font-semibold text-foreground">{section.title}</h3>
                 {isOpen ? (
-                  <ChevronDown className="h-5 w-5 text-gray-500" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                 ) : (
-                  <ChevronRight className="h-5 w-5 text-gray-500" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                 )}
               </CollapsibleTrigger>
               <CollapsibleContent>
-                <div className="p-4 pt-0 border-t border-gray-100">
+                <div className="p-3 pt-0 border-t border-border bg-card/50">
                   <div
                     className={cn(
-                      "grid gap-6",
+                      "grid gap-4",
                       section.columns === 1 ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
                     )}
                   >

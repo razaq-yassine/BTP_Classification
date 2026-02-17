@@ -17,7 +17,7 @@ function UnderDevelopmentTabContent({ name }: { name: string }) {
   return (
     <div className="flex items-center justify-center py-4 text-muted-foreground">
       <div className="text-center">
-        <Construction className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+        <Construction className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
         <p className="text-sm font-medium">{name} - Under Development</p>
       </div>
     </div>
@@ -39,7 +39,7 @@ export function GenericObjectDetailViewSideSection({ objectDefinition, record }:
               <TabsTrigger value="files" className="flex-1">Files</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="history" className="p-4 mt-0">
+            <TabsContent value="history" className="p-3 mt-0">
               {recordId != null ? (
                 <RecordHistorySection
                   objectName={objectDefinition.name}

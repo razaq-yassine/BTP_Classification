@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ChevronDown, ChevronRight, Save, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getObjectBorderAccentClasses, getObjectButtonClasses } from '@/utils/object-color'
 import api from '@/services/api'
 import { toast } from 'sonner'
 import { isNetworkError } from '@/utils/handle-server-error'
@@ -57,7 +58,7 @@ function CreateFieldDisplay({
     (!fieldEditable && !profileCanEdit)
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <GenericDetailInputFormatter
         fieldDefinition={field}
         value={value}
@@ -69,7 +70,7 @@ function CreateFieldDisplay({
         recordId="temp"
       />
       {error && (
-        <p className="text-sm text-red-600 mt-1">{error}</p>
+        <p className="text-sm text-destructive mt-1">{error}</p>
       )}
     </div>
   )
@@ -525,23 +526,28 @@ export function GenericCreateDialog({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="max-h-[95vh] overflow-hidden flex flex-col p-0"
-          style={{ width: '95vw', maxWidth: '95vw' }}
+          className={cn(
+            "overflow-hidden flex flex-col p-0",
+            "fixed inset-0 w-full max-w-full h-full max-h-[100dvh] translate-x-0 translate-y-0",
+            "sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2",
+            "sm:h-auto sm:max-h-[95vh] sm:w-[95vw] sm:max-w-2xl",
+            "rounded-none sm:rounded-lg"
+          )}
         >
-          <DialogHeader className="flex-shrink-0 px-6 pt-6">
-            <DialogTitle className="text-xl font-semibold">
+          <DialogHeader className="flex-shrink-0 px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-4">
+            <DialogTitle className="text-base font-semibold sm:text-lg">
               New {objectDefinition.label || objectDefinition.name}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto px-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6">
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-600 whitespace-pre-line">{error}</p>
+              <div className="mb-3 p-2.5 sm:p-3 bg-destructive/10 border border-destructive/30 rounded-md">
+                <p className="text-sm text-destructive whitespace-pre-line">{error}</p>
               </div>
             )}
 
-            <div className="space-y-4">
+            <div className="space-y-2">
               {objectDefinition.detailView?.sections
                 ?.map((section, idx) => ({ section, sectionIndex: idx }))
                 ?.filter(({ section }) => section.title !== 'System Information')
@@ -557,21 +563,21 @@ export function GenericCreateDialog({
                       className="w-full"
                     >
                       <CollapsibleTrigger asChild>
-                        <div className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors">
-                          <h3 className="text-lg font-medium text-gray-900">
+                        <div className={cn("flex items-center justify-between w-full p-2 sm:p-2.5 bg-muted hover:bg-muted/80 rounded-md cursor-pointer transition-colors", getObjectBorderAccentClasses(objectDefinition.color))}>
+                          <h3 className="text-sm font-medium text-foreground sm:text-base">
                             {section.title}
                           </h3>
                           {isOpen ? (
-                            <ChevronDown className="h-5 w-5 text-gray-500" />
+                            <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                           ) : (
-                            <ChevronRight className="h-5 w-5 text-gray-500" />
+                            <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
                           )}
                         </div>
                       </CollapsibleTrigger>
 
-                      <CollapsibleContent className="mt-2">
+                      <CollapsibleContent className="mt-1">
                         <div className={cn(
-                          "grid gap-4 p-4 bg-white border border-gray-200 rounded-lg",
+                          "grid gap-2.5 p-2.5 sm:p-3 bg-card/50 border border-border rounded-lg shadow-sm",
                           section.columns === 1 ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
                         )}>
                           {section.fields.map((field) => {
@@ -631,7 +637,7 @@ export function GenericCreateDialog({
             </div>
           </div>
 
-          <DialogFooter className="flex-shrink-0 flex justify-end gap-2 pt-4 px-6 pb-6 border-t">
+          <DialogFooter className="flex-shrink-0 flex justify-end gap-2 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-6 border-t bg-background">
             <Button
               variant="outline"
               onClick={handleCancel}
@@ -643,6 +649,7 @@ export function GenericCreateDialog({
             <Button
               onClick={handleSave}
               disabled={saving || hasValidationErrors()}
+              className={getObjectButtonClasses(objectDefinition.color)}
             >
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Creating...' : 'Create'}

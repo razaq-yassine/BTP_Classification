@@ -21,11 +21,9 @@ export interface FieldFormatterProps {
   onReferenceClick?: (objectName: string, id: string | number) => void
 }
 
-const EMPTY = <span className="text-muted-foreground italic">(Empty)</span>
-
 export function ListViewFieldFormatter({ type, value, format: dateFormat, options, render: renderType, objectName, onReferenceClick }: FieldFormatterProps) {
   const isEmpty = value === null || value === undefined || value === ''
-  if (isEmpty && type !== 'boolean') return EMPTY
+  if (isEmpty && type !== 'boolean') return null
 
   switch (type) {
     case 'boolean':
@@ -41,18 +39,18 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
     case 'date':
       try {
         const date = new Date(value)
-        if (!isValid(date)) return EMPTY
+        if (!isValid(date)) return null
         const formattedDate = dateFormat ? format(date, dateFormat) : format(date, 'MMM d, yyyy')
         return <span className="text-sm tabular-nums whitespace-nowrap">{formattedDate}</span>
       } catch {
-        return EMPTY
+        return null
       }
 
     case 'email':
       return (
         <a
           href={`mailto:${value}`}
-          className="text-primary hover:underline text-sm"
+          className="text-blue-600 dark:text-primary hover:underline text-sm"
           onClick={(e) => e.stopPropagation()}
         >
           {value}
@@ -63,7 +61,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
       return (
         <a
           href={`tel:${value}`}
-          className="text-primary hover:underline text-sm"
+          className="text-blue-600 dark:text-primary hover:underline text-sm"
           onClick={(e) => e.stopPropagation()}
         >
           {value}
@@ -78,7 +76,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary hover:underline text-sm"
+          className="text-blue-600 dark:text-primary hover:underline text-sm"
           onClick={(e) => e.stopPropagation()}
         >
           {display}
@@ -102,9 +100,9 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
       try {
         loc = typeof value === 'string' ? JSON.parse(value) : value
       } catch {
-        return EMPTY
+        return null
       }
-      if (loc?.latitude == null && loc?.longitude == null) return EMPTY
+      if (loc?.latitude == null && loc?.longitude == null) return null
       const label = [loc.latitude, loc.longitude].filter((x) => x != null).join(', ')
       return <span className="text-sm">{label}</span>
     }
@@ -114,26 +112,26 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
       try {
         addr = typeof value === 'string' ? JSON.parse(value) : value
       } catch {
-        return EMPTY
+        return null
       }
-      if (!addr || typeof addr !== 'object') return EMPTY
+      if (!addr || typeof addr !== 'object') return null
       const parts = [addr.street, addr.city, addr.state, addr.zip, addr.country].filter(Boolean)
       const display = parts.length > 0 ? parts.join(', ') : ''
       const truncated = display.length > 40 ? `${display.substring(0, 40)}...` : display
-      return truncated ? <span className="text-sm" title={display}>{truncated}</span> : EMPTY
+      return truncated ? <span className="text-sm" title={display}>{truncated}</span> : null
     }
 
     case 'richText': {
       const str = typeof value === 'string' ? value : String(value ?? '')
       const stripped = str.replace(/<[^>]*>/g, '').trim()
       const truncated = stripped.length > 50 ? `${stripped.substring(0, 50)}...` : stripped
-      return truncated ? <span className="text-sm" title={stripped}>{truncated}</span> : EMPTY
+      return truncated ? <span className="text-sm" title={stripped}>{truncated}</span> : null
     }
 
     case 'file': {
       const path = typeof value === 'string' ? value : String(value ?? '')
       const filename = path.split('/').pop() || path
-      return filename ? <span className="text-sm">{filename}</span> : EMPTY
+      return filename ? <span className="text-sm">{filename}</span> : null
     }
 
     case 'select':
@@ -151,7 +149,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
           arr = value ? [value] : []
         }
       }
-      if (arr.length === 0) return EMPTY
+      if (arr.length === 0) return null
       return (
         <div className="flex flex-wrap gap-1">
           {arr.slice(0, 3).map((val, index) => {
@@ -178,7 +176,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
     case 'datetime':
       try {
         const date = new Date(value)
-        if (!isValid(date)) return EMPTY
+        if (!isValid(date)) return null
         const formatted = dateFormat ? format(date, dateFormat) : format(date, 'MMM d, yyyy h:mm a')
         return (
           <span className="text-sm tabular-nums whitespace-nowrap" title={date.toLocaleString()}>
@@ -186,7 +184,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
           </span>
         )
       } catch {
-        return EMPTY
+        return null
       }
 
     case 'reference':
@@ -201,7 +199,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
         return (
           <button
             type="button"
-            className="text-sm text-primary hover:underline text-left"
+            className="text-sm text-blue-600 dark:text-primary hover:underline text-left"
             onClick={(e) => {
               e.stopPropagation()
               onReferenceClick(objectName, refId)

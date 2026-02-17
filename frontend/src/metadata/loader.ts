@@ -168,7 +168,7 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
           render: (value: string) =>
             React.createElement('span', {
               className: `inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                { PENDING: 'bg-yellow-100 text-yellow-800', CONFIRMED: 'bg-blue-100 text-blue-800', SHIPPED: 'bg-purple-100 text-purple-800', DELIVERED: 'bg-green-100 text-green-800', CANCELLED: 'bg-red-100 text-red-800' }[value] || 'bg-gray-100 text-gray-800'
+                { PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200', CONFIRMED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200', SHIPPED: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200', DELIVERED: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200', CANCELLED: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200' }[value] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
               }`,
             }, value),
         } as FieldDefinition
@@ -187,7 +187,7 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
           render: (value: boolean) =>
             React.createElement('span', {
               className: `inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                value ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200'
               }`,
             }, value ? 'Active' : 'Inactive'),
         } as FieldDefinition
@@ -270,7 +270,7 @@ async function loadFields(objectName: string, objPathOverride?: string): Promise
           render: (value: boolean) =>
             React.createElement('span', {
               className: `inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                value ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200'
               }`,
             }, value ? 'Active' : 'Inactive'),
         }
@@ -281,7 +281,7 @@ async function loadFields(objectName: string, objPathOverride?: string): Promise
           render: (value: string) =>
             React.createElement('span', {
               className: `inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                { PENDING: 'bg-yellow-100 text-yellow-800', CONFIRMED: 'bg-blue-100 text-blue-800', SHIPPED: 'bg-purple-100 text-purple-800', DELIVERED: 'bg-green-100 text-green-800', CANCELLED: 'bg-red-100 text-red-800' }[value] || 'bg-gray-100 text-gray-800'
+                { PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200', CONFIRMED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200', SHIPPED: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200', DELIVERED: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200', CANCELLED: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200' }[value] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
               }`,
             }, value),
         }

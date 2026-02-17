@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import api from '@/services/api'
 import { pluralize } from '@/metadata/utils'
 import { useObjectDefinition } from '@/hooks/useObjectDefinition'
+import { getObjectIconClasses } from '@/utils/object-color'
 import { sortByRecentlyViewed } from '@/utils/recently-viewed'
 
 // Simple debounce implementation to avoid lodash dependency
@@ -72,6 +73,7 @@ export function RecordLookup({
 
   const { definition } = useObjectDefinition(objectName)
   const ObjectIcon = definition?.icon
+  const iconClasses = getObjectIconClasses(definition?.color)
 
   // Helper function to get display name from record
   const getRecordDisplayName = (record: LookupRecord): string => {
@@ -205,7 +207,7 @@ export function RecordLookup({
     return (
       <div className="flex items-center gap-2 flex-1 min-w-0">
         {showIcon && ObjectIcon && (
-          <ObjectIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <ObjectIcon className={cn('h-4 w-4 shrink-0', iconClasses)} />
         )}
         <div className="flex flex-col min-w-0">
           <span className="font-medium truncate">{getRecordDisplayName(record)}</span>
@@ -238,7 +240,7 @@ export function RecordLookup({
           >
             <div className="flex items-center gap-2 flex-1 text-left min-w-0">
               {selectedRecord && ObjectIcon ? (
-                <ObjectIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <ObjectIcon className={cn('h-4 w-4 shrink-0', iconClasses)} />
               ) : (
                 <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
               )}

@@ -20,6 +20,8 @@ import { isNetworkError } from '@/utils/handle-server-error'
 import { trackRecentlyViewed, getRecentlyViewedIds } from '@/utils/recently-viewed'
 import { useAuthStore, selectUser } from '@/stores/authStore'
 import { usePermissions } from '@/hooks/usePermissions'
+import { getObjectAvatarClasses, getObjectButtonClasses } from '@/utils/object-color'
+import { cn } from '@/lib/utils'
 
 interface GenericListViewProps {
   objectDefinition: ObjectDefinition
@@ -381,6 +383,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
             {hasMultipleViews ? (
               <ListViewSwitcher
                 objectIcon={objectDefinition.icon}
+                objectColor={objectDefinition.color}
                 views={views!}
                 activeViewKey={activeViewKey}
                 recordCount={records.length}
@@ -391,7 +394,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
             ) : (
               <div className="flex flex-col gap-1 min-w-0">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <div className={cn("flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full", getObjectAvatarClasses(objectDefinition.color))}>
                     {(() => {
                       const Icon = objectDefinition.icon
                       return Icon ? (
@@ -424,7 +427,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
                 </Button>
               )}
               {canCreate(objectDefinition.name) && (
-                <Button size="icon" className="h-8 w-8" onClick={handleAddRecord}>
+                <Button size="icon" className={cn("h-8 w-8", getObjectButtonClasses(objectDefinition.color))} onClick={handleAddRecord}>
                   <Plus className="h-4 w-4" />
                 </Button>
               )}
@@ -449,7 +452,7 @@ export function GenericListView({ objectDefinition, basePath }: GenericListViewP
                 </Button>
               )}
               {canCreate(objectDefinition.name) && (
-                <Button size="sm" onClick={handleAddRecord}>
+                <Button size="sm" className={getObjectButtonClasses(objectDefinition.color)} onClick={handleAddRecord}>
                   <Plus className="mr-2 h-4 w-4" />
                   Add {objectDefinition.label}
                 </Button>

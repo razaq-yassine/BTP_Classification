@@ -11,6 +11,7 @@ import { metadataRoutes } from "./routes/metadata.js";
 import { uploadRoutes } from "./routes/upload.js";
 import { fileRoutes } from "./routes/files.js";
 import { recordHistoryRoutes } from "./routes/record-history.js";
+import { searchRoutes } from "./routes/search.js";
 import { runMigrations } from "./db/migrate.js";
 import { initDb } from "./db/init.js";
 
@@ -40,6 +41,7 @@ app.use("/uploads/*", serveStatic({ root: path.join(__dirname, "..") }));
 
 app.route("/api/auth", authRoutes);
 app.route("/api/config", configRoutes);
+app.route("/api/search", searchRoutes);
 app.route("/api", entityRoutes);
 app.route("/api/upload", uploadRoutes);
 app.route("/api/files", fileRoutes);

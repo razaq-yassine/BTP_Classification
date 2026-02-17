@@ -19,6 +19,8 @@ interface SearchableSelectProps {
   disabled?: boolean
   className?: string
   emptyMessage?: string
+  /** Custom render for selected value (e.g. for phone: show flag + dial code only) */
+  renderValue?: (option: SearchableSelectOption) => React.ReactNode
 }
 
 export function SearchableSelect({
@@ -29,7 +31,8 @@ export function SearchableSelect({
   searchPlaceholder = "Search options...",
   disabled = false,
   className,
-  emptyMessage = "No options found."
+  emptyMessage = "No options found.",
+  renderValue,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false)
 
@@ -46,8 +49,7 @@ export function SearchableSelect({
           disabled={disabled}
         >
           {selectedOption ? (
-            // For phone country selector, show only the flag part
-            className?.includes('w-16') ? selectedOption.label.split(' ')[0] : selectedOption.label
+            renderValue ? renderValue(selectedOption) : selectedOption.label
           ) : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>

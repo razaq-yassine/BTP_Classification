@@ -133,7 +133,7 @@ export default function Apps() {
               </div>
               <div>
                 <h2 className='mb-1 font-semibold'>{app.name}</h2>
-                <p className='line-clamp-2 text-gray-500'>{app.desc}</p>
+                <p className='line-clamp-2 text-muted-foreground'>{app.desc}</p>
               </div>
             </li>
           ))}

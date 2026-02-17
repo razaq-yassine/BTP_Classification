@@ -7,7 +7,7 @@ import { ExpandableText } from '@/components/expandable-text'
 import { evaluateFormula } from './evaluateFormula'
 import { formatCurrency } from '@/stores/appConfigStore'
 
-const linkClass = 'text-primary hover:underline'
+const linkClass = 'text-blue-600 dark:text-primary hover:underline'
 
 /**
  * Formats a field value for read-only display in the detail view.

@@ -23,8 +23,58 @@ export function getRecentlyViewedIds(objectName: string, userId: number | null |
   }
 }
 
+export interface RecentlyViewedEntry {
+  objectName: string
+  recordId: string | number
+  viewedAt?: number
+}
+
 /**
- * Track a record as recently viewed
+ * Get globally recently viewed records across all objects (most recent first)
+ * Aggregates from per-object storage and optional global storage
+ * @param userId - The current user's ID
+ * @param limit - Max number of entries to return (default 20)
+ */
+export function getGlobalRecentlyViewed(
+  userId: number | null | undefined,
+  limit = 20
+): RecentlyViewedEntry[] {
+  if (!userId) return []
+
+  try {
+    const globalKey = `recentlyViewed_global_${userId}`
+    const globalStored = localStorage.getItem(globalKey)
+    if (globalStored) {
+      const entries: RecentlyViewedEntry[] = JSON.parse(globalStored)
+      return (Array.isArray(entries) ? entries : [])
+        .slice(-limit)
+        .reverse()
+    }
+
+    const entries: RecentlyViewedEntry[] = []
+    const prefix = `recentlyViewed_${userId}_`
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key?.startsWith(prefix) && key !== globalKey) {
+        const objectName = key.slice(prefix.length)
+        const stored = localStorage.getItem(key)
+        if (stored) {
+          const ids = JSON.parse(stored)
+          const idsArr = Array.isArray(ids) ? ids : []
+          idsArr.slice(-10).reverse().forEach((id: string) => {
+            entries.push({ objectName, recordId: id })
+          })
+        }
+      }
+    }
+    return entries.slice(0, limit)
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Track a record as recently viewed (updates both per-object and global storage)
  * @param objectName - The object type name (e.g., 'order', 'customer')
  * @param recordId - The ID of the record being viewed
  * @param userId - The current user's ID
@@ -33,16 +83,25 @@ export function trackRecentlyViewed(objectName: string, recordId: string | numbe
   if (!userId) return
   
   try {
+    const recordIdStr = String(recordId)
     const key = `recentlyViewed_${userId}_${objectName}`
     const stored = localStorage.getItem(key)
     const recentIds = stored ? JSON.parse(stored) : []
-    const recordIdStr = String(recordId)
-    // Remove if already exists, then add to end
     const filtered = recentIds.filter((id: string) => id !== recordIdStr)
     filtered.push(recordIdStr)
-    // Keep only last 50
     const trimmed = filtered.slice(-50)
     localStorage.setItem(key, JSON.stringify(trimmed))
+
+    const globalKey = `recentlyViewed_global_${userId}`
+    const globalStored = localStorage.getItem(globalKey)
+    const globalEntries: RecentlyViewedEntry[] = globalStored ? JSON.parse(globalStored) : []
+    const newEntry: RecentlyViewedEntry = { objectName, recordId: recordIdStr, viewedAt: Date.now() }
+    const filteredGlobal = globalEntries.filter(
+      (e) => !(e.objectName === objectName && String(e.recordId) === recordIdStr)
+    )
+    filteredGlobal.push(newEntry)
+    const trimmedGlobal = filteredGlobal.slice(-50)
+    localStorage.setItem(globalKey, JSON.stringify(trimmedGlobal))
   } catch {
     // Ignore localStorage errors
   }

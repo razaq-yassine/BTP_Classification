@@ -239,7 +239,7 @@ export function GenericDetailInputFormatter({
               className={cn(className, emailError && 'border-red-500')}
             />
             {emailError && (
-              <p className="text-sm text-red-500">{emailError}</p>
+              <p className="text-sm text-destructive">{emailError}</p>
             )}
           </div>
         )
@@ -275,30 +275,38 @@ export function GenericDetailInputFormatter({
 
         return (
           <div className="space-y-1">
-            <div className="relative flex">
-              <div className="absolute left-0 top-0 h-full z-10">
+            <div className={cn(
+              "flex rounded-md border bg-transparent shadow-xs overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+              phoneError ? "border-destructive" : "border-input"
+            )}>
+              {/* Persistent country code - always visible, clickable to change */}
+              <div className="flex shrink-0 border-r border-input">
                 <SearchableSelect
                   options={countryOptions}
                   value={selectedCountry.code}
+                  renderValue={(opt) => {
+                    const parts = opt.label.split(' ')
+                    return `${parts[0]} ${parts[parts.length - 1]}`
+                  }}
                   onValueChange={(countryCode) => {
                     const country = countries.find(c => c.code === countryCode) || defaultCountry
                     setSelectedCountry(country)
-                    // Don't auto-populate random number - keep existing phone number if any
                     const currentPhone = value ? formatPhoneNumber(value.replace(selectedCountry.dialCode, '').trim()) : ''
                     const newValue = currentPhone ? `${country.dialCode} ${currentPhone}` : ''
                     onChange(newValue)
                     if (currentPhone) {
                       validatePhoneNumber(currentPhone, country)
                     } else {
-                      setPhoneError('') // Clear error if no phone number
+                      setPhoneError('')
                     }
                   }}
                   placeholder={selectedCountry.flag}
                   searchPlaceholder="Search countries..."
                   disabled={disabled}
-                  className="w-16 border-r-0 rounded-r-none bg-transparent"
+                  className="h-9 min-w-0 w-auto px-3 border-0 rounded-none bg-muted/30 hover:bg-muted/50 focus:ring-0 focus-visible:ring-0"
                 />
               </div>
+              {/* Phone number input - user types here, next to country code */}
               <Input
                 type="tel"
                 value={value ? formatPhoneNumber(value.replace(selectedCountry.dialCode, '').trim()) : ''}
@@ -309,12 +317,12 @@ export function GenericDetailInputFormatter({
                   validatePhoneNumber(cleanPhone, selectedCountry)
                 }}
                 disabled={disabled}
-                placeholder={`${selectedCountry.dialCode} Enter ${selectedCountry.phoneLength.min === selectedCountry.phoneLength.max ? selectedCountry.phoneLength.min : `${selectedCountry.phoneLength.min}-${selectedCountry.phoneLength.max}`} digits`}
-                className={cn('pl-16 flex-1', className, phoneError && 'border-red-500')}
+                placeholder={`${selectedCountry.phoneLength.min === selectedCountry.phoneLength.max ? selectedCountry.phoneLength.min : `${selectedCountry.phoneLength.min}-${selectedCountry.phoneLength.max}`} digits`}
+                className={cn('flex-1 border-0 rounded-none focus-visible:ring-0', className)}
               />
             </div>
             {phoneError && (
-              <p className="text-sm text-red-500">{phoneError}</p>
+              <p className="text-sm text-destructive">{phoneError}</p>
             )}
           </div>
         )
@@ -392,7 +400,7 @@ export function GenericDetailInputFormatter({
         const { objectName, additionalFields = [], apiEndpoint, searchBy } = fieldDefinition as any
         if (!objectName) {
           return (
-            <div className="text-sm text-red-500">
+            <div className="text-sm text-destructive">
               Object name is required for reference fields
             </div>
           )
@@ -614,7 +622,7 @@ export function GenericDetailInputFormatter({
           <Label htmlFor={fieldDefinition.key} className="text-sm font-medium">
             {label}
           </Label>
-          {isFieldRequired && <span className="text-red-500 text-sm">*</span>}
+          {isFieldRequired && <span className="text-destructive text-sm">*</span>}
           {isFieldImportant && <span className="text-orange-500 text-sm" title="Important field">!</span>}
         </div>
       )}

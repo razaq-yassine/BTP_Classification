@@ -65,7 +65,7 @@ function LoginPage() {
   // Show loading while checking authentication
   if (isCheckingAuth || isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-muted">
         <div className="flex items-center space-x-2">
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>Loading...</span>
@@ -88,7 +88,7 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-muted py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Sign in</CardTitle>
