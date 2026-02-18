@@ -13,6 +13,7 @@ import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
 import SkipToMain from '@/components/skip-to-main'
 import { useMetadataVersionPolling } from '@/hooks/useMetadataVersionPolling'
+import { useEffectiveLanguage } from '@/hooks/useEffectiveLanguage'
 import { useAppConfigStore } from '@/stores/appConfigStore'
 
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
 
 export function AuthenticatedLayout({ children }: Props) {
   const fetchConfig = useAppConfigStore((s) => s.fetchConfig)
+  useEffectiveLanguage()
   useEffect(() => {
     fetchConfig()
   }, [fetchConfig])

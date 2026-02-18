@@ -1,4 +1,14 @@
 {
   "defaultCurrency": "MAD",
-  "currencySymbol": "Dh"
+  "currencySymbol": "Dh",
+  "emailConfig": {
+    "enabled": false,
+    "fromEmail": "noreply@example.com",
+    "fromName": "My App",
+    "smtpHost": "smtp.example.com",
+    "smtpPort": 587,
+    "smtpSecure": false,
+    "smtpUser": "",
+    "smtpPassword": ""
+  }
 }

@@ -94,3 +94,30 @@ export async function getGlobalActions(): Promise<GlobalAction[]> {
   const data = res.data
   return Array.isArray(data?.actions) ? data.actions : []
 }
+
+const TRANSLATION_NAMESPACES = ['common', 'navigation', 'settings', 'errors', 'objects'] as const
+
+export async function getTranslationLocales(): Promise<string[]> {
+  const res = await api.get<string[]>(`${METADATA_BASE}/translations`)
+  return Array.isArray(res.data) ? res.data : []
+}
+
+export async function getTranslationNamespace(
+  locale: string,
+  namespace: (typeof TRANSLATION_NAMESPACES)[number]
+): Promise<Record<string, string | Record<string, unknown>>> {
+  const res = await api.get<Record<string, string | Record<string, unknown>>>(
+    `${METADATA_BASE}/translations/${locale}/${namespace}`
+  )
+  return res.data ?? {}
+}
+
+export async function saveTranslationNamespace(
+  locale: string,
+  namespace: (typeof TRANSLATION_NAMESPACES)[number],
+  data: Record<string, unknown>
+): Promise<void> {
+  await api.put(`${METADATA_BASE}/translations/${locale}/${namespace}`, data)
+}
+
+export { TRANSLATION_NAMESPACES }

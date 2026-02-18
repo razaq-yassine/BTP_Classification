@@ -79,6 +79,13 @@ export const recordHistory = mysqlTable('record_history', {
   tenantId: int('tenant_id').references(() => tenants.id, { onDelete: 'set null' }),
 })
 
+export const notificationSettings = mysqlTable('notification_settings', {
+  id: int('id').autoincrement().primaryKey(),
+  eventKey: varchar('event_key', { length: 255 }).notNull().unique(),
+  enabled: boolean('enabled').default(false).notNull(),
+  templateKey: varchar('template_key', { length: 255 }).notNull(),
+})
+
 export const categories = mysqlTable('categories', {
   id: int('id').autoincrement().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
@@ -227,6 +234,7 @@ export type Organization = typeof organizations.$inferSelect
 export type Tenant = typeof tenants.$inferSelect
 export type Fil = typeof files.$inferSelect
 export type RecordHistory = typeof recordHistory.$inferSelect
+export type NotificationSetting = typeof notificationSettings.$inferSelect
 export type Category = typeof categories.$inferSelect
 export type Customer = typeof customers.$inferSelect
 export type Deploytest = typeof deploytests.$inferSelect

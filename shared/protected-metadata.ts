@@ -11,6 +11,7 @@ export const PROTECTED_TABLES = [
   "tenants",
   "files",
   "record_history",
+  "notification_settings",
   "__drizzle_migrations"
 ] as const;
 export const PROTECTED_TABLES_SET = new Set<string>(PROTECTED_TABLES);

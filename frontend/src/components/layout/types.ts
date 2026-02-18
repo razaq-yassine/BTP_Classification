@@ -21,6 +21,8 @@ export interface TenantContextData {
 
 interface BaseNavItem {
   title: string
+  /** Translation key (e.g. navigation.dashboard). When set, title is used as fallback. */
+  titleKey?: string
   badge?: string
   icon?: React.ElementType
   /** If true, only visible to users with profile === 'admin' */
@@ -48,6 +50,8 @@ type NavItem = NavCollapsible | NavLink
 
 interface NavGroup {
   title: string
+  /** Translation key for group title (e.g. navigation.personal) */
+  titleKey?: string
   items: NavItem[]
 }
 

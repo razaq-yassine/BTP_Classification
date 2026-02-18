@@ -26,6 +26,7 @@ export interface AuthUser {
   profile: string
   organizationId?: number | null
   tenantId?: number | null
+  preferredLanguage?: string | null
 }
 
 /**
@@ -88,7 +89,8 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
         lastName: userData.lastName,
         profile: userData.profile || 'standard-user',
         organizationId: userData.organizationId ?? null,
-        tenantId: userData.tenantId ?? null
+        tenantId: userData.tenantId ?? null,
+        preferredLanguage: userData.preferredLanguage ?? null
       }
 
       // Update state
@@ -169,7 +171,8 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
         lastName: userData.lastName,
         profile: userData.profile || 'standard-user',
         organizationId: userData.organizationId ?? null,
-        tenantId: userData.tenantId ?? null
+        tenantId: userData.tenantId ?? null,
+        preferredLanguage: userData.preferredLanguage ?? null
       }
 
       // Update state

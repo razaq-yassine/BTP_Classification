@@ -699,6 +699,24 @@ function main() {
   tables.push(recordHistoryTable);
   tableNames.push("recordHistory");
 
+  // Internal notification_settings table (admin toggles + template per event)
+  const notificationSettingsTable =
+    dialect === "mysql"
+      ? `export const notificationSettings = mysqlTable('notification_settings', {
+  id: int('id').autoincrement().primaryKey(),
+  eventKey: varchar('event_key', { length: 255 }).notNull().unique(),
+  enabled: boolean('enabled').default(false).notNull(),
+  templateKey: varchar('template_key', { length: 255 }).notNull(),
+})`
+      : `export const notificationSettings = sqliteTable('notification_settings', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  eventKey: text('event_key').notNull().unique(),
+  enabled: integer('enabled', { mode: 'boolean' }).default(false).notNull(),
+  templateKey: text('template_key').notNull(),
+})`;
+  tables.push(notificationSettingsTable);
+  tableNames.push("notificationSettings");
+
   const refs = new Map<string, string>();
 
   for (const objectName of objectDirs) {

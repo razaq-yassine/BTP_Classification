@@ -19,6 +19,7 @@ import {
   orderitems,
   products,
 } from "../src/db/schema.js";
+import { seedNotificationSettings } from "./seed-notification-settings.js";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
@@ -176,6 +177,8 @@ export async function seedSingleTenant() {
     }
     console.log("[seed-single-tenant] Created sample customer and order");
   }
+
+  await seedNotificationSettings();
 
   console.log("[seed-single-tenant] Done. Users:");
   console.log("  admin / admin123 (platform admin)");

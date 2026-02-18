@@ -32,6 +32,10 @@ const METADATA_PATH = process.env.METADATA_PATH || defaultMetadataPath
 const OBJECTS_PATH = path.join(METADATA_PATH, 'objects')
 const PROFILES_PATH = path.join(METADATA_PATH, 'profiles')
 const SYSTEM_EXTENSIONS_PATH = path.join(METADATA_PATH, 'system-extensions')
+const TRANSLATIONS_PATH = path.join(METADATA_PATH, 'translations')
+
+const TRANSLATION_NAMESPACES = ['common', 'navigation', 'settings', 'errors', 'objects'] as const
+const LOCALE_REGEX = /^[a-z]{2}(-[A-Z]{2})?$/
 
 const ALLOWED_FILES = ['object.json', 'listView.json', 'detailView.json', 'fields.json', 'header.json', 'relatedObjects.json']
 
@@ -749,5 +753,75 @@ metadataRoutes.post('/bump-version', (c) => {
   } catch (err) {
     console.error('Bump version error:', err)
     return c.json({ message: 'Failed to bump version' }, 500)
+  }
+})
+
+// Translation metadata routes
+metadataRoutes.get('/translations', (c) => {
+  try {
+    if (!fs.existsSync(TRANSLATIONS_PATH)) {
+      return c.json([])
+    }
+    const locales = fs.readdirSync(TRANSLATIONS_PATH).filter((d) => {
+      const p = path.join(TRANSLATIONS_PATH, d)
+      return fs.statSync(p).isDirectory() && /^[a-z]{2}(-[A-Z]{2})?$/.test(d)
+    })
+    return c.json(locales.sort())
+  } catch (err) {
+    console.error('Translations list error:', err)
+    return c.json({ message: 'Failed to list translations' }, 500)
+  }
+})
+
+metadataRoutes.get('/translations/:locale/:namespace', (c) => {
+  const locale = c.req.param('locale')
+  const namespace = c.req.param('namespace')
+  if (!LOCALE_REGEX.test(locale)) {
+    return c.json({ message: 'Invalid locale format (e.g. en, es, fr)' }, 400)
+  }
+  if (!TRANSLATION_NAMESPACES.includes(namespace as (typeof TRANSLATION_NAMESPACES)[number])) {
+    return c.json({ message: `Invalid namespace. Must be one of: ${TRANSLATION_NAMESPACES.join(', ')}` }, 400)
+  }
+  const filePath = path.join(TRANSLATIONS_PATH, locale, `${namespace}.json`)
+  if (!path.resolve(filePath).startsWith(path.resolve(TRANSLATIONS_PATH))) {
+    return c.json({ message: 'Invalid path' }, 400)
+  }
+  try {
+    if (!fs.existsSync(filePath)) {
+      return c.json({})
+    }
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'))
+    return c.json(data)
+  } catch (err) {
+    console.error('Translation read error:', err)
+    return c.json({ message: 'Failed to read translation' }, 500)
+  }
+})
+
+metadataRoutes.put('/translations/:locale/:namespace', async (c) => {
+  const locale = c.req.param('locale')
+  const namespace = c.req.param('namespace')
+  if (!LOCALE_REGEX.test(locale)) {
+    return c.json({ message: 'Invalid locale format (e.g. en, es, fr)' }, 400)
+  }
+  if (!TRANSLATION_NAMESPACES.includes(namespace as (typeof TRANSLATION_NAMESPACES)[number])) {
+    return c.json({ message: `Invalid namespace. Must be one of: ${TRANSLATION_NAMESPACES.join(', ')}` }, 400)
+  }
+  const dirPath = path.join(TRANSLATIONS_PATH, locale)
+  const filePath = path.join(dirPath, `${namespace}.json`)
+  if (!path.resolve(filePath).startsWith(path.resolve(TRANSLATIONS_PATH))) {
+    return c.json({ message: 'Invalid path' }, 400)
+  }
+  try {
+    const body = await c.req.json()
+    if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+      return c.json({ message: 'Body must be a JSON object' }, 400)
+    }
+    fs.mkdirSync(dirPath, { recursive: true })
+    fs.writeFileSync(filePath, JSON.stringify(body, null, 2), 'utf-8')
+    return c.json({ success: true })
+  } catch (err) {
+    console.error('Translation write error:', err)
+    return c.json({ message: 'Failed to write translation' }, 500)
   }
 })

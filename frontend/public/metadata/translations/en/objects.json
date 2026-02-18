@@ -1,0 +1,141 @@
+{
+  "customer": {
+    "label": "Customer",
+    "labelPlural": "Customers",
+    "fields": {
+      "name": "Name",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone",
+      "company": "Company",
+      "address": "Address",
+      "notes": "Notes",
+      "tags": "Tags",
+      "priority": "Priority",
+      "organization": "Organization",
+      "tenant": "Tenant",
+      "bignotes": "Big Notes"
+    }
+  },
+  "order": {
+    "label": "Order",
+    "labelPlural": "Orders",
+    "fields": {
+      "name": "Order Number",
+      "status": "Status",
+      "totalAmount": "Total Amount",
+      "description": "Description",
+      "orderDate": "Order Date",
+      "deliveryDate": "Delivery Date",
+      "customer": "Customer",
+      "customerName": "Customer",
+      "organization": "Organization",
+      "tenant": "Tenant"
+    }
+  },
+  "orderitem": {
+    "label": "Order Item",
+    "labelPlural": "Order Items",
+    "fields": {
+      "name": "Item",
+      "order": "Order",
+      "product": "Product",
+      "quantity": "Quantity",
+      "unitPrice": "Unit Price",
+      "lineTotal": "Line Total",
+      "organization": "Organization",
+      "tenant": "Tenant"
+    }
+  },
+  "product": {
+    "label": "Product",
+    "labelPlural": "Products",
+    "fields": {
+      "name": "Name",
+      "sku": "SKU",
+      "description": "Description",
+      "price": "Price"
+    }
+  },
+  "category": {
+    "label": "Category",
+    "labelPlural": "Categories",
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "slug": "Slug"
+    }
+  },
+  "supplier": {
+    "label": "Supplier",
+    "labelPlural": "Suppliers",
+    "fields": {
+      "name": "Name",
+      "slug": "Slug",
+      "website": "Website",
+      "contactEmail": "Contact Email"
+    }
+  },
+  "warehouse": {
+    "label": "Warehouse",
+    "labelPlural": "Warehouses",
+    "fields": {
+      "name": "Name",
+      "slug": "Slug",
+      "description": "Description",
+      "capacity": "Storage Capacity (m²)",
+      "location": "Location"
+    }
+  },
+  "opportunity": {
+    "label": "Opportunity",
+    "labelPlural": "Opportunities",
+    "fields": {
+      "name": "Name"
+    }
+  },
+  "deploytest": {
+    "label": "Deploy Test",
+    "labelPlural": "Deploy Tests",
+    "fields": {
+      "name": "Name",
+      "fString": "String",
+      "fText": "Text",
+      "fNumber": "Number (as text)",
+      "fBoolean": "Boolean",
+      "fDate": "Date",
+      "fDatetime": "Datetime",
+      "fEmail": "Email",
+      "fPhone": "Phone",
+      "fUrl": "URL",
+      "fSelect": "Select",
+      "fMultiselect": "Multiselect",
+      "fReference": "Customer",
+      "fFormula": "Formula",
+      "fComputed": "Computed",
+      "fFile": "File",
+      "fAddress": "Address",
+      "fRichText": "Rich Text",
+      "fGeolocation": "Geolocation",
+      "fPassword": "Password"
+    }
+  },
+  "organization": {
+    "label": "Organization",
+    "labelPlural": "Organizations",
+    "fields": {
+      "name": "Name",
+      "slug": "Slug"
+    }
+  },
+  "tenant": {
+    "label": "Tenant",
+    "labelPlural": "Tenants",
+    "fields": {
+      "name": "Name",
+      "organization": "Organization"
+    }
+  }
+}

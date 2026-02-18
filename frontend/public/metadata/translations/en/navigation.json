@@ -1,0 +1,22 @@
+{
+  "dashboard": "Dashboard",
+  "settings": "Settings",
+  "personal": "Personal",
+  "workspace": "Workspace",
+  "administration": "Administration",
+  "profile": "Profile",
+  "account": "Account",
+  "appearance": "Appearance",
+  "organization": "Organization",
+  "tenant": "Tenant",
+  "email": "Email",
+  "emailTemplates": "Email Templates",
+  "notificationSettings": "Notification Settings",
+  "objectManager": "Object Manager",
+  "permissionProfiles": "Permission Profiles",
+  "sidebarAssignment": "Sidebar Assignment",
+  "display": "Display",
+  "translations": "Translations",
+  "sales": "Sales",
+  "data": "Data"
+}

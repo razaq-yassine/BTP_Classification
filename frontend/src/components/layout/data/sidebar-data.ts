@@ -5,6 +5,7 @@ import {
   IconChecklist,
   IconError404,
   IconHelp,
+  IconLanguage,
   IconLayoutDashboard,
   IconLayoutSidebarLeftExpand,
   IconLock,
@@ -33,17 +34,20 @@ import { type SidebarData, type NavGroup } from "../types";
 export const settingsNavGroups: NavGroup[] = [
   {
     title: "Personal",
+    titleKey: "navigation.personal",
     items: [
-      { title: "Profile", url: "/settings", icon: IconUserCog },
-      { title: "Account", url: "/settings/account", icon: IconTool },
-      { title: "Appearance", url: "/settings/appearance", icon: IconPalette }
+      { title: "Profile", titleKey: "navigation.profile", url: "/settings", icon: IconUserCog },
+      { title: "Account", titleKey: "navigation.account", url: "/settings/account", icon: IconTool },
+      { title: "Appearance", titleKey: "navigation.appearance", url: "/settings/appearance", icon: IconPalette }
     ]
   },
   {
     title: "Workspace",
+    titleKey: "navigation.workspace",
     items: [
       {
         title: "Organization",
+        titleKey: "navigation.organization",
         url: "/settings/organization",
         icon: Layers,
         orgUserOnly: true,
@@ -51,6 +55,7 @@ export const settingsNavGroups: NavGroup[] = [
       },
       {
         title: "Tenant",
+        titleKey: "navigation.tenant",
         url: "/settings/tenant",
         icon: Layers,
         tenantUserOnly: true,
@@ -60,41 +65,55 @@ export const settingsNavGroups: NavGroup[] = [
   },
   {
     title: "Administration",
+    titleKey: "navigation.administration",
     items: [
       {
         title: "Email",
+        titleKey: "navigation.email",
         url: "/settings/email",
         icon: IconMail,
         adminOnly: true
       },
       {
         title: "Email Templates",
+        titleKey: "navigation.emailTemplates",
         url: "/settings/email-templates",
         icon: IconMail,
         adminOnly: true
       },
       {
         title: "Notification Settings",
+        titleKey: "navigation.notificationSettings",
         url: "/settings/notification-settings",
         icon: IconNotification,
         adminOnly: true
       },
       {
         title: "Object Manager",
+        titleKey: "navigation.objectManager",
         url: "/settings/object-manager",
         icon: IconBox,
         adminOnly: true
       },
       {
         title: "Permission Profiles",
+        titleKey: "navigation.permissionProfiles",
         url: "/settings/profiles",
         icon: IconLockAccess,
         adminOnly: true
       },
       {
         title: "Sidebar Assignment",
+        titleKey: "navigation.sidebarAssignment",
         url: "/settings/sidebar-assignment",
         icon: IconLayoutSidebarLeftExpand,
+        adminOnly: true
+      },
+      {
+        title: "Translations",
+        titleKey: "navigation.translations",
+        url: "/settings/translations",
+        icon: IconLanguage,
         adminOnly: true
       }
     ]

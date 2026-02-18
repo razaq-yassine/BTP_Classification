@@ -11,6 +11,7 @@ import { getObjectBorderAccentClasses, getObjectButtonClasses } from '@/utils/ob
 import api from '@/services/api'
 import { toast } from 'sonner'
 import { isNetworkError } from '@/utils/handle-server-error'
+import { useTranslation } from 'react-i18next'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useTenantConfig } from '@/hooks/useTenantConfig'
 
@@ -82,6 +83,7 @@ export function GenericCreateDialog({
   onOpenChange,
   onRecordCreated
 }: GenericCreateDialogProps) {
+  const { t } = useTranslation('common')
   const { isFieldVisible, canEditField, profile } = usePermissions()
   const { data: tenantConfig } = useTenantConfig()
   const tenantMode = tenantConfig?.mode ?? 'single_tenant'
@@ -646,7 +648,7 @@ export function GenericCreateDialog({
               disabled={saving}
             >
               <X className="h-4 w-4 mr-2" />
-              Cancel
+              {t('cancel', { defaultValue: 'Cancel' })}
             </Button>
             <Button
               onClick={handleSave}
@@ -654,7 +656,7 @@ export function GenericCreateDialog({
               className={getObjectButtonClasses(objectDefinition.color)}
             >
               <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Creating...' : 'Create'}
+              {saving ? t('creating', { defaultValue: 'Creating...' }) : t('create', { defaultValue: 'Create' })}
             </Button>
           </DialogFooter>
         </DialogContent>

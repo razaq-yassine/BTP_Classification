@@ -1,0 +1,14 @@
+[
+  {
+    "key": "order_created",
+    "label": "Order Created",
+    "description": "When a new order is created",
+    "defaultTemplateKey": "order_created"
+  },
+  {
+    "key": "customer_signup",
+    "label": "Customer Signup",
+    "description": "When a new customer is added",
+    "defaultTemplateKey": "customer_signup"
+  }
+]

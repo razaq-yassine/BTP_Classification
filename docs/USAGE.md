@@ -27,6 +27,8 @@ This project is **metadata-driven**. The UI, API routes, and database schema are
 19. [Global Actions Bar](#global-actions-bar)
 20. [Sidebars](#sidebars)
 21. [Dashboard](#dashboard)
+22. [Email and Notifications](#email-and-notifications)
+23. [Translations and Localization](#translations-and-localization)
 
 ---
 
@@ -818,6 +820,94 @@ Admins can set the default currency symbol used when displaying currency fields 
 - **Settings**: Settings → Administration → Default Currency (admin only)
 - **Config**: Stored in `metadata/app-config.json` with `defaultCurrency` (e.g. "USD") and `currencySymbol` (e.g. "$", "€", "£")
 - **API**: `GET /api/config/app-config` (auth required), `PUT /api/config/app-config` (admin only)
+
+---
+
+## Email and Notifications
+
+The platform supports transactional emails via SMTP. Admins configure SMTP settings, edit email templates, and toggle which events send emails.
+
+### SMTP Configuration
+
+- **Settings**: Settings → Administration → Email (admin only)
+- **Storage**: `metadata/app-config.json` under `emailConfig`
+- **Fields**: `enabled`, `fromEmail`, `fromName`, `smtpHost`, `smtpPort`, `smtpSecure`, `smtpUser`, `smtpPassword`
+- **API**: Same as Default Currency; `emailConfig` is included in `GET/PUT /api/config/app-config`
+
+### Email Templates
+
+- **Location**: `metadata/email-templates/{templateKey}.json`
+- **Structure**: `key`, `label`, `subject`, `bodyHtml`, `variables` (array of variable paths)
+- **Variable syntax**: `{{path}}` (e.g. `{{customer.firstName}}`, `{{order.name}}`)
+- **API**: `GET /api/email/templates`, `GET /api/email/templates/:key`, `PUT /api/email/templates/:key` (admin), `POST /api/email/preview`
+- **UI**: Settings → Administration → Email Templates — list, edit, preview
+
+### Notification Settings
+
+- **Table**: `notification_settings` (eventKey, enabled, templateKey)
+- **Event catalog**: `metadata/notification-events.json` — defines available events and default templates
+- **Seed**: `notification_settings` is seeded from the event catalog in `seed-single-tenant`, `seed-multi-tenant`, and `initDb`
+- **API**: `GET /api/email/notification-settings`, `PUT /api/email/notification-settings` (admin)
+- **UI**: Settings → Administration → Notification Settings — toggle events, select template per event
+
+### Trigger Integration
+
+Triggers call `maybeSendNotification(eventKey, record, context)` from `backend/triggers/helpers/email.ts`. The helper checks `notification_settings`, resolves the recipient, and enqueues the email via `setImmediate` (non-blocking). For production, consider a proper queue (Redis/BullMQ).
+
+**Built-in events**: `order_created` (sends to customer email), `customer_signup` (sends to new customer email).
+
+---
+
+## Translations and Localization
+
+The platform supports multiple languages via metadata-driven translations. The effective language is resolved in this order: **user preferred language** → **tenant default** → **org default** → **app default** → **English**.
+
+### Translation File Structure
+
+Translations live under `metadata/translations/{locale}/`:
+
+| Namespace   | Purpose                                      |
+| ----------- | -------------------------------------------- |
+| `common.json`     | Buttons, generic labels (Save, Cancel, Create) |
+| `navigation.json` | Sidebar, menu items, Dashboard, Settings     |
+| `settings.json`   | Settings page labels and messages             |
+| `errors.json`     | Error messages, validation                   |
+| `objects.json`    | Object and field labels (nested by object)    |
+
+**Key convention for objects**: `objects.{objectName}.label`, `objects.{objectName}.labelPlural`, `objects.{objectName}.fields.{fieldKey}`.
+
+### Effective Language Resolution
+
+1. **User** — `preferredLanguage` (Settings → Display). Overrides all.
+2. **Tenant** — `defaultPreferredLanguage` on tenant record (tenant users).
+3. **Organization** — `defaultPreferredLanguage` on org record (org users).
+4. **App** — `defaultPreferredLanguage` in `app-config.json` (users with no tenant/org).
+5. **Fallback** — English (`en`).
+
+New users inherit the tenant or org default until they set a personal preference.
+
+### Admin UI
+
+- **Settings** → Administration → **Translations** (admin only)
+- Select locale and namespace, edit key-value pairs, save
+- API: `GET/PUT /api/admin/metadata/translations/:locale/:namespace`
+
+### Adding a New Locale
+
+1. Create `metadata/translations/{locale}/` (e.g. `es`, `fr`).
+2. Copy all namespace files from `en/` and translate values.
+3. Ensure `defaultPreferredLanguage` is available in org/tenant/app config for users to select it.
+
+### Adding Translations for New Metadata
+
+When adding a new object or field:
+
+1. Add entry to `metadata/translations/{locale}/objects.json` for each supported locale.
+2. Structure: `{ "objectName": { "label": "...", "labelPlural": "...", "fields": { "fieldKey": "..." } } }`.
+
+### Cursor Rule
+
+See `.cursor/rules/translations.mdc` — when adding new UI strings or metadata, always add translations for all supported locales.
 
 ---
 

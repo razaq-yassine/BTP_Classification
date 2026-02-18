@@ -21,6 +21,7 @@ import {
   orderitems,
   products,
 } from "../src/db/schema.js";
+import { seedNotificationSettings } from "./seed-notification-settings.js";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
@@ -398,6 +399,8 @@ export async function seedMultiTenant() {
 
     console.log("[seed-multi-tenant] Created customers and orders per tenant");
   }
+
+  await seedNotificationSettings();
 
   console.log("[seed-multi-tenant] Done. Test users:");
   console.log("  admin / admin123 (platform admin, no org/tenant)");

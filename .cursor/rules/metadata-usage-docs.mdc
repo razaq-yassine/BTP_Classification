@@ -24,6 +24,8 @@ Update `docs/USAGE.md` when you:
 
 6. **Change object.json, listView.json, or detailView.json schema** → Update the relevant sections and property tables.
 
+7. **Add or change translation metadata** → Document new namespaces, key conventions, or locale structure in the Translations and Localization section.
+
 ## What to Update
 
 - **Field Types Reference**: Add new types with DB column and notes.

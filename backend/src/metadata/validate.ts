@@ -820,8 +820,53 @@ export function validateMetadataFull(metadataPath: string): ValidationResult {
       }
     }
   }
-  
+
+  // Validate email templates
+  const emailTemplatesPath = path.join(metadataPath, 'email-templates')
+  if (fs.existsSync(emailTemplatesPath)) {
+    const templateFiles = fs.readdirSync(emailTemplatesPath).filter((f) => f.endsWith('.json'))
+    for (const file of templateFiles) {
+      const templateKey = file.replace(/\.json$/, '')
+      try {
+        const templateData = JSON.parse(fs.readFileSync(path.join(emailTemplatesPath, file), 'utf-8')) as Record<string, unknown>
+        validateEmailTemplate(templateKey, templateData, errors)
+      } catch (e) {
+        addError(errors, `email-templates/${file}`, `Failed to parse: ${(e as Error).message}`, 'PARSE_ERROR')
+      }
+    }
+  }
+
   return { valid: errors.length === 0, errors }
+}
+
+function validateEmailTemplate(
+  templateKey: string,
+  data: Record<string, unknown>,
+  errors: ValidationError[]
+): void {
+  const pathPrefix = `email-templates/${templateKey}.json`
+  if (!data.key || typeof data.key !== 'string' || data.key !== templateKey) {
+    addError(errors, pathPrefix, `key must match filename and be non-empty`, 'EMAIL_TEMPLATE_INVALID_KEY')
+  }
+  if (!data.label || typeof data.label !== 'string' || !data.label.trim()) {
+    addError(errors, pathPrefix, 'Missing required: label', 'EMAIL_TEMPLATE_MISSING_LABEL')
+  }
+  if (!data.subject || typeof data.subject !== 'string' || !data.subject.trim()) {
+    addError(errors, pathPrefix, 'Missing required: subject', 'EMAIL_TEMPLATE_MISSING_SUBJECT')
+  }
+  if (!data.bodyHtml || typeof data.bodyHtml !== 'string' || !data.bodyHtml.trim()) {
+    addError(errors, pathPrefix, 'Missing required: bodyHtml', 'EMAIL_TEMPLATE_MISSING_BODY')
+  }
+  if (!Array.isArray(data.variables)) {
+    addError(errors, pathPrefix, 'variables must be an array of strings', 'EMAIL_TEMPLATE_INVALID_VARIABLES')
+  } else {
+    for (let i = 0; i < data.variables.length; i++) {
+      const v = data.variables[i]
+      if (typeof v !== 'string' || !v.trim()) {
+        addError(errors, pathPrefix, `variables[${i}] must be a non-empty string`, 'EMAIL_TEMPLATE_INVALID_VARIABLE')
+      }
+    }
+  }
 }
 
 /**

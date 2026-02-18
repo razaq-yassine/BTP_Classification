@@ -1,11 +1,23 @@
 import { create } from "zustand";
 import api from "@/services/api";
 
+export interface EmailConfig {
+  enabled?: boolean;
+  fromEmail?: string;
+  fromName?: string;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpSecure?: boolean;
+  smtpUser?: string;
+  smtpPassword?: string;
+}
+
 export interface AppConfig {
   defaultCurrency: string;
   currencySymbol: string;
   timezone?: string;
   defaultPreferredLanguage?: string;
+  emailConfig?: EmailConfig;
 }
 
 const DEFAULT_CONFIG: AppConfig = {

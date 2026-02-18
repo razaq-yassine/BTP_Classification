@@ -13,6 +13,7 @@ import "dotenv/config";
 import { fileURLToPath } from "url";
 import { db } from "../src/db/index.js";
 import { organizations, tenants, users, customers, orders, orderitems, products, } from "../src/db/schema.js";
+import { seedNotificationSettings } from "./seed-notification-settings.js";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 export async function seedMultiTenant() {
@@ -372,6 +373,7 @@ export async function seedMultiTenant() {
         });
         console.log("[seed-multi-tenant] Created customers and orders per tenant");
     }
+    await seedNotificationSettings();
     console.log("[seed-multi-tenant] Done. Test users:");
     console.log("  admin / admin123 (platform admin, no org/tenant)");
     console.log("  acme-us-user / acme123 (Acme Corp, Acme US - tenant user)");

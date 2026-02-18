@@ -1,0 +1,38 @@
+---
+description: Enforce translation of new UI strings and metadata labels
+globs: frontend/src/**, frontend/public/metadata/translations/**, frontend/public/metadata/objects/**
+alwaysApply: false
+---
+
+# Translations Rule
+
+When adding or changing user-facing content, **always add translations** for all supported locales.
+
+## When to Add Translations
+
+1. **New UI strings** (buttons, labels, messages, placeholders):
+   - Add the string to the appropriate namespace in `metadata/translations/{locale}/` for each supported locale
+   - Use `t('namespace:key', { defaultValue: 'Fallback' })` in code
+   - Namespaces: `common`, `navigation`, `settings`, `errors`, `objects`
+
+2. **New metadata** (object, field, section title):
+   - Add corresponding entry to `metadata/translations/{locale}/objects.json` for each supported locale
+   - Structure: `objects.{objectName}.label`, `objects.{objectName}.labelPlural`, `objects.{objectName}.fields.{fieldKey}`
+
+3. **New locale**:
+   - Create `metadata/translations/{locale}/` with all namespace files
+   - Copy structure from `en/` and translate values
+
+## Checklist for New Features
+
+- [ ] New UI strings added to `common.json`, `navigation.json`, `settings.json`, or `errors.json` (per locale)
+- [ ] New object/field labels added to `objects.json` (per locale)
+- [ ] Code uses `t()` with translation key and `defaultValue` fallback
+- [ ] All supported locales updated (currently: `en`; add `es`, `fr`, etc. as needed)
+
+## References
+
+- `frontend/src/i18n.ts` — i18next configuration
+- `metadata/translations/` — translation file structure
+- `frontend/src/utils/translateMetadata.ts` — helpers for object/field labels
+- `docs/USAGE.md` — Translations and Localization section

@@ -33,12 +33,16 @@ import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedObjectNameIndexRouteImport } from './routes/_authenticated/$objectName/index'
+import { Route as AuthenticatedSettingsTranslationsRouteImport } from './routes/_authenticated/settings/translations'
 import { Route as AuthenticatedSettingsTenantRouteImport } from './routes/_authenticated/settings/tenant'
 import { Route as AuthenticatedSettingsSidebarAssignmentRouteImport } from './routes/_authenticated/settings/sidebar-assignment'
 import { Route as AuthenticatedSettingsProfilesRouteImport } from './routes/_authenticated/settings/profiles'
 import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings/organization'
 import { Route as AuthenticatedSettingsObjectManagerRouteImport } from './routes/_authenticated/settings/object-manager'
 import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
+import { Route as AuthenticatedSettingsNotificationSettingsRouteImport } from './routes/_authenticated/settings/notification-settings'
+import { Route as AuthenticatedSettingsEmailTemplatesRouteImport } from './routes/_authenticated/settings/email-templates'
+import { Route as AuthenticatedSettingsEmailRouteImport } from './routes/_authenticated/settings/email'
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
@@ -46,11 +50,14 @@ import { Route as AuthenticatedDevComponentsSalesforcePathRouteImport } from './
 import { Route as AuthenticatedDevComponentsOrderDetailPathRouteImport } from './routes/_authenticated/dev-components/order-detail-path'
 import { Route as AuthenticatedDevComponentsDetailViewFormatterRouteImport } from './routes/_authenticated/dev-components/detail-view-formatter'
 import { Route as AuthenticatedObjectNameRecordIdRouteImport } from './routes/_authenticated/$objectName/$recordId'
+import { Route as AuthenticatedSettingsTranslationsIndexRouteImport } from './routes/_authenticated/settings/translations/index'
 import { Route as AuthenticatedSettingsSidebarAssignmentIndexRouteImport } from './routes/_authenticated/settings/sidebar-assignment/index'
 import { Route as AuthenticatedSettingsProfilesIndexRouteImport } from './routes/_authenticated/settings/profiles/index'
 import { Route as AuthenticatedSettingsObjectManagerIndexRouteImport } from './routes/_authenticated/settings/object-manager/index'
+import { Route as AuthenticatedSettingsEmailTemplatesIndexRouteImport } from './routes/_authenticated/settings/email-templates/index'
 import { Route as AuthenticatedSettingsProfilesProfileNameRouteImport } from './routes/_authenticated/settings/profiles/$profileName'
 import { Route as AuthenticatedSettingsObjectManagerObjectNameRouteImport } from './routes/_authenticated/settings/object-manager/$objectName'
+import { Route as AuthenticatedSettingsEmailTemplatesTemplateKeyRouteImport } from './routes/_authenticated/settings/email-templates/$templateKey'
 import { Route as AuthenticatedSettingsProfilesProfileNameIndexRouteImport } from './routes/_authenticated/settings/profiles/$profileName/index'
 import { Route as AuthenticatedSettingsProfilesProfileNameObjectsRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects'
 import { Route as AuthenticatedSettingsProfilesProfileNameListViewsRouteImport } from './routes/_authenticated/settings/profiles/$profileName/list-views'
@@ -181,6 +188,12 @@ const AuthenticatedObjectNameIndexRoute =
     path: '/$objectName/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsTranslationsRoute =
+  AuthenticatedSettingsTranslationsRouteImport.update({
+    id: '/translations',
+    path: '/translations',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedSettingsTenantRoute =
   AuthenticatedSettingsTenantRouteImport.update({
     id: '/tenant',
@@ -215,6 +228,24 @@ const AuthenticatedSettingsNotificationsRoute =
   AuthenticatedSettingsNotificationsRouteImport.update({
     id: '/notifications',
     path: '/notifications',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsNotificationSettingsRoute =
+  AuthenticatedSettingsNotificationSettingsRouteImport.update({
+    id: '/notification-settings',
+    path: '/notification-settings',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsEmailTemplatesRoute =
+  AuthenticatedSettingsEmailTemplatesRouteImport.update({
+    id: '/email-templates',
+    path: '/email-templates',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsEmailRoute =
+  AuthenticatedSettingsEmailRouteImport.update({
+    id: '/email',
+    path: '/email',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
 const AuthenticatedSettingsDisplayRoute =
@@ -259,6 +290,12 @@ const AuthenticatedObjectNameRecordIdRoute =
     path: '/$objectName/$recordId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsTranslationsIndexRoute =
+  AuthenticatedSettingsTranslationsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsTranslationsRoute,
+  } as any)
 const AuthenticatedSettingsSidebarAssignmentIndexRoute =
   AuthenticatedSettingsSidebarAssignmentIndexRouteImport.update({
     id: '/',
@@ -277,6 +314,12 @@ const AuthenticatedSettingsObjectManagerIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedSettingsObjectManagerRoute,
   } as any)
+const AuthenticatedSettingsEmailTemplatesIndexRoute =
+  AuthenticatedSettingsEmailTemplatesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsEmailTemplatesRoute,
+  } as any)
 const AuthenticatedSettingsProfilesProfileNameRoute =
   AuthenticatedSettingsProfilesProfileNameRouteImport.update({
     id: '/$profileName',
@@ -288,6 +331,12 @@ const AuthenticatedSettingsObjectManagerObjectNameRoute =
     id: '/$objectName',
     path: '/$objectName',
     getParentRoute: () => AuthenticatedSettingsObjectManagerRoute,
+  } as any)
+const AuthenticatedSettingsEmailTemplatesTemplateKeyRoute =
+  AuthenticatedSettingsEmailTemplatesTemplateKeyRouteImport.update({
+    id: '/$templateKey',
+    path: '/$templateKey',
+    getParentRoute: () => AuthenticatedSettingsEmailTemplatesRoute,
   } as any)
 const AuthenticatedSettingsProfilesProfileNameIndexRoute =
   AuthenticatedSettingsProfilesProfileNameIndexRouteImport.update({
@@ -350,12 +399,16 @@ export interface FileRoutesByFullPath {
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
+  '/settings/email': typeof AuthenticatedSettingsEmailRoute
+  '/settings/email-templates': typeof AuthenticatedSettingsEmailTemplatesRouteWithChildren
+  '/settings/notification-settings': typeof AuthenticatedSettingsNotificationSettingsRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/object-manager': typeof AuthenticatedSettingsObjectManagerRouteWithChildren
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/settings/profiles': typeof AuthenticatedSettingsProfilesRouteWithChildren
   '/settings/sidebar-assignment': typeof AuthenticatedSettingsSidebarAssignmentRouteWithChildren
   '/settings/tenant': typeof AuthenticatedSettingsTenantRoute
+  '/settings/translations': typeof AuthenticatedSettingsTranslationsRouteWithChildren
   '/$objectName': typeof AuthenticatedObjectNameIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
@@ -363,11 +416,14 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/settings/email-templates/$templateKey': typeof AuthenticatedSettingsEmailTemplatesTemplateKeyRoute
   '/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
   '/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameRouteWithChildren
+  '/settings/email-templates/': typeof AuthenticatedSettingsEmailTemplatesIndexRoute
   '/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/settings/profiles/': typeof AuthenticatedSettingsProfilesIndexRoute
   '/settings/sidebar-assignment/': typeof AuthenticatedSettingsSidebarAssignmentIndexRoute
+  '/settings/translations/': typeof AuthenticatedSettingsTranslationsIndexRoute
   '/settings/profiles/$profileName/global-actions': typeof AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute
   '/settings/profiles/$profileName/list-views': typeof AuthenticatedSettingsProfilesProfileNameListViewsRoute
   '/settings/profiles/$profileName/objects': typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren
@@ -398,6 +454,8 @@ export interface FileRoutesByTo {
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
+  '/settings/email': typeof AuthenticatedSettingsEmailRoute
+  '/settings/notification-settings': typeof AuthenticatedSettingsNotificationSettingsRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/settings/tenant': typeof AuthenticatedSettingsTenantRoute
@@ -408,10 +466,13 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/settings/email-templates/$templateKey': typeof AuthenticatedSettingsEmailTemplatesTemplateKeyRoute
   '/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
+  '/settings/email-templates': typeof AuthenticatedSettingsEmailTemplatesIndexRoute
   '/settings/object-manager': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/settings/profiles': typeof AuthenticatedSettingsProfilesIndexRoute
   '/settings/sidebar-assignment': typeof AuthenticatedSettingsSidebarAssignmentIndexRoute
+  '/settings/translations': typeof AuthenticatedSettingsTranslationsIndexRoute
   '/settings/profiles/$profileName/global-actions': typeof AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute
   '/settings/profiles/$profileName/list-views': typeof AuthenticatedSettingsProfilesProfileNameListViewsRoute
   '/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
@@ -444,12 +505,16 @@ export interface FileRoutesById {
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
+  '/_authenticated/settings/email': typeof AuthenticatedSettingsEmailRoute
+  '/_authenticated/settings/email-templates': typeof AuthenticatedSettingsEmailTemplatesRouteWithChildren
+  '/_authenticated/settings/notification-settings': typeof AuthenticatedSettingsNotificationSettingsRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/_authenticated/settings/object-manager': typeof AuthenticatedSettingsObjectManagerRouteWithChildren
   '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/_authenticated/settings/profiles': typeof AuthenticatedSettingsProfilesRouteWithChildren
   '/_authenticated/settings/sidebar-assignment': typeof AuthenticatedSettingsSidebarAssignmentRouteWithChildren
   '/_authenticated/settings/tenant': typeof AuthenticatedSettingsTenantRoute
+  '/_authenticated/settings/translations': typeof AuthenticatedSettingsTranslationsRouteWithChildren
   '/_authenticated/$objectName/': typeof AuthenticatedObjectNameIndexRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
@@ -457,11 +522,14 @@ export interface FileRoutesById {
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/settings/email-templates/$templateKey': typeof AuthenticatedSettingsEmailTemplatesTemplateKeyRoute
   '/_authenticated/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
   '/_authenticated/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameRouteWithChildren
+  '/_authenticated/settings/email-templates/': typeof AuthenticatedSettingsEmailTemplatesIndexRoute
   '/_authenticated/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/_authenticated/settings/profiles/': typeof AuthenticatedSettingsProfilesIndexRoute
   '/_authenticated/settings/sidebar-assignment/': typeof AuthenticatedSettingsSidebarAssignmentIndexRoute
+  '/_authenticated/settings/translations/': typeof AuthenticatedSettingsTranslationsIndexRoute
   '/_authenticated/settings/profiles/$profileName/global-actions': typeof AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute
   '/_authenticated/settings/profiles/$profileName/list-views': typeof AuthenticatedSettingsProfilesProfileNameListViewsRoute
   '/_authenticated/settings/profiles/$profileName/objects': typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren
@@ -495,12 +563,16 @@ export interface FileRouteTypes {
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
+    | '/settings/email'
+    | '/settings/email-templates'
+    | '/settings/notification-settings'
     | '/settings/notifications'
     | '/settings/object-manager'
     | '/settings/organization'
     | '/settings/profiles'
     | '/settings/sidebar-assignment'
     | '/settings/tenant'
+    | '/settings/translations'
     | '/$objectName'
     | '/apps'
     | '/chats'
@@ -508,11 +580,14 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/tasks'
     | '/users'
+    | '/settings/email-templates/$templateKey'
     | '/settings/object-manager/$objectName'
     | '/settings/profiles/$profileName'
+    | '/settings/email-templates/'
     | '/settings/object-manager/'
     | '/settings/profiles/'
     | '/settings/sidebar-assignment/'
+    | '/settings/translations/'
     | '/settings/profiles/$profileName/global-actions'
     | '/settings/profiles/$profileName/list-views'
     | '/settings/profiles/$profileName/objects'
@@ -543,6 +618,8 @@ export interface FileRouteTypes {
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/display'
+    | '/settings/email'
+    | '/settings/notification-settings'
     | '/settings/notifications'
     | '/settings/organization'
     | '/settings/tenant'
@@ -553,10 +630,13 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/users'
+    | '/settings/email-templates/$templateKey'
     | '/settings/object-manager/$objectName'
+    | '/settings/email-templates'
     | '/settings/object-manager'
     | '/settings/profiles'
     | '/settings/sidebar-assignment'
+    | '/settings/translations'
     | '/settings/profiles/$profileName/global-actions'
     | '/settings/profiles/$profileName/list-views'
     | '/settings/profiles/$profileName'
@@ -588,12 +668,16 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/display'
+    | '/_authenticated/settings/email'
+    | '/_authenticated/settings/email-templates'
+    | '/_authenticated/settings/notification-settings'
     | '/_authenticated/settings/notifications'
     | '/_authenticated/settings/object-manager'
     | '/_authenticated/settings/organization'
     | '/_authenticated/settings/profiles'
     | '/_authenticated/settings/sidebar-assignment'
     | '/_authenticated/settings/tenant'
+    | '/_authenticated/settings/translations'
     | '/_authenticated/$objectName/'
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
@@ -601,11 +685,14 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
+    | '/_authenticated/settings/email-templates/$templateKey'
     | '/_authenticated/settings/object-manager/$objectName'
     | '/_authenticated/settings/profiles/$profileName'
+    | '/_authenticated/settings/email-templates/'
     | '/_authenticated/settings/object-manager/'
     | '/_authenticated/settings/profiles/'
     | '/_authenticated/settings/sidebar-assignment/'
+    | '/_authenticated/settings/translations/'
     | '/_authenticated/settings/profiles/$profileName/global-actions'
     | '/_authenticated/settings/profiles/$profileName/list-views'
     | '/_authenticated/settings/profiles/$profileName/objects'
@@ -800,6 +887,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObjectNameIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/translations': {
+      id: '/_authenticated/settings/translations'
+      path: '/translations'
+      fullPath: '/settings/translations'
+      preLoaderRoute: typeof AuthenticatedSettingsTranslationsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/tenant': {
       id: '/_authenticated/settings/tenant'
       path: '/tenant'
@@ -840,6 +934,27 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/settings/notifications'
       preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/notification-settings': {
+      id: '/_authenticated/settings/notification-settings'
+      path: '/notification-settings'
+      fullPath: '/settings/notification-settings'
+      preLoaderRoute: typeof AuthenticatedSettingsNotificationSettingsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/email-templates': {
+      id: '/_authenticated/settings/email-templates'
+      path: '/email-templates'
+      fullPath: '/settings/email-templates'
+      preLoaderRoute: typeof AuthenticatedSettingsEmailTemplatesRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/email': {
+      id: '/_authenticated/settings/email'
+      path: '/email'
+      fullPath: '/settings/email'
+      preLoaderRoute: typeof AuthenticatedSettingsEmailRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
     '/_authenticated/settings/display': {
@@ -891,6 +1006,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObjectNameRecordIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/translations/': {
+      id: '/_authenticated/settings/translations/'
+      path: '/'
+      fullPath: '/settings/translations/'
+      preLoaderRoute: typeof AuthenticatedSettingsTranslationsIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsTranslationsRoute
+    }
     '/_authenticated/settings/sidebar-assignment/': {
       id: '/_authenticated/settings/sidebar-assignment/'
       path: '/'
@@ -912,6 +1034,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsObjectManagerIndexRouteImport
       parentRoute: typeof AuthenticatedSettingsObjectManagerRoute
     }
+    '/_authenticated/settings/email-templates/': {
+      id: '/_authenticated/settings/email-templates/'
+      path: '/'
+      fullPath: '/settings/email-templates/'
+      preLoaderRoute: typeof AuthenticatedSettingsEmailTemplatesIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsEmailTemplatesRoute
+    }
     '/_authenticated/settings/profiles/$profileName': {
       id: '/_authenticated/settings/profiles/$profileName'
       path: '/$profileName'
@@ -925,6 +1054,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/object-manager/$objectName'
       preLoaderRoute: typeof AuthenticatedSettingsObjectManagerObjectNameRouteImport
       parentRoute: typeof AuthenticatedSettingsObjectManagerRoute
+    }
+    '/_authenticated/settings/email-templates/$templateKey': {
+      id: '/_authenticated/settings/email-templates/$templateKey'
+      path: '/$templateKey'
+      fullPath: '/settings/email-templates/$templateKey'
+      preLoaderRoute: typeof AuthenticatedSettingsEmailTemplatesTemplateKeyRouteImport
+      parentRoute: typeof AuthenticatedSettingsEmailTemplatesRoute
     }
     '/_authenticated/settings/profiles/$profileName/': {
       id: '/_authenticated/settings/profiles/$profileName/'
@@ -970,6 +1106,24 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedSettingsEmailTemplatesRouteChildren {
+  AuthenticatedSettingsEmailTemplatesTemplateKeyRoute: typeof AuthenticatedSettingsEmailTemplatesTemplateKeyRoute
+  AuthenticatedSettingsEmailTemplatesIndexRoute: typeof AuthenticatedSettingsEmailTemplatesIndexRoute
+}
+
+const AuthenticatedSettingsEmailTemplatesRouteChildren: AuthenticatedSettingsEmailTemplatesRouteChildren =
+  {
+    AuthenticatedSettingsEmailTemplatesTemplateKeyRoute:
+      AuthenticatedSettingsEmailTemplatesTemplateKeyRoute,
+    AuthenticatedSettingsEmailTemplatesIndexRoute:
+      AuthenticatedSettingsEmailTemplatesIndexRoute,
+  }
+
+const AuthenticatedSettingsEmailTemplatesRouteWithChildren =
+  AuthenticatedSettingsEmailTemplatesRoute._addFileChildren(
+    AuthenticatedSettingsEmailTemplatesRouteChildren,
+  )
 
 interface AuthenticatedSettingsObjectManagerRouteChildren {
   AuthenticatedSettingsObjectManagerObjectNameRoute: typeof AuthenticatedSettingsObjectManagerObjectNameRoute
@@ -1064,16 +1218,35 @@ const AuthenticatedSettingsSidebarAssignmentRouteWithChildren =
     AuthenticatedSettingsSidebarAssignmentRouteChildren,
   )
 
+interface AuthenticatedSettingsTranslationsRouteChildren {
+  AuthenticatedSettingsTranslationsIndexRoute: typeof AuthenticatedSettingsTranslationsIndexRoute
+}
+
+const AuthenticatedSettingsTranslationsRouteChildren: AuthenticatedSettingsTranslationsRouteChildren =
+  {
+    AuthenticatedSettingsTranslationsIndexRoute:
+      AuthenticatedSettingsTranslationsIndexRoute,
+  }
+
+const AuthenticatedSettingsTranslationsRouteWithChildren =
+  AuthenticatedSettingsTranslationsRoute._addFileChildren(
+    AuthenticatedSettingsTranslationsRouteChildren,
+  )
+
 interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
   AuthenticatedSettingsDisplayRoute: typeof AuthenticatedSettingsDisplayRoute
+  AuthenticatedSettingsEmailRoute: typeof AuthenticatedSettingsEmailRoute
+  AuthenticatedSettingsEmailTemplatesRoute: typeof AuthenticatedSettingsEmailTemplatesRouteWithChildren
+  AuthenticatedSettingsNotificationSettingsRoute: typeof AuthenticatedSettingsNotificationSettingsRoute
   AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
   AuthenticatedSettingsObjectManagerRoute: typeof AuthenticatedSettingsObjectManagerRouteWithChildren
   AuthenticatedSettingsOrganizationRoute: typeof AuthenticatedSettingsOrganizationRoute
   AuthenticatedSettingsProfilesRoute: typeof AuthenticatedSettingsProfilesRouteWithChildren
   AuthenticatedSettingsSidebarAssignmentRoute: typeof AuthenticatedSettingsSidebarAssignmentRouteWithChildren
   AuthenticatedSettingsTenantRoute: typeof AuthenticatedSettingsTenantRoute
+  AuthenticatedSettingsTranslationsRoute: typeof AuthenticatedSettingsTranslationsRouteWithChildren
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
@@ -1082,6 +1255,11 @@ const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteCh
     AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
     AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
     AuthenticatedSettingsDisplayRoute: AuthenticatedSettingsDisplayRoute,
+    AuthenticatedSettingsEmailRoute: AuthenticatedSettingsEmailRoute,
+    AuthenticatedSettingsEmailTemplatesRoute:
+      AuthenticatedSettingsEmailTemplatesRouteWithChildren,
+    AuthenticatedSettingsNotificationSettingsRoute:
+      AuthenticatedSettingsNotificationSettingsRoute,
     AuthenticatedSettingsNotificationsRoute:
       AuthenticatedSettingsNotificationsRoute,
     AuthenticatedSettingsObjectManagerRoute:
@@ -1093,6 +1271,8 @@ const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteCh
     AuthenticatedSettingsSidebarAssignmentRoute:
       AuthenticatedSettingsSidebarAssignmentRouteWithChildren,
     AuthenticatedSettingsTenantRoute: AuthenticatedSettingsTenantRoute,
+    AuthenticatedSettingsTranslationsRoute:
+      AuthenticatedSettingsTranslationsRouteWithChildren,
     AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   }
 

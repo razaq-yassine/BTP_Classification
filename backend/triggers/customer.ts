@@ -4,6 +4,7 @@
  */
 import { validateEmail } from './helpers/utils.js'
 import { logCustomerTrigger, getChangedFields, appendTriggeredMarker } from './helpers/customer.js'
+import { maybeSendNotification } from './helpers/email.js'
 
 type Record = { [key: string]: unknown }
 
@@ -14,8 +15,9 @@ export function beforeInsert(_oldValue: Record | undefined, newValue: Record): R
   return { ...newValue, notes: appendTriggeredMarker(notes) }
 }
 
-export function afterInsert(_oldValue: Record | undefined, newValue: Record): void {
+export async function afterInsert(_oldValue: Record | undefined, newValue: Record): Promise<void> {
   logCustomerTrigger('afterInsert', _oldValue, newValue)
+  await maybeSendNotification('customer_signup', newValue, {})
 }
 
 export function beforeUpdate(oldValue: Record, newValue: Record): Record {

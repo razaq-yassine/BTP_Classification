@@ -5,6 +5,7 @@ import bcrypt from 'bcrypt'
 import { tenantConfig } from '../routes/entity-registry.generated.js'
 import { seedMultiTenant } from '../../scripts/seed-multi-tenant.ts'
 import { seedSingleTenant } from '../../scripts/seed-single-tenant.ts'
+import { seedNotificationSettings } from '../../scripts/seed-notification-settings.ts'
 
 /** Seed data only - tables are created by Drizzle migrations */
 export async function initDb() {
@@ -103,6 +104,8 @@ export async function initDb() {
     ])
     console.log('Created sample categories')
   }
+
+  await seedNotificationSettings()
 }
 
 async function initDbMultiTenant() {

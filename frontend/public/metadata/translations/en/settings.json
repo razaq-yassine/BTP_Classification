@@ -1,0 +1,9 @@
+{
+  "preferredLanguage": "Preferred Language",
+  "preferredLanguageDescription": "Override the default language. Leave as \"Default\" to use tenant or app settings.",
+  "savePreferences": "Save preferences",
+  "selectLanguage": "Select language",
+  "defaultFromTenantOrApp": "Default (from tenant or app)",
+  "preferredLanguageUpdated": "Preferred language updated",
+  "failedToUpdatePreferredLanguage": "Failed to update preferred language"
+}

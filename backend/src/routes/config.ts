@@ -112,17 +112,38 @@ configRoutes.get("/tenant-config", (c) => {
   }
 });
 
+function maskEmailConfig(data: Record<string, unknown>): Record<string, unknown> {
+  const ec = data.emailConfig as Record<string, unknown> | undefined;
+  if (!ec) return data;
+  const masked = { ...ec };
+  if (typeof masked.smtpPassword === "string" && masked.smtpPassword.length > 0) {
+    masked.smtpPassword = "********";
+  }
+  return { ...data, emailConfig: masked };
+}
+
 configRoutes.get("/app-config", (c) => {
   if (!fs.existsSync(APP_CONFIG_PATH)) {
-    return c.json({ defaultCurrency: "USD", currencySymbol: "$" });
+    return c.json({ defaultCurrency: "USD", currencySymbol: "$", defaultPreferredLanguage: "en" });
   }
   try {
-    const data = JSON.parse(fs.readFileSync(APP_CONFIG_PATH, "utf-8"));
-    return c.json(data);
+    const data = JSON.parse(fs.readFileSync(APP_CONFIG_PATH, "utf-8")) as Record<string, unknown>;
+    return c.json(maskEmailConfig(data));
   } catch {
     return c.json({ defaultCurrency: "USD", currencySymbol: "$" });
   }
 });
+
+const DEFAULT_EMAIL_CONFIG = {
+  enabled: false,
+  fromEmail: "noreply@example.com",
+  fromName: "My App",
+  smtpHost: "smtp.example.com",
+  smtpPort: 587,
+  smtpSecure: false,
+  smtpUser: "",
+  smtpPassword: ""
+};
 
 configRoutes.put("/app-config", adminOnlyMiddleware, async (c) => {
   try {
@@ -131,9 +152,41 @@ configRoutes.put("/app-config", adminOnlyMiddleware, async (c) => {
       typeof body.defaultCurrency === "string" ? body.defaultCurrency : "USD";
     const currencySymbol =
       typeof body.currencySymbol === "string" ? body.currencySymbol : "$";
-    const data = { defaultCurrency, currencySymbol };
+    let defaultPreferredLanguage: string | null =
+      typeof body.defaultPreferredLanguage === "string" ? body.defaultPreferredLanguage : null;
+    if (defaultPreferredLanguage === null && body.defaultPreferredLanguage === undefined) {
+      const existing = fs.existsSync(APP_CONFIG_PATH)
+        ? (JSON.parse(fs.readFileSync(APP_CONFIG_PATH, "utf-8")) as Record<string, unknown>)
+        : {};
+      defaultPreferredLanguage =
+        typeof existing.defaultPreferredLanguage === "string" ? existing.defaultPreferredLanguage : null;
+    }
+
+    let emailConfig = DEFAULT_EMAIL_CONFIG;
+    const ec = body.emailConfig as Record<string, unknown> | undefined;
+    if (ec && typeof ec === "object") {
+      const existing = fs.existsSync(APP_CONFIG_PATH)
+        ? (JSON.parse(fs.readFileSync(APP_CONFIG_PATH, "utf-8")) as Record<string, unknown>)
+        : {};
+      const existingEc = (existing.emailConfig as Record<string, unknown>) || {};
+      emailConfig = {
+        enabled: typeof ec.enabled === "boolean" ? ec.enabled : existingEc.enabled ?? false,
+        fromEmail: typeof ec.fromEmail === "string" ? ec.fromEmail : existingEc.fromEmail ?? "noreply@example.com",
+        fromName: typeof ec.fromName === "string" ? ec.fromName : existingEc.fromName ?? "My App",
+        smtpHost: typeof ec.smtpHost === "string" ? ec.smtpHost : existingEc.smtpHost ?? "smtp.example.com",
+        smtpPort: typeof ec.smtpPort === "number" ? ec.smtpPort : (existingEc.smtpPort as number) ?? 587,
+        smtpSecure: typeof ec.smtpSecure === "boolean" ? ec.smtpSecure : existingEc.smtpSecure ?? false,
+        smtpUser: typeof ec.smtpUser === "string" ? ec.smtpUser : (existingEc.smtpUser as string) ?? "",
+        smtpPassword:
+          typeof ec.smtpPassword === "string" && ec.smtpPassword !== "********"
+            ? ec.smtpPassword
+            : (existingEc.smtpPassword as string) ?? ""
+      };
+    }
+
+    const data = { defaultCurrency, currencySymbol, defaultPreferredLanguage, emailConfig };
     fs.writeFileSync(APP_CONFIG_PATH, JSON.stringify(data, null, 2), "utf-8");
-    return c.json(data);
+    return c.json(maskEmailConfig(data));
   } catch (err) {
     console.error("[config] PUT app-config error:", err);
     return c.json(

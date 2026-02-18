@@ -20,8 +20,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useTranslation } from 'react-i18next'
 import api from '@/services/api'
 import { toast } from 'sonner'
+import { useAuthStore } from '@/stores/authStore'
 
 const DEFAULT_LANG_VALUE = '__default__'
 const LANGUAGE_OPTIONS = [
@@ -78,6 +80,8 @@ const defaultValues: Partial<DisplayFormValues> = {
 }
 
 export function DisplayForm() {
+  const { t } = useTranslation('settings')
+  const updateUser = useAuthStore((s) => s.checkAuth)
   const [loadingPrefs, setLoadingPrefs] = useState(true)
   const form = useForm<DisplayFormValues>({
     resolver: zodResolver(displayFormSchema),
@@ -103,9 +107,10 @@ export function DisplayForm() {
             ? null
             : data.preferredLanguage,
       })
-      toast.success('Preferred language updated')
+      await updateUser()
+      toast.success(t('preferredLanguageUpdated', { defaultValue: 'Preferred language updated' }))
     } catch {
-      toast.error('Failed to update preferred language')
+      toast.error(t('failedToUpdatePreferredLanguage', { defaultValue: 'Failed to update preferred language' }))
     }
   }
 
@@ -120,9 +125,9 @@ export function DisplayForm() {
           name='preferredLanguage'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Preferred Language</FormLabel>
+              <FormLabel>{t('preferredLanguage', { defaultValue: 'Preferred Language' })}</FormLabel>
               <FormDescription>
-                Override the default language. Leave as &quot;Default&quot; to use tenant or app settings.
+                {t('preferredLanguageDescription', { defaultValue: 'Override the default language. Leave as "Default" to use tenant or app settings.' })}
               </FormDescription>
               <Select
                 onValueChange={field.onChange}
@@ -131,7 +136,7 @@ export function DisplayForm() {
               >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder='Select language' />
+                    <SelectValue placeholder={t('selectLanguage', { defaultValue: 'Select language' })} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -195,7 +200,7 @@ export function DisplayForm() {
           )}
         />
         <Button type='submit' disabled={loadingPrefs}>
-          Save preferences
+          {t('savePreferences', { defaultValue: 'Save preferences' })}
         </Button>
       </form>
     </Form>
