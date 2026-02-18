@@ -113,8 +113,15 @@ function generateCreateTableSql(tableName: string, fields: FieldDef[]): string {
 
   for (const [key, cfg] of Object.entries(SYSTEM_FIELD_COLUMN_CONFIG)) {
     if (!fields.some((f) => f.key === key)) {
-      const def = cfg.sqlDefault ? ` ${cfg.sqlDefault}` : "";
-      cols.push(`\`${cfg.col}\` DATETIME${def}`);
+      if ("mode" in cfg && cfg.mode === "reference") {
+        const refCfg = cfg as { col: string };
+        cols.push(`\`${refCfg.col}\` INT`);
+      } else {
+        const def = (cfg as { sqlDefault?: string }).sqlDefault
+          ? ` ${(cfg as { sqlDefault: string }).sqlDefault}`
+          : "";
+        cols.push(`\`${(cfg as { col: string }).col}\` DATETIME${def}`);
+      }
     }
   }
 

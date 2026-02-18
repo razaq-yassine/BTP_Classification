@@ -1,9 +1,6 @@
 import "dotenv/config";
-import path from "path";
-import { fileURLToPath } from "url";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { serveStatic } from "@hono/node-server/serve-static";
 import { authRoutes } from "./routes/auth.js";
 import { configRoutes } from "./routes/config.js";
 import { entityRoutes } from "./routes/entities.js";
@@ -33,11 +30,6 @@ app.use(
 
 await runMigrations();
 await initDb();
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Legacy: static uploads for old file field (path-based). New attachments use /api/files/download/:fileId
-app.use("/uploads/*", serveStatic({ root: path.join(__dirname, "..") }));
 
 app.route("/api/auth", authRoutes);
 app.route("/api/config", configRoutes);

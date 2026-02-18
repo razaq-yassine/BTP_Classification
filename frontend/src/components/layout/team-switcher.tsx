@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/sidebar'
 import type { TenantContextData } from '@/components/layout/types'
 import { apiBaseUrl } from '@/services/api'
+import { ProtectedImage } from '@/components/generic/ProtectedImage'
 
 const DEFAULT_APP_NAME = 'App'
 
@@ -17,7 +18,8 @@ export function TeamSwitcher({
 }) {
   const name = tenantContext?.name ?? DEFAULT_APP_NAME
   const rawLogo = tenantContext?.logoUrl
-  const logoUrl = rawLogo?.startsWith('/')
+  const isProtectedPath = rawLogo?.startsWith('/uploads/')
+  const logoUrl = rawLogo?.startsWith('/') && !isProtectedPath
     ? `${apiBaseUrl.replace(/\/$/, '')}${rawLogo}`
     : rawLogo
   const subtitle = tenantContext?.subtitle
@@ -28,7 +30,14 @@ export function TeamSwitcher({
         <SidebarMenuButton size='lg' asChild>
           <Link to='/dashboard'>
             <div className='bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg'>
-              {logoUrl ? (
+              {isProtectedPath && rawLogo ? (
+                <ProtectedImage
+                  path={rawLogo}
+                  alt={name}
+                  className='size-full object-cover'
+                  fallbackIcon={<Layers className='size-4' />}
+                />
+              ) : logoUrl ? (
                 <img
                   src={logoUrl}
                   alt={name}

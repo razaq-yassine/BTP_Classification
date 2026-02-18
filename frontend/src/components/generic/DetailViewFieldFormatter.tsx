@@ -2,6 +2,7 @@ import React from 'react'
 import { Badge } from '@/components/ui/badge'
 import { RichTextView } from '@/components/rich-text-view'
 import { format } from 'date-fns'
+import { ProtectedFileLink } from '@/components/generic/ProtectedFileLink'
 
 export interface DetailFieldFormatterProps {
   type: 'string' | 'number' | 'boolean' | 'date' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'password' | 'geolocation' | 'address' | 'richText' | 'file'
@@ -108,12 +109,21 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
     case 'file': {
       const path = typeof value === 'string' ? value : String(value ?? '')
       const filename = path.split('/').pop() || path
-      return path ? (
-        <a href={path.startsWith('/') ? path : `/${path}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-primary hover:underline">
+      const normalizedPath = path.startsWith('/') ? path : `/${path}`
+      if (!path) return <span className="text-muted-foreground">Not provided</span>
+      if (normalizedPath.startsWith('/uploads/')) {
+        return (
+          <ProtectedFileLink
+            path={normalizedPath}
+            filename={filename}
+            className="text-blue-600 dark:text-primary hover:underline"
+          />
+        )
+      }
+      return (
+        <a href={normalizedPath} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-primary hover:underline">
           {filename}
         </a>
-      ) : (
-        <span className="text-muted-foreground">Not provided</span>
       )
     }
 

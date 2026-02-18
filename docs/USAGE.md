@@ -54,7 +54,7 @@ Each object has its own folder with these files:
 | `header.json`         | No              | Header actions and calculated data               |
 | `relatedObjects.json` | No              | Related object tables (e.g. Orders on Customer)  |
 
-**System fields** (`id`, `createdAt`, `updatedAt`) are automatic—do not add them to `fields.json` or create `fields/*.json` for them.
+**System fields** (`id`, `createdAt`, `updatedAt`, `createdBy`, `ownerId`, `editedBy`) are automatic—do not add them to `fields.json` or create `fields/*.json` for them. `createdBy` and `ownerId` are set on create from the current user; `editedBy` is set on update. `ownerId` can be reassigned; `createdBy` is immutable.
 
 ---
 
@@ -192,6 +192,7 @@ Each object has its own folder with these files:
 | `email`       | Email address            | text                |                                                                                                                                                                       |
 | `phone`       | Phone number             | text                |                                                                                                                                                                       |
 | `url`         | URL                      | text                | Validated as URL                                                                                                                                                      |
+| `color`       | Hex color                 | varchar             | Color picker + hex input; stored as hex (e.g. `#3b82f6`)                                                                                                              |
 | `password`    | Masked input             | varchar             | Displayed as •••••••• in view mode                                                                                                                                    |
 | `geolocation` | Lat/long                 | text (JSON)         | `{latitude, longitude}`; link to maps in view                                                                                                                         |
 | `address`     | Compound address         | text (JSON)         | `{street, city, state, zip, country}`                                                                                                                                 |
@@ -243,6 +244,7 @@ Every object must have a `name` field. It serves as the primary identifier for r
 | `autoNumberStart`     | number                         | Starting value for autoNumber                                                                                                                                                 |
 | `formulaExpression`   | string                         | For formula fields                                                                                                                                                            |
 | `accept`              | string                         | For file fields: accepted file types (e.g. `image/*` or `.jpg,.jpeg,.png,.gif,.webp,.svg`)                                                                                   |
+| `suggestedColors`     | string[]                       | For color fields: hex values shown as quick-pick swatches (e.g. light theme presets for sidebar)                                                                             |
 | `computed`            | boolean                        | Not stored; computed from `sourceFields`                                                                                                                                      |
 | `computedExpression`  | string                         | `concat`, `join`, `lookup`                                                                                                                                                    |
 | `sourceFields`        | string[]                       | For computed fields                                                                                                                                                           |
@@ -757,7 +759,14 @@ See `.cursor/rules/tenant-multi-tenancy.mdc` for mode, tenantScope, and enforcem
 The sidebar displays the current tenant or organization context. Edit the tenant or organization record to customize:
 
 - **Logo**: Upload an image (tenant/org logo field). The logo appears in the sidebar header. Only image files (`.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`, `.svg`) are accepted.
-- **Sidebar theme**: Set the **Sidebar Theme** field to a hex color (e.g. `#3b82f6`). This controls the sidebar primary color and accent. Leave empty to use the default theme.
+- **Sidebar theme**: Set the **Sidebar Theme** field using the color picker (hex, e.g. `#3b82f6`). This controls the full sidebar background, primary color, and accent in **light mode only**. In dark mode, the default sidebar styling is used. Leave empty to use the default theme. When the chosen color is dark, text automatically switches to white for better visibility. Use the **Light themes** quick-pick swatches for colors that work well with black text.
+
+### Org-to-child tenant configuration inheritance
+
+When using mode `org_and_tenant`, organization settings are inherited by child tenants:
+
+- **New tenant creation**: When creating a new tenant, any fields left empty (logo, address, defaultCurrency, currencySymbol, timezone, defaultPreferredLanguage, sidebarTheme) inherit the parent organization's values. Fill a field to override.
+- **Org update cascade**: When updating an organization's settings, child tenants whose values are empty receive the new org values. Tenants with explicit overrides (non-empty values) are left unchanged.
 
 ---
 

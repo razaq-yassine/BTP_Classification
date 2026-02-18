@@ -146,6 +146,7 @@ function LoginPage() {
           <div className="mt-4 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800 font-medium">Default Credentials:</p>
             <p className="text-sm text-blue-600">admin / admin123 (platform admin)</p>
+            <p className="text-sm text-blue-600">acme-owner / acme123 (org owner, can edit org/tenant config)</p>
             <p className="text-sm text-blue-600">acme-org-user / acme123 (org user, all Acme tenants)</p>
             <p className="text-sm text-blue-600">acme-us-user / acme123 (tenant user, Acme US only)</p>
           </div>

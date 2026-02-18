@@ -17,7 +17,7 @@ import {
 const VALID_FIELD_TYPES = new Set([
   'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text', 'url',
   'select', 'multiselect', 'reference', 'lookup', 'masterdetail', 'autonumber', 'formula',
-  'password', 'geolocation', 'address', 'richtext', 'file'
+  'password', 'geolocation', 'address', 'richtext', 'file', 'color'
 ])
 
 const VALID_TENANT_MODES = new Set(['single_tenant', 'multi_tenant', 'org_and_tenant'])

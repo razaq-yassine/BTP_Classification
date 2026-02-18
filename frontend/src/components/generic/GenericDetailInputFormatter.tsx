@@ -259,6 +259,66 @@ export function GenericDetailInputFormatter({
           />
         )
 
+      case 'color': {
+        const hexVal = value && typeof value === 'string' ? value : ''
+        const normalizedHex = /^#?[a-f\d]{6}$/i.test(hexVal) ? (hexVal.startsWith('#') ? hexVal : `#${hexVal}`) : '#000000'
+        const suggestions = fieldDefinition.suggestedColors ?? []
+        return (
+          <div className="space-y-2">
+            {suggestions.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-muted-foreground text-xs self-center">Light themes:</span>
+                {suggestions.map((hex) => {
+                  const displayHex = hex.startsWith('#') ? hex : `#${hex}`
+                  return (
+                    <button
+                      key={displayHex}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => onChange(displayHex)}
+                      className="size-7 shrink-0 rounded border-2 border-border transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                      style={{ backgroundColor: displayHex }}
+                      title={displayHex}
+                      aria-label={`Select ${displayHex}`}
+                    />
+                  )
+                })}
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={normalizedHex}
+                onChange={(e) => onChange(e.target.value)}
+                disabled={disabled}
+                className="h-9 w-14 cursor-pointer rounded border border-input bg-transparent p-1"
+              />
+              <Input
+                type="text"
+                value={hexVal}
+                onChange={(e) => {
+                  const v = e.target.value || ''
+                  onChange(v.startsWith('#') ? v : v ? `#${v}` : v)
+                }}
+                disabled={disabled}
+                placeholder="#000000"
+                className={cn(className, 'flex-1 font-mono text-sm')}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={disabled}
+                onClick={() => onChange('')}
+                className="shrink-0"
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        )
+      }
+
       case 'password':
         return (
           <PasswordInput

@@ -122,8 +122,20 @@ export async function seedMultiTenant() {
                 organizationId: techOrg.id,
                 tenantId: null,
             },
+            {
+                username: "acme-owner",
+                email: "acme.owner@example.com",
+                passwordHash: hashAcme,
+                firstName: "Acme",
+                lastName: "Owner",
+                profile: "org-owner",
+                isActive: true,
+                dateJoined: now,
+                organizationId: acmeOrg.id,
+                tenantId: null,
+            },
         ]);
-        console.log("[seed-multi-tenant] Created users: admin, acme-us-user, acme-eu-user, tech-us-user, acme-org-user, tech-org-user");
+        console.log("[seed-multi-tenant] Created users: admin, acme-us-user, acme-eu-user, tech-us-user, acme-org-user, tech-org-user, acme-owner");
     }
     else {
         // Update admin to ensure no org/tenant (platform admin)
@@ -135,6 +147,7 @@ export async function seedMultiTenant() {
         for (const un of ["acme-org-user", "tech-org-user"]) {
             await db.update(users).set({ profile: "org-user" }).where(eq(users.username, un));
         }
+        await db.update(users).set({ profile: "org-owner" }).where(eq(users.username, "acme-owner"));
         // Create tenant users and org users if they don't exist
         const usernames = existingUsers.map((u) => u.username);
         const toInsert = [];
@@ -205,6 +218,20 @@ export async function seedMultiTenant() {
                 isActive: true,
                 dateJoined: now,
                 organizationId: techOrg.id,
+                tenantId: null,
+            });
+        }
+        if (!usernames.includes("acme-owner")) {
+            toInsert.push({
+                username: "acme-owner",
+                email: "acme.owner@example.com",
+                passwordHash: hashAcme,
+                firstName: "Acme",
+                lastName: "Owner",
+                profile: "org-owner",
+                isActive: true,
+                dateJoined: now,
+                organizationId: acmeOrg.id,
                 tenantId: null,
             });
         }
@@ -352,6 +379,7 @@ export async function seedMultiTenant() {
     console.log("  tech-us-user / tech123 (TechStart, TechStart US - tenant user)");
     console.log("  acme-org-user / acme123 (Acme Corp, all tenants - org user)");
     console.log("  tech-org-user / tech123 (TechStart, all tenants - org user)");
+    console.log("  acme-owner / acme123 (Acme Corp - org owner, can edit org/tenant config)");
 }
 const __filename = fileURLToPath(import.meta.url);
 const isMain = process.argv[1]?.endsWith("seed-multi-tenant.ts") ?? false;

@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { RichTextView } from '@/components/rich-text-view'
 import { apiBaseUrl } from '@/services/api'
 import type { FieldDefinition, GenericRecord } from '@/types/object-definition'
+import { ProtectedFileLink } from '@/components/generic/ProtectedFileLink'
 import { ExpandableText } from '@/components/expandable-text'
 import { evaluateFormula } from './evaluateFormula'
 import { formatCurrency } from '@/stores/appConfigStore'
@@ -89,6 +90,21 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
           {val}
         </a>
       )
+    case 'color': {
+      const hex = typeof val === 'string' ? val : ''
+      if (!hex) return '(Empty)'
+      const displayHex = hex.startsWith('#') ? hex : `#${hex}`
+      return (
+        <span className="inline-flex items-center gap-2">
+          <span
+            className="inline-block size-4 shrink-0 rounded border border-border"
+            style={{ backgroundColor: displayHex }}
+            aria-hidden
+          />
+          <span className="font-mono text-sm">{displayHex}</span>
+        </span>
+      )
+    }
     case 'number': {
       const numVal = typeof val === 'number' ? val : parseFloat(val)
       if (isNaN(numVal)) return typeof val === 'object' ? JSON.stringify(val) : String(val)
@@ -176,6 +192,16 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
       if (!path || path.trim() === '') return '(Empty)'
       const filename = path.split('/').pop() || path
       const normalizedPath = path.startsWith('/') ? path : `/${path}`
+      if (normalizedPath.startsWith('/uploads/')) {
+        return (
+          <ProtectedFileLink
+            path={normalizedPath}
+            filename={filename}
+            className={linkClass}
+            onClick={(e) => e.stopPropagation()}
+          />
+        )
+      }
       const fileUrl = `${apiBaseUrl}${normalizedPath}`
       return (
         <a

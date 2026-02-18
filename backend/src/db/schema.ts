@@ -21,8 +21,11 @@ export const organizations = mysqlTable('organizations', {
   slug: varchar('slug', { length: 255 }),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),
     logo: varchar('logo', { length: 255 }),
-    address: text('address'),
+    address: varchar('address', { length: 255 }),
     defaultCurrency: varchar('default_currency', { length: 255 }),
     currencySymbol: varchar('currency_symbol', { length: 255 }),
     timezone: varchar('timezone', { length: 255 }),
@@ -36,8 +39,11 @@ export const tenants = mysqlTable('tenants', {
   organizationId: int('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),
     logo: varchar('logo', { length: 255 }),
-    address: text('address'),
+    address: varchar('address', { length: 255 }),
     defaultCurrency: varchar('default_currency', { length: 255 }),
     currencySymbol: varchar('currency_symbol', { length: 255 }),
     timezone: varchar('timezone', { length: 255 }),
@@ -80,6 +86,9 @@ export const categories = mysqlTable('categories', {
   description: text('description'),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),
 })
 
 export const customers = mysqlTable('customers', {
@@ -97,6 +106,9 @@ export const customers = mysqlTable('customers', {
   priority: varchar('priority', { length: 255 }),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),
 })
 
 export const deploytests = mysqlTable('deploytests', {
@@ -121,6 +133,9 @@ export const deploytests = mysqlTable('deploytests', {
   fReferenceId: int('f_reference_id').references(() => customers.id, { onDelete: 'set null' }),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),
 })
 
 export const opportunities = mysqlTable('opportunities', {
@@ -128,6 +143,9 @@ export const opportunities = mysqlTable('opportunities', {
   name: varchar('name', { length: 255 }).notNull().unique(),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),
 })
 
 export const orders = mysqlTable('orders', {
@@ -143,6 +161,9 @@ export const orders = mysqlTable('orders', {
   customerId: int('customer_id').notNull().references(() => customers.id, { onDelete: 'cascade' }),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),
 })
 
 export const orderitems = mysqlTable('orderitems', {
@@ -156,6 +177,9 @@ export const orderitems = mysqlTable('orderitems', {
   unitPrice: decimal('unit_price', { precision: 10, scale: 2 }).notNull(),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),
 })
 
 export const products = mysqlTable('products', {
@@ -166,6 +190,9 @@ export const products = mysqlTable('products', {
   description: text('description'),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),
 })
 
 export const suppliers = mysqlTable('suppliers', {
@@ -176,6 +203,9 @@ export const suppliers = mysqlTable('suppliers', {
   website: varchar('website', { length: 255 }),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),
 })
 
 export const warehouses = mysqlTable('warehouses', {
@@ -187,6 +217,9 @@ export const warehouses = mysqlTable('warehouses', {
   description: text('description').notNull(),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),
 })
 
 export type User = typeof users.$inferSelect

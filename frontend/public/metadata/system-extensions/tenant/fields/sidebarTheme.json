@@ -1,1 +1,1 @@
-{"key":"sidebarTheme","label":"Sidebar Theme","type":"string","editable":true}
+{"key":"sidebarTheme","label":"Sidebar Theme","type":"color","editable":true,"suggestedColors":["#ffffff","#e0f2fe","#dbeafe","#e0e7ff","#ede9fe","#fce7f3","#dcfce7","#fef3c7","#f3f4f6"]}

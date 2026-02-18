@@ -11,7 +11,7 @@ export interface SelectOption {
 }
 
 export interface FieldFormatterProps {
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'masterDetail' | 'formula' | 'password' | 'geolocation' | 'address' | 'richText' | 'file'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'masterDetail' | 'formula' | 'password' | 'geolocation' | 'address' | 'richText' | 'file' | 'color'
   value: any
   format?: string
   options?: SelectOption[]
@@ -81,6 +81,22 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
         >
           {display}
         </a>
+      )
+    }
+
+    case 'color': {
+      const hex = typeof value === 'string' ? value : ''
+      if (!hex) return null
+      const displayHex = hex.startsWith('#') ? hex : `#${hex}`
+      return (
+        <span className="flex items-center gap-2 text-sm">
+          <span
+            className="size-4 shrink-0 rounded border border-border"
+            style={{ backgroundColor: displayHex }}
+            aria-hidden
+          />
+          {displayHex}
+        </span>
       )
     }
 

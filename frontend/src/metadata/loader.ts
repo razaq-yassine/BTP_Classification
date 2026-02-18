@@ -48,12 +48,22 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
     return fieldKeys.map((key) => {
       const field = fieldsMap.get(key)
       if (field) return field
-      const fallbackType =
-        key === 'createdAt' || key === 'updatedAt'
-            ? ('datetime' as const)
-            : ('string' as const)
       const label = getSystemFieldLabel(key)
-      return { key, label, type: fallbackType }
+      if (key === 'createdAt' || key === 'updatedAt') {
+        return { key, label, type: 'datetime' as const }
+      }
+      if (key === 'createdBy' || key === 'ownerId' || key === 'editedBy') {
+        return {
+          key: key === 'ownerId' ? 'owner' : key,
+          label,
+          type: 'reference' as const,
+          objectName: 'user',
+          apiEndpoint: '/api/users',
+          editable: key === 'ownerId',
+          searchBy: 'username'
+        }
+      }
+      return { key, label, type: 'string' as const }
     })
   }
 
@@ -106,12 +116,22 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
     fields: (section.fields as string[]).map((key) => {
       const field = fieldsMap.get(key)
       if (field) return field
-      const fallbackType =
-        key === 'createdAt' || key === 'updatedAt'
-            ? ('datetime' as const)
-            : ('string' as const)
       const label = getSystemFieldLabel(key)
-      return { key, label, type: fallbackType }
+      if (key === 'createdAt' || key === 'updatedAt') {
+        return { key, label, type: 'datetime' as const }
+      }
+      if (key === 'createdBy' || key === 'ownerId' || key === 'editedBy') {
+        return {
+          key: key === 'ownerId' ? 'owner' : key,
+          label,
+          type: 'reference' as const,
+          objectName: 'user',
+          apiEndpoint: '/api/users',
+          editable: key === 'ownerId',
+          searchBy: 'username'
+        }
+      }
+      return { key, label, type: 'string' as const }
     }),
   }))
 

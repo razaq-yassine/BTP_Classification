@@ -14,6 +14,8 @@ import {
   SYSTEM_FIELD_COLUMN_CONFIG,
   SYSTEM_OBJECTS_WITH_EXTENSIONS,
   SYSTEM_OBJECT_BASE_FIELDS,
+  SYSTEM_USER_REFERENCE_INSERT_FIELDS,
+  SYSTEM_USER_REFERENCE_UPDATE_FIELDS,
   TENANT_SYSTEM_OBJECTS_SET
 } from "../../shared/protected-metadata";
 
@@ -428,7 +430,17 @@ function generateTable(
     const cfg =
       SYSTEM_FIELD_COLUMN_CONFIG[fk as keyof typeof SYSTEM_FIELD_COLUMN_CONFIG];
     if (cfg && !fields.some((f) => f.key === fk)) {
-      if (dialect === "mysql") {
+      if ("mode" in cfg && cfg.mode === "reference") {
+        const refCfg = cfg as {
+          col: string;
+          idField: string;
+          refTable: string;
+        };
+        const intType = dialect === "mysql" ? "int" : "integer";
+        lines.push(
+          `  ${refCfg.idField}: ${intType}('${refCfg.col}').references(() => users.id, { onDelete: 'set null' }),`
+        );
+      } else if (dialect === "mysql") {
         const colType =
           cfg.mode === "boolean"
             ? `boolean('${cfg.col}')`
@@ -525,6 +537,16 @@ function main() {
       loadExtensionFields("organization"),
       dialect
     );
+    const orgUserRefCols =
+      dialect === "mysql"
+        ? `
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),`
+        : `
+  createdById: integer('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: integer('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: integer('edited_by_id').references(() => users.id, { onDelete: 'set null' }),`;
     const orgTable =
       dialect === "mysql"
         ? `export const organizations = mysqlTable('organizations', {
@@ -532,14 +554,14 @@ function main() {
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 255 }),
   createdAt: datetime('created_at'),
-  updatedAt: datetime('updated_at'),${orgExtCols}
+  updatedAt: datetime('updated_at'),${orgUserRefCols}${orgExtCols}
 })`
         : `export const organizations = sqliteTable('organizations', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   slug: text('slug'),
   createdAt: integer('created_at', { mode: 'timestamp' }),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }),${orgExtCols}
+  updatedAt: integer('updated_at', { mode: 'timestamp' }),${orgUserRefCols}${orgExtCols}
 })`;
     tables.push(orgTable);
     tableNames.push("organizations");
@@ -551,6 +573,16 @@ function main() {
       loadExtensionFields("tenant"),
       dialect
     );
+    const tenantUserRefCols =
+      dialect === "mysql"
+        ? `
+  createdById: int('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: int('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: int('edited_by_id').references(() => users.id, { onDelete: 'set null' }),`
+        : `
+  createdById: integer('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+  ownerId: integer('owner_id').references(() => users.id, { onDelete: 'set null' }),
+  editedById: integer('edited_by_id').references(() => users.id, { onDelete: 'set null' }),`;
     const tenantTable =
       dialect === "mysql"
         ? `export const tenants = mysqlTable('tenants', {
@@ -558,14 +590,14 @@ function main() {
   name: varchar('name', { length: 255 }).notNull(),
   organizationId: int('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   createdAt: datetime('created_at'),
-  updatedAt: datetime('updated_at'),${tenantExtCols}
+  updatedAt: datetime('updated_at'),${tenantUserRefCols}${tenantExtCols}
 })`
         : `export const tenants = sqliteTable('tenants', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   organizationId: integer('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   createdAt: integer('created_at', { mode: 'timestamp' }),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }),${tenantExtCols}
+  updatedAt: integer('updated_at', { mode: 'timestamp' }),${tenantUserRefCols}${tenantExtCols}
 })`;
     tables.push(tenantTable);
     tableNames.push("tenants");
@@ -809,7 +841,28 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
     const referenceFields = fields.filter(
       (f) => f.type === "reference" || f.type === "masterDetail"
     );
-    const systemInsertFields = SYSTEM_FIELDS.filter((f) => f !== "id");
+    const systemUserRefFields = [
+      { key: "createdBy", idField: "createdById", refTable: "users" },
+      { key: "owner", idField: "ownerId", refTable: "users" },
+      { key: "editedBy", idField: "editedById", refTable: "users" }
+    ];
+    const allReferenceFields = [
+      ...referenceFields.map((f) => ({
+        key: f.key,
+        idField: `${f.key}Id`,
+        refTable: pluralize(f.objectName || f.key)
+      })),
+      ...systemUserRefFields
+    ];
+    const systemInsertFields = SYSTEM_FIELDS.filter(
+      (f) => f !== "id" && f !== "editedBy"
+    ).flatMap((f) => {
+      const cfg =
+        SYSTEM_FIELD_COLUMN_CONFIG[f as keyof typeof SYSTEM_FIELD_COLUMN_CONFIG];
+      if (cfg && "idField" in cfg)
+        return [(cfg as { idField: string }).idField];
+      return [f];
+    });
     const tenantScopeFields: string[] = [];
     if (
       tenantScope &&
@@ -825,12 +878,21 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
         ...insertFields,
         ...referenceFields.map((f) => `${f.key}Id`),
         ...tenantScopeFields,
-        ...systemInsertFields
+        ...systemInsertFields,
+        ...SYSTEM_USER_REFERENCE_INSERT_FIELDS
       ])
     ];
-    const updateFieldsArr = insertFieldsArr.filter(
-      (f) => f !== "createdAt" && !tenantScopeFields.includes(f)
-    );
+    const updateFieldsArr = [
+      ...new Set([
+        ...insertFieldsArr.filter(
+          (f) =>
+            f !== "createdAt" &&
+            f !== "createdById" &&
+            !tenantScopeFields.includes(f)
+        ),
+        ...SYSTEM_USER_REFERENCE_UPDATE_FIELDS
+      ])
+    ];
 
     let joinConfig = "";
     if (referenceFields.length > 0) {
@@ -839,6 +901,7 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
       imports.add(refTable);
       joinConfig = `join: { joinTable: ${refTable}, leftColumn: ${tableName}.${ref.key}Id, rightColumn: ${refTable}.id }`;
     }
+    imports.add("users");
 
     const computedFields = allFields.filter(
       (f) => f.computed && f.computedExpression
@@ -920,12 +983,10 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
       `searchFields: [${searchFieldsArr.join(", ")}]`,
       `insertFields: [${insertFieldsArr.map((s) => `'${s}'`).join(", ")}]`,
       `updateFields: [${updateFieldsArr.map((s) => `'${s}'`).join(", ")}]`,
-      `referenceFields: [${referenceFields
+      `referenceFields: [${allReferenceFields
         .map(
           (f) =>
-            `{ key: '${f.key}', idField: '${f.key}Id', refTable: '${pluralize(
-              f.objectName || f.key
-            )}' }`
+            `{ key: '${f.key}', idField: '${f.idField}', refTable: '${f.refTable}' }`
         )
         .join(", ")}]`,
       requiredRefsConfig,
@@ -981,19 +1042,49 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
     const referenceFields = combinedFields.filter(
       (f) => f.type === "reference" || f.type === "masterDetail"
     );
-    const systemInsertFields = SYSTEM_FIELDS.filter((f) => f !== "id");
+    const systemUserRefFields = [
+      { key: "createdBy", idField: "createdById", refTable: "users" },
+      { key: "owner", idField: "ownerId", refTable: "users" },
+      { key: "editedBy", idField: "editedById", refTable: "users" }
+    ];
+    const allReferenceFields = [
+      ...referenceFields.map((f) => ({
+        key: f.key,
+        idField: `${f.key}Id`,
+        refTable: pluralize(f.objectName || f.key)
+      })),
+      ...systemUserRefFields
+    ];
+    const systemInsertFields = SYSTEM_FIELDS.filter(
+      (f) => f !== "id" && f !== "editedBy"
+    ).flatMap((f) => {
+      const cfg =
+        SYSTEM_FIELD_COLUMN_CONFIG[f as keyof typeof SYSTEM_FIELD_COLUMN_CONFIG];
+      if (cfg && "idField" in cfg)
+        return [(cfg as { idField: string }).idField];
+      return [f];
+    });
     const tenantScopeFields: string[] = [];
     const insertFieldsArr = [
       ...new Set([
         ...insertFields,
         ...referenceFields.map((f) => `${f.key}Id`),
         ...tenantScopeFields,
-        ...systemInsertFields
+        ...systemInsertFields,
+        ...SYSTEM_USER_REFERENCE_INSERT_FIELDS
       ])
     ];
-    const updateFieldsArr = insertFieldsArr.filter(
-      (f) => f !== "createdAt" && !tenantScopeFields.includes(f)
-    );
+    const updateFieldsArr = [
+      ...new Set([
+        ...insertFieldsArr.filter(
+          (f) =>
+            f !== "createdAt" &&
+            f !== "createdById" &&
+            !tenantScopeFields.includes(f)
+        ),
+        ...SYSTEM_USER_REFERENCE_UPDATE_FIELDS
+      ])
+    ];
 
     let joinConfig = "";
     if (referenceFields.length > 0) {
@@ -1002,6 +1093,7 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
       imports.add(refTable);
       joinConfig = `join: { joinTable: ${refTable}, leftColumn: ${tableName}.${ref.key}Id, rightColumn: ${refTable}.id }`;
     }
+    imports.add("users");
 
     const requiredRefIdFields = referenceFields
       .filter((f) => f.required)
@@ -1027,12 +1119,10 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
       `searchFields: [${searchFieldsArr.join(", ")}]`,
       `insertFields: [${insertFieldsArr.map((s) => `'${s}'`).join(", ")}]`,
       `updateFields: [${updateFieldsArr.map((s) => `'${s}'`).join(", ")}]`,
-      `referenceFields: [${referenceFields
+      `referenceFields: [${allReferenceFields
         .map(
           (f) =>
-            `{ key: '${f.key}', idField: '${f.key}Id', refTable: '${pluralize(
-              f.objectName || f.key
-            )}' }`
+            `{ key: '${f.key}', idField: '${f.idField}', refTable: '${f.refTable}' }`
         )
         .join(", ")}]`,
       requiredRefsConfig,

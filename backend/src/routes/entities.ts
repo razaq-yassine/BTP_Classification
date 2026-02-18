@@ -1,7 +1,7 @@
 import { Hono } from "hono";
-import { eq, desc, like, or, and } from "drizzle-orm";
+import { eq, desc, like, or, and, inArray } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { organizations, tenants } from "../db/schema.js";
+import { organizations, tenants, users } from "../db/schema.js";
 import {
   entityRegistry,
   tenantConfig,
@@ -165,33 +165,58 @@ function toRecord(
   return filtered;
 }
 
-/** Enrich tenant-scoped records with organization and tenant objects for display. */
+/** Enrich records with organization, tenant, and user reference objects for display. */
 async function enrichWithTenantScope(
   record: Record<string, unknown>,
   config: EntityConfig
 ): Promise<Record<string, unknown>> {
+  const out = { ...record };
   const tenantScope = (config as { tenantScope?: string }).tenantScope;
   const mode = tenantConfig.mode;
   const hasOrgs =
     mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
-  if (!tenantScope || !hasOrgs) return record;
-  const out = { ...record };
-  const orgId = record.organizationId as number | undefined;
-  const tenantId = record.tenantId as number | undefined;
-  if (orgId != null) {
-    const [org] = await db
-      .select()
-      .from(organizations)
-      .where(eq(organizations.id, orgId));
-    out.organization = org ? { id: org.id, ...org } : null;
+
+  if (tenantScope && hasOrgs) {
+    const orgId = record.organizationId as number | undefined;
+    const tenantId = record.tenantId as number | undefined;
+    if (orgId != null) {
+      const [org] = await db
+        .select()
+        .from(organizations)
+        .where(eq(organizations.id, orgId));
+      out.organization = org ? { id: org.id, ...org } : null;
+    }
+    if (tenantId != null && tenantScope === "org_and_tenant") {
+      const [tenant] = await db
+        .select()
+        .from(tenants)
+        .where(eq(tenants.id, tenantId));
+      out.tenant = tenant ? { id: tenant.id, ...tenant } : null;
+    }
   }
-  if (tenantId != null && tenantScope === "org_and_tenant") {
-    const [tenant] = await db
+
+  // Enrich user reference fields (createdBy, owner, editedBy)
+  const userRefFields = [
+    { key: "createdBy", idField: "createdById" },
+    { key: "owner", idField: "ownerId" },
+    { key: "editedBy", idField: "editedById" }
+  ];
+  const userIds = userRefFields
+    .map((f) => record[f.idField] as number | undefined)
+    .filter((id): id is number => id != null);
+  if (userIds.length > 0) {
+    const uniqueIds = [...new Set(userIds)];
+    const userRows = await db
       .select()
-      .from(tenants)
-      .where(eq(tenants.id, tenantId));
-    out.tenant = tenant ? { id: tenant.id, ...tenant } : null;
+      .from(users)
+      .where(inArray(users.id, uniqueIds));
+    const userMap = new Map(userRows.map((u) => [u.id, { id: u.id, ...u }]));
+    for (const { key, idField } of userRefFields) {
+      const id = record[idField] as number | undefined;
+      out[key] = id != null ? userMap.get(id) ?? null : null;
+    }
   }
+
   return out;
 }
 
@@ -794,6 +819,22 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
         }
       }
     }
+    // Org user creating tenant: must create in their own org only
+    if (
+      entityPath === "tenants" &&
+      !isAdmin &&
+      user?.organizationId != null &&
+      user?.tenantId == null
+    ) {
+      const orgVal =
+        body.organizationId ?? (body.organization as { id?: number })?.id;
+      if (Number(orgVal) !== user.organizationId) {
+        return c.json(
+          { message: "organizationId must be your organization" },
+          400
+        );
+      }
+    }
     const requiredRefIdFields = (config as { requiredRefIdFields?: string[] })
       .requiredRefIdFields;
     if (requiredRefIdFields?.length && config.referenceFields) {
@@ -842,6 +883,37 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       }
     }
 
+    // Tenant create: inherit org config for empty fields
+    if (entityPath === "tenants") {
+      const orgId =
+        insertBody.organizationId ??
+        body.organizationId ??
+        (body.organization as { id?: number })?.id;
+      if (orgId != null) {
+        const [org] = await db
+          .select()
+          .from(organizations)
+          .where(eq(organizations.id, Number(orgId)));
+        if (org) {
+          const inheritedFields = [
+            "sidebarTheme",
+            "defaultCurrency",
+            "currencySymbol",
+            "timezone",
+            "defaultPreferredLanguage",
+            "logo",
+            "address",
+          ];
+          for (const field of inheritedFields) {
+            const val = insertBody[field] ?? body[field];
+            if (val === undefined || val === null || val === "") {
+              insertBody[field] = org[field as keyof typeof org] ?? null;
+            }
+          }
+        }
+      }
+    }
+
     let payload = buildInsertPayload(insertBody, config, {});
     if (tenantScope && hasOrgs) {
       if (isAdmin) {
@@ -860,6 +932,15 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
         }
       }
     }
+    // Set createdBy and ownerId from current user
+    if (config.insertFields?.includes("createdById"))
+      payload.createdById = user?.id ?? null;
+    if (config.insertFields?.includes("ownerId"))
+      payload.ownerId =
+        body.ownerId ??
+        (body.owner as { id?: number })?.id ??
+        user?.id ??
+        null;
     const modified =
       (await runTrigger(objectName, "beforeInsert", undefined, payload)) ??
       payload;
@@ -968,12 +1049,15 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     const [oldRow] = await db.select().from(table).where(whereCond);
     if (!oldRow) return c.json({ message: "Not found" }, 404);
     const body = (await c.req.json()) as Record<string, unknown>;
-    const newPayload = buildUpdatePayload(
+    let newPayload = buildUpdatePayload(
       body,
       oldRow as Record<string, unknown>,
       config,
       profile
     );
+    // Set editedBy from current user
+    if (config.updateFields?.includes("editedById"))
+      newPayload = { ...newPayload, editedById: user?.id ?? null };
     const modified =
       (await runTrigger(
         objectName,
@@ -992,6 +1076,45 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       oldRow as Record<string, unknown>,
       updated as Record<string, unknown>
     );
+
+    // Org update: cascade config to child tenants with empty values
+    if (entityPath === "organizations" && id && updated) {
+      const childTenants = await db
+        .select()
+        .from(tenants)
+        .where(eq(tenants.organizationId, id));
+      const inheritedFields = [
+        "sidebarTheme",
+        "defaultCurrency",
+        "currencySymbol",
+        "timezone",
+        "defaultPreferredLanguage",
+        "logo",
+        "address",
+      ];
+      const orgRecord = updated as Record<string, unknown>;
+      for (const tenant of childTenants) {
+        const tenantUpdates: Record<string, unknown> = {};
+        for (const field of inheritedFields) {
+          const tenantVal = tenant[field as keyof typeof tenant];
+          const orgVal = orgRecord[field];
+          const isEmpty =
+            tenantVal === null || tenantVal === undefined || tenantVal === "";
+          if (isEmpty && orgVal != null && orgVal !== "") {
+            tenantUpdates[field] = orgVal;
+          }
+        }
+        if (Object.keys(tenantUpdates).length > 0) {
+          tenantUpdates.updatedAt = new Date();
+          tenantUpdates.editedById = user?.id ?? null;
+          await db
+            .update(tenants)
+            .set(tenantUpdates as any)
+            .where(eq(tenants.id, tenant.id));
+        }
+      }
+    }
+
     try {
       const updateFields = config.updateFields as readonly string[];
       const orgId = (updated as Record<string, unknown>).organizationId as

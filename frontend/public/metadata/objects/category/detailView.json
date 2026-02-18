@@ -1,1 +1,1 @@
-{"layout":"two-column","sections":[{"title":"Category Information","columns":2,"defaultOpen":true,"fields":["name","slug","description"]},{"title":"System Information","columns":2,"defaultOpen":false,"fields":["id","createdAt","updatedAt"]}]}
+{"layout":"two-column","sections":[{"title":"Category Information","columns":2,"defaultOpen":true,"fields":["name","slug","description"]},{"title":"System Information","columns":2,"defaultOpen":false,"fields":["id","createdAt","updatedAt","createdBy","ownerId","editedBy"]}]}

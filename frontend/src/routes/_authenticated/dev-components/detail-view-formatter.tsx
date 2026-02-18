@@ -30,6 +30,7 @@ function DetailViewFormatterPage() {
     select: 'option2',
     multiselect: ['option1', 'option3'],
     url: 'https://example.com',
+    color: '#3b82f6',
     password: 'secret123',
     geolocation: JSON.stringify({ latitude: 33.5731, longitude: -7.5898 }),
     address: JSON.stringify({ street: '123 Main St', city: 'Casablanca', state: 'Casablanca-Settat', zip: '20000', country: 'Morocco' }),
@@ -132,6 +133,12 @@ function DetailViewFormatterPage() {
       key: 'url',
       label: 'URL Field',
       type: 'url',
+      required: false,
+    },
+    {
+      key: 'color',
+      label: 'Color Field',
+      type: 'color',
       required: false,
     },
     {

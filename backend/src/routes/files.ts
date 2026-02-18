@@ -109,6 +109,115 @@ function buildTenantConditions(
 
 export const fileRoutes = new Hono();
 
+/**
+ * Serve field-uploaded files (e.g. logo, file-type fields) with auth.
+ * Path format: /uploads/{objectName}/{recordId}/{fieldKey}/{filename}
+ * Replaces legacy static /uploads/* which had no protection.
+ */
+fileRoutes.get("/serve", authMiddleware, async (c) => {
+  const pathParam = c.req.query("path");
+  if (!pathParam || typeof pathParam !== "string") {
+    return c.json({ message: "path query parameter is required" }, 400);
+  }
+  const normalizedPath = pathParam.startsWith("/") ? pathParam : `/${pathParam}`;
+  if (!normalizedPath.startsWith("/uploads/")) {
+    return c.json({ message: "Invalid path" }, 400);
+  }
+  const parts = normalizedPath.replace(/^\/uploads\//, "").split("/");
+  if (parts.length < 4) {
+    return c.json({ message: "Invalid path format" }, 400);
+  }
+  const [objectName, recordIdStr, fieldKey] = parts;
+  const recordId = Number(recordIdStr);
+  if (isNaN(recordId)) {
+    return c.json({ message: "Invalid recordId" }, 400);
+  }
+
+  const entityEntry = Object.entries(entityRegistry).find(
+    ([key, config]) =>
+      config.objectName === objectName || key === objectName
+  );
+  if (!entityEntry) {
+    return c.json({ message: "Unknown object" }, 400);
+  }
+  const [entityPath, config] = entityEntry as [
+    EntityPath,
+    (typeof entityRegistry)[EntityPath]
+  ];
+  const {
+    table,
+    objectName: objName,
+    tenantScope
+  } = config as { table: any; objectName: string; tenantScope?: string };
+
+  const user = c.get("user") as UserWithTenant;
+  const profile = await getUserProfile(user?.id ?? 0);
+  if (!profile) {
+    return c.json({ message: "Unauthorized" }, 401);
+  }
+  if (!hasObjectPermission(profile, objName, "read")) {
+    return c.json({ message: "Forbidden" }, 403);
+  }
+
+  const isAdmin =
+    user?.profile === "admin" ||
+    (user?.organizationId == null && user?.tenantId == null);
+
+  const tenantFilter = getTenantFilter(user, tenantScope);
+  let tenantConds = buildTenantConditions(table, tenantFilter);
+  if (entityPath === "organizations" && !isAdmin && user?.organizationId != null) {
+    tenantConds = [...tenantConds, eq((table as any).id, user.organizationId)];
+  }
+  if (entityPath === "tenants" && !isAdmin && user?.tenantId != null) {
+    tenantConds = [...tenantConds, eq((table as any).id, user.tenantId)];
+  }
+  if (
+    entityPath === "tenants" &&
+    user?.organizationId != null &&
+    user?.tenantId == null
+  ) {
+    tenantConds = [
+      ...tenantConds,
+      eq((table as any).organizationId, user.organizationId)
+    ];
+  }
+
+  const idCol = (table as { id?: unknown }).id;
+  const recordCond = eq(idCol as any, recordId);
+  const whereCond =
+    tenantConds.length > 0 ? and(recordCond, ...tenantConds) : recordCond;
+
+  const [parentRecord] = await db.select().from(table).where(whereCond);
+  if (!parentRecord) {
+    return c.json({ message: "Record not found or access denied" }, 403);
+  }
+
+  const diskPath = path.join(UPLOADS_ROOT, normalizedPath.replace(/^\/uploads\//, ""));
+  if (!existsSync(diskPath)) {
+    return c.json({ message: "File not found" }, 404);
+  }
+
+  const filename = parts[parts.length - 1];
+  const statResult = await stat(diskPath);
+  const readStream = createReadStream(diskPath);
+  const webStream = Readable.toWeb(readStream) as ReadableStream;
+  return stream(
+    c,
+    async (s) => {
+      await s.pipe(webStream);
+    },
+    undefined,
+    {
+      status: 200,
+      headers: {
+        "Content-Type": getMimeTypeFromFilename(filename),
+        "Content-Length": String(statResult.size),
+        "Content-Disposition": `inline; filename="${encodeURIComponent(filename)}"`
+      }
+    }
+  );
+});
+
 fileRoutes.get("/", authMiddleware, async (c) => {
   try {
     const objectName = c.req.query("objectName");

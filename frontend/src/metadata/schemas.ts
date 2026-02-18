@@ -26,7 +26,7 @@ export const fieldSchema = z.object({
   type: z.enum([
     'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text', 'url',
     'select', 'multiselect', 'reference', 'lookup', 'masterDetail', 'autoNumber', 'formula', // lookup maps to reference
-    'password', 'geolocation', 'address', 'richText', 'file'
+    'password', 'geolocation', 'address', 'richText', 'file', 'color'
   ]),
   required: z.boolean().optional(),
   editable: z.boolean().optional(),
@@ -62,6 +62,8 @@ export const fieldSchema = z.object({
   formulaExpression: z.string().optional(),
   /** For file fields: accepted file types (e.g. "image/*" or ".jpg,.jpeg,.png,.gif,.webp,.svg") */
   accept: z.string().optional(),
+  /** For color fields: suggested hex values as quick-pick options (e.g. light theme presets) */
+  suggestedColors: z.array(z.string()).optional(),
 })
 
 export const statisticsCardSchema = z.object({

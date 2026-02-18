@@ -16,22 +16,46 @@ export const PROTECTED_TABLES = [
 export const PROTECTED_TABLES_SET = new Set<string>(PROTECTED_TABLES);
 
 /** Columns that must never be dropped (primary key, system info) */
-export const PROTECTED_COLUMNS = ["id", "created_at", "updated_at"] as const;
+export const PROTECTED_COLUMNS = [
+  "id",
+  "created_at",
+  "updated_at",
+  "created_by_id",
+  "owner_id",
+  "edited_by_id"
+] as const;
 export const PROTECTED_COLUMNS_SET = new Set<string>(PROTECTED_COLUMNS);
 
 /** System field keys (camelCase) - used for validation, defaults, Object Manager */
-export const SYSTEM_FIELDS = ["id", "createdAt", "updatedAt"] as const;
+export const SYSTEM_FIELDS = [
+  "id",
+  "createdAt",
+  "updatedAt",
+  "createdBy",
+  "ownerId",
+  "editedBy"
+] as const;
 export const SYSTEM_FIELDS_SET = new Set<string>(SYSTEM_FIELDS);
 
 /** Human-readable labels for system fields (used when no field JSON exists) */
 export const SYSTEM_FIELD_LABELS: Record<string, string> = {
   id: "ID",
   createdAt: "Created At",
-  updatedAt: "Updated At"
+  updatedAt: "Updated At",
+  createdBy: "Created By",
+  ownerId: "Owner",
+  editedBy: "Edited By"
 };
 
 /** System column names (snake_case) - used when building expected columns from metadata */
-export const SYSTEM_COLUMNS = ["id", "created_at", "updated_at"] as const;
+export const SYSTEM_COLUMNS = [
+  "id",
+  "created_at",
+  "updated_at",
+  "created_by_id",
+  "owner_id",
+  "edited_by_id"
+] as const;
 export const SYSTEM_COLUMNS_SET = new Set<string>(SYSTEM_COLUMNS);
 
 /** System objects not managed via metadata (permissions, roles, sessions, org, tenant, user) */
@@ -86,6 +110,18 @@ export const SYSTEM_OBJECT_BASE_FIELDS: Record<string, Set<string>> = {
 /** Default "System Information" section fields for new objects */
 export const SYSTEM_INFO_SECTION_FIELDS = SYSTEM_FIELDS;
 
+/** System user reference fields for insert (createdBy, ownerId) */
+export const SYSTEM_USER_REFERENCE_INSERT_FIELDS = [
+  "createdById",
+  "ownerId"
+] as const;
+
+/** System user reference fields for update (editedBy, ownerId) */
+export const SYSTEM_USER_REFERENCE_UPDATE_FIELDS = [
+  "editedById",
+  "ownerId"
+] as const;
+
 /** Config for system fields that are auto-added to object tables (excludes id) */
 export const SYSTEM_FIELD_COLUMN_CONFIG = {
   createdAt: {
@@ -99,5 +135,23 @@ export const SYSTEM_FIELD_COLUMN_CONFIG = {
     mode: "timestamp" as const,
     drizzleDefault: "",
     sqlDefault: ""
+  },
+  createdBy: {
+    col: "created_by_id",
+    mode: "reference" as const,
+    refTable: "users",
+    idField: "createdById"
+  },
+  ownerId: {
+    col: "owner_id",
+    mode: "reference" as const,
+    refTable: "users",
+    idField: "ownerId"
+  },
+  editedBy: {
+    col: "edited_by_id",
+    mode: "reference" as const,
+    refTable: "users",
+    idField: "editedById"
   }
 } as const;
