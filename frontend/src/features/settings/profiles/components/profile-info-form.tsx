@@ -23,7 +23,7 @@ export function ProfileInfoForm({ profile }: ProfileInfoFormProps) {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await updateProfile(profile.name, { label, description })
+      await updateProfile(profile.name, { ...profile, label, description })
       queryClient.invalidateQueries({ queryKey: ['profile', profile.name] })
       toast.success('Profile updated')
     } catch (err: unknown) {

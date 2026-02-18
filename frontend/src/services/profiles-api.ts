@@ -19,12 +19,19 @@ export interface Profile {
   name: string
   label: string
   description?: string
+  /** Sidebar ID from metadata/sidebars/. If omitted, uses "default". */
+  sidebar?: string
   objectPermissions: Record<string, ObjectPermission>
   globalActionPermissions?: Record<string, boolean>
 }
 
 export async function getProfileNames(): Promise<string[]> {
   const res = await api.get<string[]>(`${METADATA_BASE}/profiles`)
+  return Array.isArray(res.data) ? res.data : []
+}
+
+export async function getSidebarIds(): Promise<string[]> {
+  const res = await api.get<string[]>(`${METADATA_BASE}/sidebars`)
   return Array.isArray(res.data) ? res.data : []
 }
 

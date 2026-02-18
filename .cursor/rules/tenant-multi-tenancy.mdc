@@ -14,8 +14,8 @@ Location: `frontend/public/metadata/tenant-config.json`
 
 | mode | Master tables | User columns | Scoped object columns |
 |------|---------------|--------------|------------------------|
-| none | — | — | — |
-| tenant | organizations | organizationId | organizationId |
+| single_tenant | organizations, tenants | organizationId, tenantId | organizationId, tenantId |
+| multi_tenant | organizations | organizationId | organizationId |
 | org_and_tenant | organizations, tenants | organizationId, tenantId | organizationId, tenantId |
 
 ## tenantScope (object.json)
@@ -23,11 +23,11 @@ Location: `frontend/public/metadata/tenant-config.json`
 Per-object: `tenantScope: null | "tenant" | "org_and_tenant"`
 
 - `null`: Platform-wide (not tenant-scoped)
-- `"tenant"`: Filter by organizationId (mode tenant) or org+tenant (mode org_and_tenant)
-- `"org_and_tenant"`: Only when mode is org_and_tenant; filter by both
+- `"tenant"`: Filter by organizationId (mode multi_tenant) or org+tenant (mode single_tenant/org_and_tenant)
+- `"org_and_tenant"`: Only when mode is single_tenant or org_and_tenant; filter by both
 
 **Rules:**
-- tenantScope must match global mode (tenantScope "tenant" ok for mode tenant; "org_and_tenant" only for mode org_and_tenant)
+- tenantScope must match global mode (tenantScope "tenant" ok for mode multi_tenant; "org_and_tenant" only for mode single_tenant or org_and_tenant)
 - Master objects (organization, tenant) must NOT have tenantScope
 
 ## Admin vs Org User vs Tenant User
@@ -52,9 +52,11 @@ Per-object: `tenantScope: null | "tenant" | "org_and_tenant"`
 
 | Action | Implications |
 |--------|---------------|
-| none → tenant | Add organizations, organizationId to users/scoped objects. Migration + data backfill |
-| tenant → org_and_tenant | Add tenants table, tenantId columns. Migration + data backfill |
-| org_and_tenant → tenant | Breaking; drop tenant_id columns |
+| single_tenant | One org, one tenant; all users belong to that tenant |
+| multi_tenant | Orgs only; each org acts as tenant |
+| org_and_tenant | Orgs + tenants; org users see org, tenant users see tenant |
+| single_tenant → org_and_tenant | Add more orgs/tenants; migration + data backfill |
+| org_and_tenant → multi_tenant | Breaking; drop tenant_id columns |
 | Adding tenantScope to object | Add columns via migration; backfill existing rows |
 | Removing tenantScope | Filtering stops; optional migration to drop column |
 

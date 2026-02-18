@@ -84,10 +84,12 @@ export function GenericCreateDialog({
 }: GenericCreateDialogProps) {
   const { isFieldVisible, canEditField, profile } = usePermissions()
   const { data: tenantConfig } = useTenantConfig()
-  const tenantMode = tenantConfig?.mode ?? 'none'
-  const isTenantModeNone = tenantMode === 'none'
+  const tenantMode = tenantConfig?.mode ?? 'single_tenant'
+  const hasOrgs =
+    tenantMode === 'single_tenant' || tenantMode === 'multi_tenant' || tenantMode === 'org_and_tenant'
+  const isTenantModeNone = !hasOrgs
 
-  // When mode is "none", org/tenant fields don't exist in schema - skip them
+  // When mode has no orgs (legacy "none"), org/tenant fields don't exist in schema - skip them
   const isTenantScopeFieldSkipped = (fieldKey: string) =>
     isTenantModeNone && (fieldKey === 'organization' || fieldKey === 'tenant')
 
@@ -319,7 +321,7 @@ export function GenericCreateDialog({
       // Prepare create data
       const createData = { ...formData }
 
-      // When mode is "none", don't send org/tenant - backend doesn't expect them
+      // When mode has no orgs, don't send org/tenant - backend doesn't expect them
       if (isTenantModeNone) {
         delete createData.organization
         delete createData.organizationId

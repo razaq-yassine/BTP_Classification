@@ -6,6 +6,7 @@ import type { SidebarData, NavGroup, NavItem, NavLink, NavCollapsible } from '@/
 import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuthStore, selectUser } from '@/stores/authStore'
+import { useTenantContext } from '@/hooks/useTenantContext'
 import { sidebarData as staticSidebarData, settingsNavGroups } from '@/components/layout/data/sidebar-data'
 
 function buildDataNavItems(defs: ObjectDefinition[], canRead: (objectName: string) => boolean): NavItem[] {
@@ -51,12 +52,21 @@ function buildDataNavItems(defs: ObjectDefinition[], canRead: (objectName: strin
   return objectNavItems
 }
 
-function filterSettingsNavForProfile(groups: NavGroup[], isAdmin: boolean): NavGroup[] {
-  if (isAdmin) return groups
+function filterSettingsNavForProfile(
+  groups: NavGroup[],
+  isAdmin: boolean,
+  hasOrgId: boolean,
+  hasTenantId: boolean
+): NavGroup[] {
   return groups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => !('adminOnly' in item) || !item.adminOnly),
+      items: group.items.filter((item) => {
+        if ('adminOnly' in item && item.adminOnly && !isAdmin) return false
+        if ('orgUserOnly' in item && item.orgUserOnly && !hasOrgId && !(item.adminAlsoSees && isAdmin)) return false
+        if ('tenantUserOnly' in item && item.tenantUserOnly && !hasTenantId && !(item.adminAlsoSees && isAdmin)) return false
+        return true
+      }),
     }))
     .filter((group) => group.items.length > 0)
 }
@@ -64,13 +74,28 @@ function filterSettingsNavForProfile(groups: NavGroup[], isAdmin: boolean): NavG
 export function useSidebarData(): SidebarData {
   const location = useLocation()
   const user = useAuthStore(selectUser)
+  const { data: tenantContext } = useTenantContext()
   const { data: defs } = useObjectDefinitionsQuery()
   const { canRead } = usePermissions()
   const isSettings = location.pathname.startsWith('/settings')
-  const isAdmin = user?.profile === 'admin'
+  const isAdmin = (user?.profile ?? '').toLowerCase() === 'admin'
+
+  const tenantContextData = useMemo(() => {
+    if (!tenantContext) return null
+    return {
+      name: tenantContext.name,
+      logoUrl: tenantContext.logoUrl ?? null,
+      subtitle: tenantContext.subtitle,
+      sidebarTheme: tenantContext.sidebarTheme ?? null
+    }
+  }, [tenantContext])
+
+  const hasOrgId = (user?.organizationId ?? null) != null
+  const hasTenantId = (user?.tenantId ?? null) != null
 
   const navGroups = useMemo(() => {
-    if (isSettings) return filterSettingsNavForProfile(settingsNavGroups, isAdmin)
+    if (isSettings)
+      return filterSettingsNavForProfile(settingsNavGroups, isAdmin, hasOrgId, hasTenantId)
 
     const dashboardItem: NavLink = {
       title: 'Dashboard',
@@ -88,10 +113,11 @@ export function useSidebarData(): SidebarData {
     const allItems: NavItem[] = [dashboardItem, ...dataItems, settingsItem]
 
     return [{ title: '', items: allItems }]
-  }, [defs, isSettings, canRead])
+  }, [defs, isSettings, canRead, isAdmin, hasOrgId, hasTenantId])
 
   return {
     ...staticSidebarData,
     navGroups,
+    tenantContext: tenantContextData,
   }
 }

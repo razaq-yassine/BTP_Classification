@@ -1,7 +1,7 @@
+import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { showSubmittedData } from '@/utils/show-submitted-data'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
@@ -13,6 +13,27 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import api from '@/services/api'
+import { toast } from 'sonner'
+
+const LANGUAGE_OPTIONS = [
+  { value: '', label: 'Default (from tenant or app)' },
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'fr', label: 'French' },
+  { value: 'de', label: 'German' },
+  { value: 'it', label: 'Italian' },
+  { value: 'pt', label: 'Portuguese' },
+  { value: 'ja', label: 'Japanese' },
+  { value: 'zh', label: 'Chinese' },
+]
 
 const items = [
   {
@@ -45,27 +66,82 @@ const displayFormSchema = z.object({
   items: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: 'You have to select at least one item.',
   }),
+  preferredLanguage: z.string().optional(),
 })
 
 type DisplayFormValues = z.infer<typeof displayFormSchema>
 
-// This can come from your database or API.
 const defaultValues: Partial<DisplayFormValues> = {
   items: ['recents', 'home'],
+  preferredLanguage: '',
 }
 
 export function DisplayForm() {
+  const [loadingPrefs, setLoadingPrefs] = useState(true)
   const form = useForm<DisplayFormValues>({
     resolver: zodResolver(displayFormSchema),
     defaultValues,
   })
 
+  useEffect(() => {
+    api
+      .get('/api/auth/me')
+      .then((res) => {
+        const pref = res.data?.preferredLanguage ?? ''
+        form.setValue('preferredLanguage', pref || '')
+      })
+      .catch(() => {})
+      .finally(() => setLoadingPrefs(false))
+  }, [form])
+
+  const handleSubmit = async (data: DisplayFormValues) => {
+    try {
+      await api.patch('/api/auth/me', {
+        preferredLanguage: data.preferredLanguage || null,
+      })
+      toast.success('Preferred language updated')
+    } catch {
+      toast.error('Failed to update preferred language')
+    }
+  }
+
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((data) => showSubmittedData(data))}
+        onSubmit={form.handleSubmit(handleSubmit)}
         className='space-y-8'
       >
+        <FormField
+          control={form.control}
+          name='preferredLanguage'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Preferred Language</FormLabel>
+              <FormDescription>
+                Override the default language. Leave as &quot;Default&quot; to use tenant or app settings.
+              </FormDescription>
+              <Select
+                onValueChange={field.onChange}
+                value={field.value ?? ''}
+                disabled={loadingPrefs}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select language' />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {LANGUAGE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value || 'default'} value={opt.value || ''}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name='items'
@@ -114,7 +190,9 @@ export function DisplayForm() {
             </FormItem>
           )}
         />
-        <Button type='submit'>Update display</Button>
+        <Button type='submit' disabled={loadingPrefs}>
+          Save preferences
+        </Button>
       </form>
     </Form>
   )

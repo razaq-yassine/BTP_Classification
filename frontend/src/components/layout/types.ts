@@ -12,12 +12,25 @@ interface Team {
   plan: string
 }
 
+export interface TenantContextData {
+  name: string
+  logoUrl?: string | null
+  subtitle?: string
+  sidebarTheme?: string | null
+}
+
 interface BaseNavItem {
   title: string
   badge?: string
   icon?: React.ElementType
   /** If true, only visible to users with profile === 'admin' */
   adminOnly?: boolean
+  /** If true, only visible when user has organizationId (org user) */
+  orgUserOnly?: boolean
+  /** If true, only visible when user has tenantId (tenant user) */
+  tenantUserOnly?: boolean
+  /** If true, admin also sees this item even when orgUserOnly/tenantUserOnly would hide it */
+  adminAlsoSees?: boolean
 }
 
 type NavLink = BaseNavItem & {
@@ -42,6 +55,8 @@ interface SidebarData {
   user: User
   teams: Team[]
   navGroups: NavGroup[]
+  /** Tenant or org context for sidebar selector (when user has org/tenant) */
+  tenantContext?: TenantContextData | null
 }
 
 export type { SidebarData, NavGroup, NavItem, NavCollapsible, NavLink }

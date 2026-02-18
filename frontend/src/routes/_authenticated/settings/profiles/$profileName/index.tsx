@@ -28,6 +28,10 @@ function ProfileDetailPage() {
     navigate({ to: '/settings/profiles/$profileName/global-actions', params: { profileName } })
   }
 
+  const handleListViewPermissionsClick = () => {
+    navigate({ to: '/settings/profiles/$profileName/list-views', params: { profileName } })
+  }
+
   if (isLoading) {
     return (
       <Main>
@@ -104,17 +108,22 @@ function ProfileDetailPage() {
               <ChevronRight className='h-5 w-5 text-muted-foreground' />
             </button>
 
-            <div
+            <button
+              type='button'
+              onClick={handleListViewPermissionsClick}
               className={cn(
-                'flex w-full items-center justify-between rounded-lg border p-4 text-left',
-                'opacity-60 cursor-not-allowed'
+                'flex w-full items-center justify-between rounded-lg border p-4 text-left transition-colors',
+                'hover:bg-accent hover:text-accent-foreground'
               )}
             >
               <div>
                 <p className='font-medium'>List view permissions</p>
-                <p className='text-sm text-muted-foreground'>Coming soon</p>
+                <p className='text-sm text-muted-foreground'>
+                  Choose which list views this profile can see for each object.
+                </p>
               </div>
-            </div>
+              <ChevronRight className='h-5 w-5 text-muted-foreground' />
+            </button>
           </CardContent>
         </Card>
       </div>

@@ -31,23 +31,27 @@ import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_auth
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedObjectNameIndexRouteImport } from './routes/_authenticated/$objectName/index'
+import { Route as AuthenticatedSettingsTenantRouteImport } from './routes/_authenticated/settings/tenant'
+import { Route as AuthenticatedSettingsSidebarAssignmentRouteImport } from './routes/_authenticated/settings/sidebar-assignment'
 import { Route as AuthenticatedSettingsProfilesRouteImport } from './routes/_authenticated/settings/profiles'
+import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings/organization'
 import { Route as AuthenticatedSettingsObjectManagerRouteImport } from './routes/_authenticated/settings/object-manager'
 import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
 import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
-import { Route as AuthenticatedSettingsCurrencyRouteImport } from './routes/_authenticated/settings/currency'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedDevComponentsSalesforcePathRouteImport } from './routes/_authenticated/dev-components/salesforce-path'
 import { Route as AuthenticatedDevComponentsOrderDetailPathRouteImport } from './routes/_authenticated/dev-components/order-detail-path'
 import { Route as AuthenticatedDevComponentsDetailViewFormatterRouteImport } from './routes/_authenticated/dev-components/detail-view-formatter'
 import { Route as AuthenticatedObjectNameRecordIdRouteImport } from './routes/_authenticated/$objectName/$recordId'
+import { Route as AuthenticatedSettingsSidebarAssignmentIndexRouteImport } from './routes/_authenticated/settings/sidebar-assignment/index'
 import { Route as AuthenticatedSettingsProfilesIndexRouteImport } from './routes/_authenticated/settings/profiles/index'
 import { Route as AuthenticatedSettingsObjectManagerIndexRouteImport } from './routes/_authenticated/settings/object-manager/index'
 import { Route as AuthenticatedSettingsProfilesProfileNameRouteImport } from './routes/_authenticated/settings/profiles/$profileName'
 import { Route as AuthenticatedSettingsObjectManagerObjectNameRouteImport } from './routes/_authenticated/settings/object-manager/$objectName'
 import { Route as AuthenticatedSettingsProfilesProfileNameIndexRouteImport } from './routes/_authenticated/settings/profiles/$profileName/index'
 import { Route as AuthenticatedSettingsProfilesProfileNameObjectsRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects'
+import { Route as AuthenticatedSettingsProfilesProfileNameListViewsRouteImport } from './routes/_authenticated/settings/profiles/$profileName/list-views'
 import { Route as AuthenticatedSettingsProfilesProfileNameGlobalActionsRouteImport } from './routes/_authenticated/settings/profiles/$profileName/global-actions'
 import { Route as AuthenticatedSettingsProfilesProfileNameObjectsIndexRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects/index'
 import { Route as AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects/$objectName'
@@ -165,10 +169,28 @@ const AuthenticatedObjectNameIndexRoute =
     path: '/$objectName/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsTenantRoute =
+  AuthenticatedSettingsTenantRouteImport.update({
+    id: '/tenant',
+    path: '/tenant',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsSidebarAssignmentRoute =
+  AuthenticatedSettingsSidebarAssignmentRouteImport.update({
+    id: '/sidebar-assignment',
+    path: '/sidebar-assignment',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
 const AuthenticatedSettingsProfilesRoute =
   AuthenticatedSettingsProfilesRouteImport.update({
     id: '/profiles',
     path: '/profiles',
+    getParentRoute: () => AuthenticatedSettingsRouteRoute,
+  } as any)
+const AuthenticatedSettingsOrganizationRoute =
+  AuthenticatedSettingsOrganizationRouteImport.update({
+    id: '/organization',
+    path: '/organization',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
 const AuthenticatedSettingsObjectManagerRoute =
@@ -187,12 +209,6 @@ const AuthenticatedSettingsDisplayRoute =
   AuthenticatedSettingsDisplayRouteImport.update({
     id: '/display',
     path: '/display',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
-const AuthenticatedSettingsCurrencyRoute =
-  AuthenticatedSettingsCurrencyRouteImport.update({
-    id: '/currency',
-    path: '/currency',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
 const AuthenticatedSettingsAppearanceRoute =
@@ -231,6 +247,12 @@ const AuthenticatedObjectNameRecordIdRoute =
     path: '/$objectName/$recordId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSettingsSidebarAssignmentIndexRoute =
+  AuthenticatedSettingsSidebarAssignmentIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedSettingsSidebarAssignmentRoute,
+  } as any)
 const AuthenticatedSettingsProfilesIndexRoute =
   AuthenticatedSettingsProfilesIndexRouteImport.update({
     id: '/',
@@ -265,6 +287,12 @@ const AuthenticatedSettingsProfilesProfileNameObjectsRoute =
   AuthenticatedSettingsProfilesProfileNameObjectsRouteImport.update({
     id: '/objects',
     path: '/objects',
+    getParentRoute: () => AuthenticatedSettingsProfilesProfileNameRoute,
+  } as any)
+const AuthenticatedSettingsProfilesProfileNameListViewsRoute =
+  AuthenticatedSettingsProfilesProfileNameListViewsRouteImport.update({
+    id: '/list-views',
+    path: '/list-views',
     getParentRoute: () => AuthenticatedSettingsProfilesProfileNameRoute,
   } as any)
 const AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute =
@@ -307,11 +335,13 @@ export interface FileRoutesByFullPath {
   '/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
-  '/settings/currency': typeof AuthenticatedSettingsCurrencyRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/object-manager': typeof AuthenticatedSettingsObjectManagerRouteWithChildren
+  '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/settings/profiles': typeof AuthenticatedSettingsProfilesRouteWithChildren
+  '/settings/sidebar-assignment': typeof AuthenticatedSettingsSidebarAssignmentRouteWithChildren
+  '/settings/tenant': typeof AuthenticatedSettingsTenantRoute
   '/$objectName': typeof AuthenticatedObjectNameIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
@@ -323,7 +353,9 @@ export interface FileRoutesByFullPath {
   '/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameRouteWithChildren
   '/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/settings/profiles/': typeof AuthenticatedSettingsProfilesIndexRoute
+  '/settings/sidebar-assignment/': typeof AuthenticatedSettingsSidebarAssignmentIndexRoute
   '/settings/profiles/$profileName/global-actions': typeof AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute
+  '/settings/profiles/$profileName/list-views': typeof AuthenticatedSettingsProfilesProfileNameListViewsRoute
   '/settings/profiles/$profileName/objects': typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren
   '/settings/profiles/$profileName/': typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
   '/settings/profiles/$profileName/objects/$objectName': typeof AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute
@@ -349,9 +381,10 @@ export interface FileRoutesByTo {
   '/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
-  '/settings/currency': typeof AuthenticatedSettingsCurrencyRoute
   '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
+  '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
+  '/settings/tenant': typeof AuthenticatedSettingsTenantRoute
   '/$objectName': typeof AuthenticatedObjectNameIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
@@ -362,7 +395,9 @@ export interface FileRoutesByTo {
   '/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
   '/settings/object-manager': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/settings/profiles': typeof AuthenticatedSettingsProfilesIndexRoute
+  '/settings/sidebar-assignment': typeof AuthenticatedSettingsSidebarAssignmentIndexRoute
   '/settings/profiles/$profileName/global-actions': typeof AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute
+  '/settings/profiles/$profileName/list-views': typeof AuthenticatedSettingsProfilesProfileNameListViewsRoute
   '/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
   '/settings/profiles/$profileName/objects/$objectName': typeof AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute
   '/settings/profiles/$profileName/objects': typeof AuthenticatedSettingsProfilesProfileNameObjectsIndexRoute
@@ -390,11 +425,13 @@ export interface FileRoutesById {
   '/_authenticated/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
-  '/_authenticated/settings/currency': typeof AuthenticatedSettingsCurrencyRoute
   '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/_authenticated/settings/object-manager': typeof AuthenticatedSettingsObjectManagerRouteWithChildren
+  '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/_authenticated/settings/profiles': typeof AuthenticatedSettingsProfilesRouteWithChildren
+  '/_authenticated/settings/sidebar-assignment': typeof AuthenticatedSettingsSidebarAssignmentRouteWithChildren
+  '/_authenticated/settings/tenant': typeof AuthenticatedSettingsTenantRoute
   '/_authenticated/$objectName/': typeof AuthenticatedObjectNameIndexRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
@@ -406,7 +443,9 @@ export interface FileRoutesById {
   '/_authenticated/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameRouteWithChildren
   '/_authenticated/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/_authenticated/settings/profiles/': typeof AuthenticatedSettingsProfilesIndexRoute
+  '/_authenticated/settings/sidebar-assignment/': typeof AuthenticatedSettingsSidebarAssignmentIndexRoute
   '/_authenticated/settings/profiles/$profileName/global-actions': typeof AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute
+  '/_authenticated/settings/profiles/$profileName/list-views': typeof AuthenticatedSettingsProfilesProfileNameListViewsRoute
   '/_authenticated/settings/profiles/$profileName/objects': typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren
   '/_authenticated/settings/profiles/$profileName/': typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
   '/_authenticated/settings/profiles/$profileName/objects/$objectName': typeof AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute
@@ -435,11 +474,13 @@ export interface FileRouteTypes {
     | '/dev-components/salesforce-path'
     | '/settings/account'
     | '/settings/appearance'
-    | '/settings/currency'
     | '/settings/display'
     | '/settings/notifications'
     | '/settings/object-manager'
+    | '/settings/organization'
     | '/settings/profiles'
+    | '/settings/sidebar-assignment'
+    | '/settings/tenant'
     | '/$objectName'
     | '/apps'
     | '/chats'
@@ -451,7 +492,9 @@ export interface FileRouteTypes {
     | '/settings/profiles/$profileName'
     | '/settings/object-manager/'
     | '/settings/profiles/'
+    | '/settings/sidebar-assignment/'
     | '/settings/profiles/$profileName/global-actions'
+    | '/settings/profiles/$profileName/list-views'
     | '/settings/profiles/$profileName/objects'
     | '/settings/profiles/$profileName/'
     | '/settings/profiles/$profileName/objects/$objectName'
@@ -477,9 +520,10 @@ export interface FileRouteTypes {
     | '/dev-components/salesforce-path'
     | '/settings/account'
     | '/settings/appearance'
-    | '/settings/currency'
     | '/settings/display'
     | '/settings/notifications'
+    | '/settings/organization'
+    | '/settings/tenant'
     | '/$objectName'
     | '/apps'
     | '/chats'
@@ -490,7 +534,9 @@ export interface FileRouteTypes {
     | '/settings/object-manager/$objectName'
     | '/settings/object-manager'
     | '/settings/profiles'
+    | '/settings/sidebar-assignment'
     | '/settings/profiles/$profileName/global-actions'
+    | '/settings/profiles/$profileName/list-views'
     | '/settings/profiles/$profileName'
     | '/settings/profiles/$profileName/objects/$objectName'
     | '/settings/profiles/$profileName/objects'
@@ -517,11 +563,13 @@ export interface FileRouteTypes {
     | '/_authenticated/dev-components/salesforce-path'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
-    | '/_authenticated/settings/currency'
     | '/_authenticated/settings/display'
     | '/_authenticated/settings/notifications'
     | '/_authenticated/settings/object-manager'
+    | '/_authenticated/settings/organization'
     | '/_authenticated/settings/profiles'
+    | '/_authenticated/settings/sidebar-assignment'
+    | '/_authenticated/settings/tenant'
     | '/_authenticated/$objectName/'
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
@@ -533,7 +581,9 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/profiles/$profileName'
     | '/_authenticated/settings/object-manager/'
     | '/_authenticated/settings/profiles/'
+    | '/_authenticated/settings/sidebar-assignment/'
     | '/_authenticated/settings/profiles/$profileName/global-actions'
+    | '/_authenticated/settings/profiles/$profileName/list-views'
     | '/_authenticated/settings/profiles/$profileName/objects'
     | '/_authenticated/settings/profiles/$profileName/'
     | '/_authenticated/settings/profiles/$profileName/objects/$objectName'
@@ -712,11 +762,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObjectNameIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/tenant': {
+      id: '/_authenticated/settings/tenant'
+      path: '/tenant'
+      fullPath: '/settings/tenant'
+      preLoaderRoute: typeof AuthenticatedSettingsTenantRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/sidebar-assignment': {
+      id: '/_authenticated/settings/sidebar-assignment'
+      path: '/sidebar-assignment'
+      fullPath: '/settings/sidebar-assignment'
+      preLoaderRoute: typeof AuthenticatedSettingsSidebarAssignmentRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
     '/_authenticated/settings/profiles': {
       id: '/_authenticated/settings/profiles'
       path: '/profiles'
       fullPath: '/settings/profiles'
       preLoaderRoute: typeof AuthenticatedSettingsProfilesRouteImport
+      parentRoute: typeof AuthenticatedSettingsRouteRoute
+    }
+    '/_authenticated/settings/organization': {
+      id: '/_authenticated/settings/organization'
+      path: '/organization'
+      fullPath: '/settings/organization'
+      preLoaderRoute: typeof AuthenticatedSettingsOrganizationRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
     '/_authenticated/settings/object-manager': {
@@ -738,13 +809,6 @@ declare module '@tanstack/react-router' {
       path: '/display'
       fullPath: '/settings/display'
       preLoaderRoute: typeof AuthenticatedSettingsDisplayRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/settings/currency': {
-      id: '/_authenticated/settings/currency'
-      path: '/currency'
-      fullPath: '/settings/currency'
-      preLoaderRoute: typeof AuthenticatedSettingsCurrencyRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
     '/_authenticated/settings/appearance': {
@@ -789,6 +853,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedObjectNameRecordIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings/sidebar-assignment/': {
+      id: '/_authenticated/settings/sidebar-assignment/'
+      path: '/'
+      fullPath: '/settings/sidebar-assignment/'
+      preLoaderRoute: typeof AuthenticatedSettingsSidebarAssignmentIndexRouteImport
+      parentRoute: typeof AuthenticatedSettingsSidebarAssignmentRoute
+    }
     '/_authenticated/settings/profiles/': {
       id: '/_authenticated/settings/profiles/'
       path: '/'
@@ -829,6 +900,13 @@ declare module '@tanstack/react-router' {
       path: '/objects'
       fullPath: '/settings/profiles/$profileName/objects'
       preLoaderRoute: typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteImport
+      parentRoute: typeof AuthenticatedSettingsProfilesProfileNameRoute
+    }
+    '/_authenticated/settings/profiles/$profileName/list-views': {
+      id: '/_authenticated/settings/profiles/$profileName/list-views'
+      path: '/list-views'
+      fullPath: '/settings/profiles/$profileName/list-views'
+      preLoaderRoute: typeof AuthenticatedSettingsProfilesProfileNameListViewsRouteImport
       parentRoute: typeof AuthenticatedSettingsProfilesProfileNameRoute
     }
     '/_authenticated/settings/profiles/$profileName/global-actions': {
@@ -893,6 +971,7 @@ const AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren =
 
 interface AuthenticatedSettingsProfilesProfileNameRouteChildren {
   AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute: typeof AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute
+  AuthenticatedSettingsProfilesProfileNameListViewsRoute: typeof AuthenticatedSettingsProfilesProfileNameListViewsRoute
   AuthenticatedSettingsProfilesProfileNameObjectsRoute: typeof AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren
   AuthenticatedSettingsProfilesProfileNameIndexRoute: typeof AuthenticatedSettingsProfilesProfileNameIndexRoute
 }
@@ -901,6 +980,8 @@ const AuthenticatedSettingsProfilesProfileNameRouteChildren: AuthenticatedSettin
   {
     AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute:
       AuthenticatedSettingsProfilesProfileNameGlobalActionsRoute,
+    AuthenticatedSettingsProfilesProfileNameListViewsRoute:
+      AuthenticatedSettingsProfilesProfileNameListViewsRoute,
     AuthenticatedSettingsProfilesProfileNameObjectsRoute:
       AuthenticatedSettingsProfilesProfileNameObjectsRouteWithChildren,
     AuthenticatedSettingsProfilesProfileNameIndexRoute:
@@ -930,14 +1011,31 @@ const AuthenticatedSettingsProfilesRouteWithChildren =
     AuthenticatedSettingsProfilesRouteChildren,
   )
 
+interface AuthenticatedSettingsSidebarAssignmentRouteChildren {
+  AuthenticatedSettingsSidebarAssignmentIndexRoute: typeof AuthenticatedSettingsSidebarAssignmentIndexRoute
+}
+
+const AuthenticatedSettingsSidebarAssignmentRouteChildren: AuthenticatedSettingsSidebarAssignmentRouteChildren =
+  {
+    AuthenticatedSettingsSidebarAssignmentIndexRoute:
+      AuthenticatedSettingsSidebarAssignmentIndexRoute,
+  }
+
+const AuthenticatedSettingsSidebarAssignmentRouteWithChildren =
+  AuthenticatedSettingsSidebarAssignmentRoute._addFileChildren(
+    AuthenticatedSettingsSidebarAssignmentRouteChildren,
+  )
+
 interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
-  AuthenticatedSettingsCurrencyRoute: typeof AuthenticatedSettingsCurrencyRoute
   AuthenticatedSettingsDisplayRoute: typeof AuthenticatedSettingsDisplayRoute
   AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
   AuthenticatedSettingsObjectManagerRoute: typeof AuthenticatedSettingsObjectManagerRouteWithChildren
+  AuthenticatedSettingsOrganizationRoute: typeof AuthenticatedSettingsOrganizationRoute
   AuthenticatedSettingsProfilesRoute: typeof AuthenticatedSettingsProfilesRouteWithChildren
+  AuthenticatedSettingsSidebarAssignmentRoute: typeof AuthenticatedSettingsSidebarAssignmentRouteWithChildren
+  AuthenticatedSettingsTenantRoute: typeof AuthenticatedSettingsTenantRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
@@ -945,14 +1043,18 @@ const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteCh
   {
     AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
     AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
-    AuthenticatedSettingsCurrencyRoute: AuthenticatedSettingsCurrencyRoute,
     AuthenticatedSettingsDisplayRoute: AuthenticatedSettingsDisplayRoute,
     AuthenticatedSettingsNotificationsRoute:
       AuthenticatedSettingsNotificationsRoute,
     AuthenticatedSettingsObjectManagerRoute:
       AuthenticatedSettingsObjectManagerRouteWithChildren,
+    AuthenticatedSettingsOrganizationRoute:
+      AuthenticatedSettingsOrganizationRoute,
     AuthenticatedSettingsProfilesRoute:
       AuthenticatedSettingsProfilesRouteWithChildren,
+    AuthenticatedSettingsSidebarAssignmentRoute:
+      AuthenticatedSettingsSidebarAssignmentRouteWithChildren,
+    AuthenticatedSettingsTenantRoute: AuthenticatedSettingsTenantRoute,
     AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   }
 

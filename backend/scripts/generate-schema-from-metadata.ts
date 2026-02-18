@@ -29,20 +29,26 @@ const OBJECTS_PATH = path.join(METADATA_PATH, "objects");
 const SYSTEM_OBJECTS_PATH = path.join(METADATA_PATH, "system");
 const SYSTEM_EXTENSIONS_PATH = path.join(METADATA_PATH, "system-extensions");
 
-type TenantMode = "none" | "tenant" | "org_and_tenant";
+type TenantMode = "single_tenant" | "multi_tenant" | "org_and_tenant";
 
 function loadTenantConfig(): { mode: TenantMode } {
   const configPath = path.join(METADATA_PATH, "tenant-config.json");
-  if (!fs.existsSync(configPath)) return { mode: "none" };
+  if (!fs.existsSync(configPath)) return { mode: "single_tenant" };
   try {
     const data = JSON.parse(fs.readFileSync(configPath, "utf-8")) as Record<
       string,
       unknown
     >;
-    const mode = (data.mode as string) || "none";
-    return { mode: mode as TenantMode };
+    const raw = (data.mode as string) || "single_tenant";
+    const mode =
+      raw === "none"
+        ? "single_tenant"
+        : raw === "tenant"
+          ? "multi_tenant"
+          : (raw as TenantMode);
+    return { mode: ["single_tenant", "multi_tenant", "org_and_tenant"].includes(mode) ? mode : "single_tenant" };
   } catch {
-    return { mode: "none" };
+    return { mode: "single_tenant" };
   }
 }
 
@@ -310,9 +316,11 @@ function generateTable(
 
   // Tenant scope columns (skip for master objects: organization, tenant)
   const isMaster = objectName === "organization" || objectName === "tenant";
+  const hasOrgsForTable =
+    tenantMode === "single_tenant" || tenantMode === "multi_tenant" || tenantMode === "org_and_tenant";
   if (
     !isMaster &&
-    tenantMode !== "none" &&
+    hasOrgsForTable &&
     tenantScope &&
     (tenantScope === "tenant" || tenantScope === "org_and_tenant")
   ) {
@@ -350,7 +358,7 @@ function generateTable(
       const isTenantScopeRef =
         (field.key === "organization" || field.key === "tenant") &&
         tenantScope &&
-        tenantMode !== "none" &&
+        hasOrgsForTable &&
         !isMaster;
       if (isTenantScopeRef) continue;
       const refNotNull =
@@ -464,14 +472,16 @@ function main() {
   // Exclude tenant system objects - they are emitted from metadata/system/, not objects/
   objectDirs = objectDirs.filter((d) => !TENANT_SYSTEM_OBJECTS_SET.has(d));
 
+  const hasOrgs = tenantMode === "single_tenant" || tenantMode === "multi_tenant" || tenantMode === "org_and_tenant";
+  const hasTenants = tenantMode === "single_tenant" || tenantMode === "org_and_tenant";
   const userOrgCol =
-    tenantMode !== "none"
+    hasOrgs
       ? dialect === "mysql"
         ? "\n  organizationId: int('organization_id').references(() => organizations.id),"
         : "\n  organizationId: integer('organization_id').references(() => organizations.id),"
       : "";
   const userTenantCol =
-    tenantMode === "org_and_tenant"
+    hasTenants
       ? dialect === "mysql"
         ? "\n  tenantId: int('tenant_id').references(() => tenants.id),"
         : "\n  tenantId: integer('tenant_id').references(() => tenants.id),"
@@ -509,8 +519,8 @@ function main() {
   const tables: string[] = [usersTable];
   const tableNames: string[] = ["users"];
 
-  // Emit organizations table when tenant mode != none (system object, not from metadata/objects)
-  if (tenantMode !== "none") {
+  // Emit organizations table when tenant mode has orgs (system object, not from metadata/objects)
+  if (hasOrgs) {
     const orgExtCols = generateExtensionColumnLines(
       loadExtensionFields("organization"),
       dialect
@@ -535,8 +545,8 @@ function main() {
     tableNames.push("organizations");
   }
 
-  // Emit tenants table when tenant mode is org_and_tenant (system object)
-  if (tenantMode === "org_and_tenant") {
+  // Emit tenants table when tenant mode has tenants (single_tenant or org_and_tenant)
+  if (hasTenants) {
     const tenantExtCols = generateExtensionColumnLines(
       loadExtensionFields("tenant"),
       dialect
@@ -563,17 +573,17 @@ function main() {
 
   // Internal files table (no metadata, managed via upload/download APIs)
   const filesOrgRef =
-    tenantMode !== "none" && dialect === "mysql"
+    hasOrgs && dialect === "mysql"
       ? "int('organization_id').references(() => organizations.id, { onDelete: 'set null' })"
-      : tenantMode !== "none" && dialect === "sqlite"
+      : hasOrgs && dialect === "sqlite"
         ? "integer('organization_id').references(() => organizations.id, { onDelete: 'set null' })"
         : dialect === "mysql"
           ? "int('organization_id')"
           : "integer('organization_id')";
   const filesTenantRef =
-    tenantMode === "org_and_tenant" && dialect === "mysql"
+    hasTenants && dialect === "mysql"
       ? "int('tenant_id').references(() => tenants.id, { onDelete: 'set null' })"
-      : tenantMode === "org_and_tenant" && dialect === "sqlite"
+      : hasTenants && dialect === "sqlite"
         ? "integer('tenant_id').references(() => tenants.id, { onDelete: 'set null' })"
         : dialect === "mysql"
           ? "int('tenant_id')"
@@ -613,17 +623,17 @@ function main() {
 
   // Internal record_history table (field-level audit trail, no metadata)
   const recordHistoryOrgRef =
-    tenantMode !== "none" && dialect === "mysql"
+    hasOrgs && dialect === "mysql"
       ? "int('organization_id').references(() => organizations.id, { onDelete: 'set null' })"
-      : tenantMode !== "none" && dialect === "sqlite"
+      : hasOrgs && dialect === "sqlite"
         ? "integer('organization_id').references(() => organizations.id, { onDelete: 'set null' })"
         : dialect === "mysql"
           ? "int('organization_id')"
           : "integer('organization_id')";
   const recordHistoryTenantRef =
-    tenantMode === "org_and_tenant" && dialect === "mysql"
+    hasTenants && dialect === "mysql"
       ? "int('tenant_id').references(() => tenants.id, { onDelete: 'set null' })"
-      : tenantMode === "org_and_tenant" && dialect === "sqlite"
+      : hasTenants && dialect === "sqlite"
         ? "integer('tenant_id').references(() => tenants.id, { onDelete: 'set null' })"
         : dialect === "mysql"
           ? "int('tenant_id')"
@@ -723,8 +733,8 @@ ${tableNames
   const indexPath = path.join(METADATA_PATH, "objects", "index.json");
   const indexNames = [
     ...objectDirs,
-    ...(tenantMode !== "none" ? ["organization"] : []),
-    ...(tenantMode === "org_and_tenant" ? ["tenant"] : [])
+    ...(hasOrgs ? ["organization"] : []),
+    ...(hasTenants ? ["tenant"] : [])
   ];
   const indexContent = JSON.stringify(indexNames, null, 2);
   fs.writeFileSync(indexPath, indexContent);
@@ -743,6 +753,10 @@ ${tableNames
 }
 
 function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
+  const hasOrgs =
+    tenantMode === "single_tenant" ||
+    tenantMode === "multi_tenant" ||
+    tenantMode === "org_and_tenant";
   const relatedListPathsByEntity = new Map<
     string,
     Record<string, { filterColumn: string }>
@@ -799,7 +813,7 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
     const tenantScopeFields: string[] = [];
     if (
       tenantScope &&
-      tenantConfig.mode !== "none" &&
+      hasOrgs &&
       objectName !== "organization" &&
       objectName !== "tenant"
     ) {
@@ -897,9 +911,7 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
         : "";
 
     const tenantScopeConfig =
-      tenantScope && tenantConfig.mode !== "none"
-        ? `tenantScope: '${tenantScope}'`
-        : "";
+      tenantScope && hasOrgs ? `tenantScope: '${tenantScope}'` : "";
 
     const configParts = [
       `table: ${tableName}`,
@@ -927,10 +939,16 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
     entityConfigs.push(`  '${tableName}': { ${configParts.join(", ")} },`);
   }
 
-  // Add organization and tenant entity configs when tenant mode != none (system objects from metadata/system/)
+  // Add organization and tenant entity configs when tenant mode has orgs/tenants (system objects from metadata/system/)
   const systemObjectsToAdd: string[] = [];
-  if (tenantMode !== "none") systemObjectsToAdd.push("organization");
-  if (tenantMode === "org_and_tenant") systemObjectsToAdd.push("tenant");
+  if (
+    tenantMode === "single_tenant" ||
+    tenantMode === "multi_tenant" ||
+    tenantMode === "org_and_tenant"
+  )
+    systemObjectsToAdd.push("organization");
+  if (tenantMode === "single_tenant" || tenantMode === "org_and_tenant")
+    systemObjectsToAdd.push("tenant");
 
   for (const objectName of systemObjectsToAdd) {
     if (

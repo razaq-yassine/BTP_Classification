@@ -4,10 +4,10 @@ import {
   IconBrowserCheck,
   IconBug,
   IconChecklist,
-  IconCurrencyDollar,
   IconError404,
   IconHelp,
   IconLayoutDashboard,
+  IconLayoutSidebarLeftExpand,
   IconLock,
   IconLockAccess,
   IconMessages,
@@ -46,6 +46,25 @@ export const settingsNavGroups: NavGroup[] = [
     ]
   },
   {
+    title: "Workspace",
+    items: [
+      {
+        title: "Organization",
+        url: "/settings/organization",
+        icon: Layers,
+        orgUserOnly: true,
+        adminAlsoSees: true
+      },
+      {
+        title: "Tenant",
+        url: "/settings/tenant",
+        icon: Layers,
+        tenantUserOnly: true,
+        adminAlsoSees: true
+      }
+    ]
+  },
+  {
     title: "Administration",
     items: [
       {
@@ -61,9 +80,9 @@ export const settingsNavGroups: NavGroup[] = [
         adminOnly: true
       },
       {
-        title: "Default Currency",
-        url: "/settings/currency",
-        icon: IconCurrencyDollar,
+        title: "Sidebar Assignment",
+        url: "/settings/sidebar-assignment",
+        icon: IconLayoutSidebarLeftExpand,
         adminOnly: true
       }
     ]

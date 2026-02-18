@@ -24,6 +24,8 @@ export interface AuthUser {
   firstName: string
   lastName: string
   profile: string
+  organizationId?: number | null
+  tenantId?: number | null
 }
 
 /**
@@ -77,16 +79,18 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
       // Store JWT token
       localStorage.setItem('jwt_token', accessToken)
       
-      // Create user object
+      // Create user object (spread to include organizationId, tenantId from backend)
       const user: AuthUser = {
         id: userData.id,
         username: userData.username,
         email: userData.email,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        profile: userData.profile || 'standard-user'
+        profile: userData.profile || 'standard-user',
+        organizationId: userData.organizationId ?? null,
+        tenantId: userData.tenantId ?? null
       }
-      
+
       // Update state
       set({
         user,
@@ -94,7 +98,7 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
         isLoading: false,
         error: null
       })
-      
+
       return { success: true }
       
     } catch (error: any) {
@@ -156,16 +160,18 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
       const response = await api.get('/api/auth/me')
       const userData = response.data
       
-      // Create user object
+      // Create user object (spread to include organizationId, tenantId from backend)
       const user: AuthUser = {
         id: userData.id,
         username: userData.username,
         email: userData.email,
         firstName: userData.firstName,
         lastName: userData.lastName,
-        profile: userData.profile || 'standard-user'
+        profile: userData.profile || 'standard-user',
+        organizationId: userData.organizationId ?? null,
+        tenantId: userData.tenantId ?? null
       }
-      
+
       // Update state
       set({
         user,
@@ -173,8 +179,8 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
         isLoading: false,
         error: null
       })
-      
-      
+
+
     } catch (err: any) {
       const isNetworkError =
         !err.response &&

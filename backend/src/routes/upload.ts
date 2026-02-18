@@ -72,7 +72,10 @@ function getTenantFilter(
   tenantScope: string | undefined
 ): Record<string, number> | null {
   if (!user) return null;
-  if (tenantConfig.mode === "none") return null;
+  const mode = tenantConfig.mode;
+  const hasOrgs =
+    mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
+  if (!hasOrgs) return null;
   if (!tenantScope) return null;
   const isAdmin =
     user.profile === "admin" ||

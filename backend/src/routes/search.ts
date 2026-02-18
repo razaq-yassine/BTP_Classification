@@ -38,7 +38,9 @@ function getTenantFilter(
 ): Record<string, number> | null {
   if (!user) return null;
   const mode = tenantConfig.mode;
-  if (mode === "none") return null;
+  const hasOrgs =
+    mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
+  if (!hasOrgs) return null;
   const tenantScope = (objectConfig as { tenantScope?: string }).tenantScope;
   if (!tenantScope) return null;
   const isAdmin =
@@ -144,7 +146,10 @@ async function enrichWithTenantScope(
   config: EntityConfig
 ): Promise<Record<string, unknown>> {
   const tenantScope = (config as { tenantScope?: string }).tenantScope;
-  if (!tenantScope || (tenantConfig as { mode: string }).mode === "none")
+  const mode = (tenantConfig as { mode: string }).mode;
+  const hasOrgs =
+    mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
+  if (!tenantScope || !hasOrgs)
     return record;
   const out = { ...record };
   const orgId = record.organizationId as number | undefined;

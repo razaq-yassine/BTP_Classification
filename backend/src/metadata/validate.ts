@@ -20,9 +20,9 @@ const VALID_FIELD_TYPES = new Set([
   'password', 'geolocation', 'address', 'richtext', 'file'
 ])
 
-const VALID_TENANT_MODES = new Set(['none', 'tenant', 'org_and_tenant'])
+const VALID_TENANT_MODES = new Set(['single_tenant', 'multi_tenant', 'org_and_tenant'])
 
-export type TenantMode = 'none' | 'tenant' | 'org_and_tenant'
+export type TenantMode = 'single_tenant' | 'multi_tenant' | 'org_and_tenant'
 export type TenantScope = 'tenant' | 'org_and_tenant' | null
 
 export interface TenantConfig {
@@ -34,7 +34,7 @@ export function loadTenantConfig(metadataPath: string): TenantConfig | null {
   if (!fs.existsSync(configPath)) return null
   try {
     const data = JSON.parse(fs.readFileSync(configPath, 'utf-8')) as Record<string, unknown>
-    const mode = (data.mode as string) || 'none'
+    const mode = (data.mode as string) || 'single_tenant'
     return { mode: mode as TenantMode }
   } catch {
     return null
@@ -50,7 +50,7 @@ function validateTenantConfig(
   const pathPrefix = 'tenant-config.json'
   if (!tenantConfig) return
   if (!VALID_TENANT_MODES.has(tenantConfig.mode)) {
-    addError(errors, pathPrefix, `mode must be one of: none, tenant, org_and_tenant`, 'TENANT_INVALID_MODE')
+    addError(errors, pathPrefix, `mode must be one of: single_tenant, multi_tenant, org_and_tenant`, 'TENANT_INVALID_MODE')
   }
   // Organization and tenant are system objects in metadata/system/, not metadata/objects/ - no existence check needed
 }
@@ -110,11 +110,11 @@ function validateObjectFile(
   if (tenantScope !== undefined && tenantScope !== null) {
     if (tenantScope !== 'tenant' && tenantScope !== 'org_and_tenant') {
       addError(errors, pathPrefix, 'tenantScope must be "tenant" or "org_and_tenant"', 'OBJECT_INVALID_TENANT_SCOPE')
-    } else if (tenantConfig && tenantConfig.mode !== 'none') {
-      if (tenantConfig.mode === 'tenant' && tenantScope !== 'tenant') {
-        addError(errors, pathPrefix, 'tenantScope must be "tenant" when mode is "tenant"', 'OBJECT_TENANT_SCOPE_MISMATCH')
+    } else if (tenantConfig) {
+      if (tenantConfig.mode === 'multi_tenant' && tenantScope !== 'tenant') {
+        addError(errors, pathPrefix, 'tenantScope must be "tenant" when mode is "multi_tenant"', 'OBJECT_TENANT_SCOPE_MISMATCH')
       }
-      if (tenantConfig.mode === 'org_and_tenant' && tenantScope !== 'tenant' && tenantScope !== 'org_and_tenant') {
+      if ((tenantConfig.mode === 'single_tenant' || tenantConfig.mode === 'org_and_tenant') && tenantScope !== 'tenant' && tenantScope !== 'org_and_tenant') {
         addError(errors, pathPrefix, 'tenantScope must be "tenant" or "org_and_tenant" when mode is "org_and_tenant"', 'OBJECT_TENANT_SCOPE_MISMATCH')
       }
     }
@@ -587,12 +587,12 @@ function getObjectNames(objectsPath: string): string[] {
 /** System objects from metadata/system/ that exist and are enabled by tenant config. Used for reference validation. */
 function getSystemObjectNames(metadataPath: string, tenantConfig: TenantConfig | null): string[] {
   const systemPath = path.join(metadataPath, 'system')
-  if (!fs.existsSync(systemPath) || !tenantConfig || tenantConfig.mode === 'none') return []
+  if (!fs.existsSync(systemPath) || !tenantConfig) return []
   const names: string[] = []
-  if (tenantConfig.mode === 'tenant' || tenantConfig.mode === 'org_and_tenant') {
+  if (tenantConfig.mode === 'single_tenant' || tenantConfig.mode === 'multi_tenant' || tenantConfig.mode === 'org_and_tenant') {
     if (fs.existsSync(path.join(systemPath, 'organization', 'object.json'))) names.push('organization')
   }
-  if (tenantConfig.mode === 'org_and_tenant') {
+  if (tenantConfig.mode === 'single_tenant' || tenantConfig.mode === 'org_and_tenant') {
     if (fs.existsSync(path.join(systemPath, 'tenant', 'object.json'))) names.push('tenant')
   }
   return names

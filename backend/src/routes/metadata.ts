@@ -607,6 +607,30 @@ metadataRoutes.get('/global-actions', (c) => {
   }
 })
 
+// ============ Sidebars API ============
+const SIDEBARS_PATH = path.join(METADATA_PATH, 'sidebars')
+metadataRoutes.get('/sidebars', (c) => {
+  try {
+    const indexPath = path.join(SIDEBARS_PATH, 'index.json')
+    if (fs.existsSync(indexPath)) {
+      const data = JSON.parse(fs.readFileSync(indexPath, 'utf-8'))
+      return c.json(Array.isArray(data) ? data : [])
+    }
+    if (!fs.existsSync(SIDEBARS_PATH)) {
+      return c.json([])
+    }
+    const files = fs.readdirSync(SIDEBARS_PATH)
+    const ids = files
+      .filter((f) => f.endsWith('.json') && f !== 'index.json')
+      .map((f) => f.replace(/\.json$/, ''))
+      .sort()
+    return c.json(ids)
+  } catch (err) {
+    console.error('Sidebars list error:', err)
+    return c.json({ message: 'Failed to list sidebars' }, 500)
+  }
+})
+
 // ============ Profiles API ============
 metadataRoutes.get('/profiles', (c) => {
   try {
@@ -660,6 +684,7 @@ metadataRoutes.post('/profiles', async (c) => {
       name,
       label: body.label || name,
       description: body.description || '',
+      sidebar: body.sidebar || 'default',
       objectPermissions: body.objectPermissions || {},
       globalActionPermissions: body.globalActionPermissions || {},
     }

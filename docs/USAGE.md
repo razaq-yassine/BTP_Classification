@@ -723,8 +723,8 @@ See `.cursor/rules/metadata-validation.mdc` for the full checklist when adding n
 | Object       | When present                                       | Metadata location                                                     |
 | ------------ | -------------------------------------------------- | --------------------------------------------------------------------- |
 | user         | Always                                             | Hardcoded in schema; extensions in `metadata/system-extensions/user/` |
-| organization | When `tenant-config.json` mode ≠ `none`            | `metadata/system/organization/` (read-only UI)                        |
-| tenant       | When `tenant-config.json` mode is `org_and_tenant` | `metadata/system/tenant/` (read-only UI)                              |
+| organization | When `tenant-config.json` mode is `single_tenant`, `multi_tenant`, or `org_and_tenant` | `metadata/system/organization/` (read-only UI)                        |
+| tenant       | When `tenant-config.json` mode is `single_tenant` or `org_and_tenant` | `metadata/system/tenant/` (read-only UI)                              |
 
 - **`metadata/system/`** — Read-only UI definitions for organization and tenant (listView, detailView, fields). Shipped with the app.
 - **`metadata/system-extensions/`** — Add-only extension fields for user, organization, and tenant. You can add new fields but cannot remove or override base fields.

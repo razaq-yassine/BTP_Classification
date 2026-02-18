@@ -4,9 +4,14 @@ import { eq } from 'drizzle-orm'
 import bcrypt from 'bcrypt'
 import { tenantConfig } from '../routes/entity-registry.generated.js'
 import { seedMultiTenant } from '../../scripts/seed-multi-tenant.ts'
+import { seedSingleTenant } from '../../scripts/seed-single-tenant.ts'
 
 /** Seed data only - tables are created by Drizzle migrations */
 export async function initDb() {
+  if (tenantConfig.mode === 'single_tenant') {
+    await seedSingleTenant()
+    return
+  }
   if (tenantConfig.mode === 'org_and_tenant') {
     await initDbMultiTenant()
     return

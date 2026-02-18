@@ -35,7 +35,9 @@ function getTenantFilter(
 ): Record<string, number> | null {
   if (!user) return null;
   const mode = tenantConfig.mode;
-  if (mode === "none") return null;
+  const hasOrgs =
+    mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
+  if (!hasOrgs) return null;
   const tenantScope = (objectConfig as { tenantScope?: string }).tenantScope;
   if (!tenantScope) return null;
   const isAdmin =
@@ -169,7 +171,10 @@ async function enrichWithTenantScope(
   config: EntityConfig
 ): Promise<Record<string, unknown>> {
   const tenantScope = (config as { tenantScope?: string }).tenantScope;
-  if (!tenantScope || tenantConfig.mode === "none") return record;
+  const mode = tenantConfig.mode;
+  const hasOrgs =
+    mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
+  if (!tenantScope || !hasOrgs) return record;
   const out = { ...record };
   const orgId = record.organizationId as number | undefined;
   const tenantId = record.tenantId as number | undefined;
@@ -473,6 +478,20 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       }
       const tenantFilter = getTenantFilter(user, config);
       let tenantConds = buildTenantConditions(table as any, tenantFilter);
+      const isAdmin =
+        user?.profile === "admin" ||
+        (user?.organizationId == null && user?.tenantId == null);
+      // Org users: can only list their org
+      if (
+        entityPath === "organizations" &&
+        !isAdmin &&
+        user?.organizationId != null
+      ) {
+        tenantConds = [
+          ...tenantConds,
+          eq((table as any).id, user.organizationId)
+        ];
+      }
       // Org users listing tenants: filter to their org only
       if (
         entityPath === "tenants" &&
@@ -482,6 +501,13 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
         tenantConds = [
           ...tenantConds,
           eq((table as any).organizationId, user.organizationId)
+        ];
+      }
+      // Tenant users: can only list their tenant
+      if (entityPath === "tenants" && !isAdmin && user?.tenantId != null) {
+        tenantConds = [
+          ...tenantConds,
+          eq((table as any).id, user.tenantId)
         ];
       }
 
@@ -608,6 +634,20 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       if (Number.isNaN(id)) return c.json({ message: "Invalid ID" }, 400);
       const tenantFilter = getTenantFilter(user, config);
       let tenantConds = buildTenantConditions(table as any, tenantFilter);
+      const isAdmin =
+        user?.profile === "admin" ||
+        (user?.organizationId == null && user?.tenantId == null);
+      // Org users fetching org by id: must be their org
+      if (
+        entityPath === "organizations" &&
+        !isAdmin &&
+        user?.organizationId != null
+      ) {
+        tenantConds = [
+          ...tenantConds,
+          eq((table as any).id, user.organizationId)
+        ];
+      }
       // Org users fetching tenant by id: must belong to their org
       if (
         entityPath === "tenants" &&
@@ -617,6 +657,13 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
         tenantConds = [
           ...tenantConds,
           eq((table as any).organizationId, user.organizationId)
+        ];
+      }
+      // Tenant users fetching tenant by id: must be their tenant
+      if (entityPath === "tenants" && !isAdmin && user?.tenantId != null) {
+        tenantConds = [
+          ...tenantConds,
+          eq((table as any).id, user.tenantId)
         ];
       }
       const idCond = eq(idCol as any, id);
@@ -682,11 +729,13 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     const body = (await c.req.json()) as Record<string, unknown>;
     const tenantScope = (config as { tenantScope?: string }).tenantScope;
     const mode = tenantConfig.mode;
+    const hasOrgs =
+      mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
     const isAdmin =
       user &&
       (user.profile === "admin" ||
         (user.organizationId == null && user.tenantId == null));
-    if (tenantScope && mode !== "none") {
+    if (tenantScope && hasOrgs) {
       if (isAdmin) {
         const orgVal =
           body.organizationId ?? (body.organization as { id?: number })?.id;
@@ -794,7 +843,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     }
 
     let payload = buildInsertPayload(insertBody, config, {});
-    if (tenantScope && mode !== "none") {
+    if (tenantScope && hasOrgs) {
       if (isAdmin) {
         payload.organizationId =
           body.organizationId ?? (body.organization as { id?: number })?.id;
@@ -889,7 +938,30 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     }
     const id = Number(c.req.param("id"));
     const tenantFilter = getTenantFilter(user, config);
-    const tenantConds = buildTenantConditions(table as any, tenantFilter);
+    let tenantConds = buildTenantConditions(table as any, tenantFilter);
+    const isAdmin =
+      user?.profile === "admin" ||
+      (user?.organizationId == null && user?.tenantId == null);
+    if (
+      entityPath === "organizations" &&
+      !isAdmin &&
+      user?.organizationId != null
+    ) {
+      tenantConds = [...tenantConds, eq((table as any).id, user.organizationId)];
+    }
+    if (entityPath === "tenants" && !isAdmin && user?.tenantId != null) {
+      tenantConds = [...tenantConds, eq((table as any).id, user.tenantId)];
+    }
+    if (
+      entityPath === "tenants" &&
+      user?.organizationId != null &&
+      user?.tenantId == null
+    ) {
+      tenantConds = [
+        ...tenantConds,
+        eq((table as any).organizationId, user.organizationId)
+      ];
+    }
     const idCond = eq(idCol as any, id);
     const whereCond =
       tenantConds.length > 0 ? and(idCond, ...tenantConds) : idCond;
@@ -994,7 +1066,30 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     }
     const id = Number(c.req.param("id"));
     const tenantFilter = getTenantFilter(user, config);
-    const tenantConds = buildTenantConditions(table as any, tenantFilter);
+    let tenantConds = buildTenantConditions(table as any, tenantFilter);
+    const isAdmin =
+      user?.profile === "admin" ||
+      (user?.organizationId == null && user?.tenantId == null);
+    if (
+      entityPath === "organizations" &&
+      !isAdmin &&
+      user?.organizationId != null
+    ) {
+      tenantConds = [...tenantConds, eq((table as any).id, user.organizationId)];
+    }
+    if (entityPath === "tenants" && !isAdmin && user?.tenantId != null) {
+      tenantConds = [...tenantConds, eq((table as any).id, user.tenantId)];
+    }
+    if (
+      entityPath === "tenants" &&
+      user?.organizationId != null &&
+      user?.tenantId == null
+    ) {
+      tenantConds = [
+        ...tenantConds,
+        eq((table as any).organizationId, user.organizationId)
+      ];
+    }
     const idCond = eq(idCol as any, id);
     const whereCond =
       tenantConds.length > 0 ? and(idCond, ...tenantConds) : idCond;

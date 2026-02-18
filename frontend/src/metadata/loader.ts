@@ -11,7 +11,7 @@ import type {
 } from '@/types/object-definition'
 import { getIcon, resolveAction, resolveCalculatedData, resolveStatisticsCard } from './action-registry'
 import { objectSchema, fieldSchema } from './schemas'
-import { SYSTEM_FIELD_LABELS, TENANT_SYSTEM_OBJECTS_SET } from '@shared/protected-metadata'
+import { SYSTEM_FIELD_LABELS, SYSTEM_OBJECTS_WITH_EXTENSIONS, TENANT_SYSTEM_OBJECTS_SET } from '@shared/protected-metadata'
 
 const METADATA_BASE = '/metadata'
 
@@ -252,13 +252,41 @@ async function loadFields(objectName: string, objPathOverride?: string): Promise
     fieldNames = ['id', 'firstName', 'lastName', 'fullName', 'email', 'phone', 'company', 'address', 'createdAt', 'updatedAt']
   }
 
-  const fieldsPath = `${objPath}/fields`
+  // Merge extension fields for system objects (organization, tenant, user)
+  if (SYSTEM_OBJECTS_WITH_EXTENSIONS.includes(objectName as 'user' | 'organization' | 'tenant')) {
+    try {
+      const extIndex = await fetchJson<string[]>(`/system-extensions/${objectName}/fields.json`)
+      if (Array.isArray(extIndex) && extIndex.length > 0) {
+        const existing = new Set(fieldNames)
+        for (const key of extIndex) {
+          if (!existing.has(key)) {
+            fieldNames = [...fieldNames, key]
+            existing.add(key)
+          }
+        }
+      }
+    } catch {
+      // No extensions or failed to load
+    }
+  }
+
+  const baseFieldsPath = `${objPath}/fields`
+  const extFieldsPath = `/system-extensions/${objectName}/fields`
 
   const results: FieldDefinition[] = []
 
   for (const name of fieldNames) {
     try {
-      const data = await fetchJson<Record<string, unknown>>(`${fieldsPath}/${name}.json`)
+      let data: Record<string, unknown>
+      try {
+        data = await fetchJson<Record<string, unknown>>(`${baseFieldsPath}/${name}.json`)
+      } catch {
+        if (SYSTEM_OBJECTS_WITH_EXTENSIONS.includes(objectName as 'user' | 'organization' | 'tenant')) {
+          data = await fetchJson<Record<string, unknown>>(`${extFieldsPath}/${name}.json`)
+        } else {
+          throw new Error(`Field ${name} not found`)
+        }
+      }
       fieldSchema.parse(data)
       const fd = data as unknown as FieldDefinition & { render?: string }
       let fieldType = (fd.type || 'string') as FieldDefinition['type']

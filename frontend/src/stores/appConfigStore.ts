@@ -4,6 +4,8 @@ import api from "@/services/api";
 export interface AppConfig {
   defaultCurrency: string;
   currencySymbol: string;
+  timezone?: string;
+  defaultPreferredLanguage?: string;
 }
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -22,18 +24,31 @@ interface AppConfigState {
 export const useAppConfigStore = create<AppConfigState>((set, get) => ({
   config: DEFAULT_CONFIG,
   isLoading: false,
-  isLoaded: false,
+  isLoaded: true,
 
   fetchConfig: async () => {
     if (get().isLoading) return;
     set({ isLoading: true });
     try {
-      const { data } = await api.get<AppConfig>("/api/config/app-config");
+      const [appRes, tenantRes] = await Promise.all([
+        api.get<AppConfig>("/api/config/app-config").catch(() => ({ data: null })),
+        api.get<{ defaultCurrency?: string; currencySymbol?: string; timezone?: string; defaultPreferredLanguage?: string } | null>("/api/config/tenant-context").catch(() => ({ data: null })),
+      ]);
+      const appData = appRes?.data;
+      const tenantData = tenantRes?.data;
       set({
         config: {
           defaultCurrency:
-            data?.defaultCurrency ?? DEFAULT_CONFIG.defaultCurrency,
-          currencySymbol: data?.currencySymbol ?? DEFAULT_CONFIG.currencySymbol
+            tenantData?.defaultCurrency ??
+            appData?.defaultCurrency ??
+            DEFAULT_CONFIG.defaultCurrency,
+          currencySymbol:
+            tenantData?.currencySymbol ??
+            appData?.currencySymbol ??
+            DEFAULT_CONFIG.currencySymbol,
+          timezone: tenantData?.timezone ?? appData?.timezone,
+          defaultPreferredLanguage:
+            tenantData?.defaultPreferredLanguage ?? appData?.defaultPreferredLanguage,
         },
         isLoaded: true
       });

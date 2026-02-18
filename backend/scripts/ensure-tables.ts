@@ -23,15 +23,19 @@ const METADATA_PATH = process.env.METADATA_PATH || defaultMetadataPath;
 const OBJECTS_PATH = path.join(METADATA_PATH, "objects");
 const SYSTEM_OBJECTS_PATH = path.join(METADATA_PATH, "system");
 
-function loadTenantConfig(): { mode: "none" | "tenant" | "org_and_tenant" } {
+type TenantMode = "single_tenant" | "multi_tenant" | "org_and_tenant";
+
+function loadTenantConfig(): { mode: TenantMode } {
   const configPath = path.join(METADATA_PATH, "tenant-config.json");
-  if (!fs.existsSync(configPath)) return { mode: "none" };
+  if (!fs.existsSync(configPath)) return { mode: "single_tenant" };
   try {
     const data = JSON.parse(fs.readFileSync(configPath, "utf-8")) as Record<string, unknown>;
-    const mode = (data.mode as string) || "none";
-    return { mode: mode as "none" | "tenant" | "org_and_tenant" };
+    const raw = (data.mode as string) || "single_tenant";
+    const mode: TenantMode =
+      raw === "none" ? "single_tenant" : raw === "tenant" ? "multi_tenant" : raw;
+    return { mode: ["single_tenant", "multi_tenant", "org_and_tenant"].includes(mode) ? mode : "single_tenant" };
   } catch {
-    return { mode: "none" };
+    return { mode: "single_tenant" };
   }
 }
 
@@ -131,12 +135,18 @@ async function main() {
     );
   });
 
-  // Add tenant system objects when mode != none (load from metadata/system/)
+  // Add tenant system objects when mode has orgs/tenants (load from metadata/system/)
   const systemObjects: string[] = [];
-  if (tenantConfig.mode !== "none" && fs.existsSync(path.join(SYSTEM_OBJECTS_PATH, "organization", "object.json"))) {
+  const hasOrgs =
+    tenantConfig.mode === "single_tenant" ||
+    tenantConfig.mode === "multi_tenant" ||
+    tenantConfig.mode === "org_and_tenant";
+  const hasTenants =
+    tenantConfig.mode === "single_tenant" || tenantConfig.mode === "org_and_tenant";
+  if (hasOrgs && fs.existsSync(path.join(SYSTEM_OBJECTS_PATH, "organization", "object.json"))) {
     systemObjects.push("organization");
   }
-  if (tenantConfig.mode === "org_and_tenant" && fs.existsSync(path.join(SYSTEM_OBJECTS_PATH, "tenant", "object.json"))) {
+  if (hasTenants && fs.existsSync(path.join(SYSTEM_OBJECTS_PATH, "tenant", "object.json"))) {
     systemObjects.push("tenant");
   }
   const allObjectNames = [...systemObjects, ...objectDirs];

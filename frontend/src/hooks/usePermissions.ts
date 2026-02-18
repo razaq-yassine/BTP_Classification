@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query'
  */
 export function usePermissions() {
   const user = useAuthStore(selectUser)
-  const profileName = user?.profile || 'standard-user'
+  const profileName = (user?.profile || 'standard-user').toLowerCase()
 
   // Load user's profile (skip when not authenticated)
   const { data: profile, isLoading } = useQuery<Profile | null>({

@@ -12,6 +12,7 @@ export const users = mysqlTable('users', {
   dateJoined: datetime('date_joined'),
   organizationId: int('organization_id').references(() => organizations.id),
   tenantId: int('tenant_id').references(() => tenants.id),
+    preferredLanguage: varchar('preferred_language', { length: 255 }),
 })
 
 export const organizations = mysqlTable('organizations', {
@@ -20,6 +21,13 @@ export const organizations = mysqlTable('organizations', {
   slug: varchar('slug', { length: 255 }),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+    logo: varchar('logo', { length: 255 }),
+    address: text('address'),
+    defaultCurrency: varchar('default_currency', { length: 255 }),
+    currencySymbol: varchar('currency_symbol', { length: 255 }),
+    timezone: varchar('timezone', { length: 255 }),
+    defaultPreferredLanguage: varchar('default_preferred_language', { length: 255 }),
+    sidebarTheme: varchar('sidebar_theme', { length: 255 }),
 })
 
 export const tenants = mysqlTable('tenants', {
@@ -28,6 +36,13 @@ export const tenants = mysqlTable('tenants', {
   organizationId: int('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   createdAt: datetime('created_at'),
   updatedAt: datetime('updated_at'),
+    logo: varchar('logo', { length: 255 }),
+    address: text('address'),
+    defaultCurrency: varchar('default_currency', { length: 255 }),
+    currencySymbol: varchar('currency_symbol', { length: 255 }),
+    timezone: varchar('timezone', { length: 255 }),
+    defaultPreferredLanguage: varchar('default_preferred_language', { length: 255 }),
+    sidebarTheme: varchar('sidebar_theme', { length: 255 }),
 })
 
 export const files = mysqlTable('files', {
