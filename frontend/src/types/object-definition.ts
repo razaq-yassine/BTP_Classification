@@ -74,6 +74,8 @@ export interface FieldDefinition {
   defaultValue?: string | number | boolean | string[]
   /** For formula fields: expression to evaluate (e.g. "quantity * price", "daysSince(orderDate)") */
   formulaExpression?: string
+  /** For file fields: accepted file types (e.g. "image/*" or ".jpg,.jpeg,.png,.gif,.webp,.svg") */
+  accept?: string
 }
 
 export interface RelatedObjectDefinition {

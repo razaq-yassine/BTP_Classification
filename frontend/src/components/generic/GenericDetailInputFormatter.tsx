@@ -31,6 +31,7 @@ function FileFieldInput({
   fieldKey,
   label: _label,
   className,
+  accept,
 }: {
   value: any
   onChange: (value: string) => void
@@ -40,6 +41,7 @@ function FileFieldInput({
   fieldKey: string
   label: string
   className?: string
+  accept?: string
 }) {
   const [uploading, setUploading] = useState(false)
   const canUpload = objectName && recordId != null && !disabled
@@ -77,6 +79,7 @@ function FileFieldInput({
       )}
       <Input
         type="file"
+        accept={accept}
         onChange={handleFileChange}
         disabled={disabled || !canUpload || uploading}
         className={className}
@@ -603,6 +606,7 @@ export function GenericDetailInputFormatter({
             fieldKey={fieldDefinition.key}
             label={label}
             className={className}
+            accept={fieldDefinition.accept}
           />
         )
 

@@ -242,6 +242,7 @@ Every object must have a `name` field. It serves as the primary identifier for r
 | `autoNumberPattern`   | string                         | e.g. `OP-{0000}` for autoNumber                                                                                                                                               |
 | `autoNumberStart`     | number                         | Starting value for autoNumber                                                                                                                                                 |
 | `formulaExpression`   | string                         | For formula fields                                                                                                                                                            |
+| `accept`              | string                         | For file fields: accepted file types (e.g. `image/*` or `.jpg,.jpeg,.png,.gif,.webp,.svg`)                                                                                   |
 | `computed`            | boolean                        | Not stored; computed from `sourceFields`                                                                                                                                      |
 | `computedExpression`  | string                         | `concat`, `join`, `lookup`                                                                                                                                                    |
 | `sourceFields`        | string[]                       | For computed fields                                                                                                                                                           |
@@ -750,6 +751,13 @@ Organization and tenant are **system objects** (see [System Objects](#system-obj
 See `.cursor/rules/tenant-multi-tenancy.mdc` for mode, tenantScope, and enforcement rules.
 
 **Org users** (organizationId set, tenantId null) see data across all tenants in their org. They must select tenant when creating records. Tenant editing on existing records is disabled (see `docs/FUTURE.md`).
+
+### Sidebar branding (logo and theme)
+
+The sidebar displays the current tenant or organization context. Edit the tenant or organization record to customize:
+
+- **Logo**: Upload an image (tenant/org logo field). The logo appears in the sidebar header. Only image files (`.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`, `.svg`) are accepted.
+- **Sidebar theme**: Set the **Sidebar Theme** field to a hex color (e.g. `#3b82f6`). This controls the sidebar primary color and accent. Leave empty to use the default theme.
 
 ---
 

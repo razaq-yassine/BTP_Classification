@@ -1,1 +1,1 @@
-{"key":"logo","label":"Logo","type":"url","editable":true}
+{"key":"logo","label":"Logo","type":"file","editable":true,"accept":"image/*"}

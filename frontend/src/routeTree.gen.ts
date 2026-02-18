@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors404RouteImport } from './routes/(errors)/404'
@@ -70,9 +72,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const errors503Route = errors503RouteImport.update({
@@ -328,7 +340,9 @@ export interface FileRoutesByFullPath {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/$objectName/$recordId': typeof AuthenticatedObjectNameRecordIdRoute
   '/dev-components/detail-view-formatter': typeof AuthenticatedDevComponentsDetailViewFormatterRoute
   '/dev-components/order-detail-path': typeof AuthenticatedDevComponentsOrderDetailPathRoute
@@ -374,7 +388,9 @@ export interface FileRoutesByTo {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
+  '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/$objectName/$recordId': typeof AuthenticatedObjectNameRecordIdRoute
   '/dev-components/detail-view-formatter': typeof AuthenticatedDevComponentsDetailViewFormatterRoute
   '/dev-components/order-detail-path': typeof AuthenticatedDevComponentsOrderDetailPathRoute
@@ -418,7 +434,9 @@ export interface FileRoutesById {
   '/(errors)/404': typeof errors404Route
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
+  '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/$objectName/$recordId': typeof AuthenticatedObjectNameRecordIdRoute
   '/_authenticated/dev-components/detail-view-formatter': typeof AuthenticatedDevComponentsDetailViewFormatterRoute
   '/_authenticated/dev-components/order-detail-path': typeof AuthenticatedDevComponentsOrderDetailPathRoute
@@ -467,7 +485,9 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
+    | '/billing'
     | '/dashboard'
+    | '/profile'
     | '/$objectName/$recordId'
     | '/dev-components/detail-view-formatter'
     | '/dev-components/order-detail-path'
@@ -513,7 +533,9 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
+    | '/billing'
     | '/dashboard'
+    | '/profile'
     | '/$objectName/$recordId'
     | '/dev-components/detail-view-formatter'
     | '/dev-components/order-detail-path'
@@ -556,7 +578,9 @@ export interface FileRouteTypes {
     | '/(errors)/404'
     | '/(errors)/500'
     | '/(errors)/503'
+    | '/_authenticated/billing'
     | '/_authenticated/dashboard'
+    | '/_authenticated/profile'
     | '/_authenticated/$objectName/$recordId'
     | '/_authenticated/dev-components/detail-view-formatter'
     | '/_authenticated/dev-components/order-detail-path'
@@ -629,11 +653,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/billing': {
+      id: '/_authenticated/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AuthenticatedBillingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/(errors)/503': {
@@ -1065,7 +1103,9 @@ const AuthenticatedSettingsRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
+  AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedObjectNameRecordIdRoute: typeof AuthenticatedObjectNameRecordIdRoute
   AuthenticatedDevComponentsDetailViewFormatterRoute: typeof AuthenticatedDevComponentsDetailViewFormatterRoute
   AuthenticatedDevComponentsOrderDetailPathRoute: typeof AuthenticatedDevComponentsOrderDetailPathRoute
@@ -1080,7 +1120,9 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
+  AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedObjectNameRecordIdRoute: AuthenticatedObjectNameRecordIdRoute,
   AuthenticatedDevComponentsDetailViewFormatterRoute:
     AuthenticatedDevComponentsDetailViewFormatterRoute,

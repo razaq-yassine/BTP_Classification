@@ -32,6 +32,15 @@ const ALLOWED_EXTENSIONS = new Set([
   ".webp",
   ".svg"
 ]);
+
+const IMAGE_EXTENSIONS = new Set([
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".svg"
+]);
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 function sanitizeFilename(name: string): string {
@@ -151,12 +160,16 @@ uploadRoutes.post("/:objectName/:recordId/:fieldKey", async (c) => {
     }
 
     const ext = path.extname(file.name).toLowerCase();
-    if (!ALLOWED_EXTENSIONS.has(ext)) {
+    const isLogoField =
+      (objectName === "organization" || objectName === "tenant") &&
+      fieldKey === "logo";
+    const allowedSet = isLogoField ? IMAGE_EXTENSIONS : ALLOWED_EXTENSIONS;
+    if (!allowedSet.has(ext)) {
       return c.json(
         {
-          message: `File type not allowed. Allowed: ${[
-            ...ALLOWED_EXTENSIONS
-          ].join(", ")}`
+          message: isLogoField
+            ? `Logo must be an image. Allowed: ${[...IMAGE_EXTENSIONS].join(", ")}`
+            : `File type not allowed. Allowed: ${[...ALLOWED_EXTENSIONS].join(", ")}`
         },
         400
       );

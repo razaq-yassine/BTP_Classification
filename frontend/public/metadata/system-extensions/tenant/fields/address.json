@@ -1,1 +1,1 @@
-{"key":"address","label":"Address","type":"text","editable":true}
+{"key":"address","label":"Address","type":"address","editable":true}

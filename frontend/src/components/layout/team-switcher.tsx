@@ -6,6 +6,7 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 import type { TenantContextData } from '@/components/layout/types'
+import { apiBaseUrl } from '@/services/api'
 
 const DEFAULT_APP_NAME = 'App'
 
@@ -15,7 +16,10 @@ export function TeamSwitcher({
   tenantContext?: TenantContextData | null
 }) {
   const name = tenantContext?.name ?? DEFAULT_APP_NAME
-  const logoUrl = tenantContext?.logoUrl
+  const rawLogo = tenantContext?.logoUrl
+  const logoUrl = rawLogo?.startsWith('/')
+    ? `${apiBaseUrl.replace(/\/$/, '')}${rawLogo}`
+    : rawLogo
   const subtitle = tenantContext?.subtitle
 
   return (

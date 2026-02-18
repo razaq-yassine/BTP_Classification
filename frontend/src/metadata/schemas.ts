@@ -60,6 +60,8 @@ export const fieldSchema = z.object({
   defaultValue: z.union([z.string(), z.number(), z.boolean(), z.array(z.string())]).optional(),
   /** For formula fields: expression to evaluate (e.g. "quantity * price", "daysSince(orderDate)") */
   formulaExpression: z.string().optional(),
+  /** For file fields: accepted file types (e.g. "image/*" or ".jpg,.jpeg,.png,.gif,.webp,.svg") */
+  accept: z.string().optional(),
 })
 
 export const statisticsCardSchema = z.object({

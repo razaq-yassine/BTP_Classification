@@ -23,8 +23,9 @@ import {
 import api from '@/services/api'
 import { toast } from 'sonner'
 
+const DEFAULT_LANG_VALUE = '__default__'
 const LANGUAGE_OPTIONS = [
-  { value: '', label: 'Default (from tenant or app)' },
+  { value: DEFAULT_LANG_VALUE, label: 'Default (from tenant or app)' },
   { value: 'en', label: 'English' },
   { value: 'es', label: 'Spanish' },
   { value: 'fr', label: 'French' },
@@ -73,7 +74,7 @@ type DisplayFormValues = z.infer<typeof displayFormSchema>
 
 const defaultValues: Partial<DisplayFormValues> = {
   items: ['recents', 'home'],
-  preferredLanguage: '',
+  preferredLanguage: DEFAULT_LANG_VALUE,
 }
 
 export function DisplayForm() {
@@ -88,7 +89,7 @@ export function DisplayForm() {
       .get('/api/auth/me')
       .then((res) => {
         const pref = res.data?.preferredLanguage ?? ''
-        form.setValue('preferredLanguage', pref || '')
+        form.setValue('preferredLanguage', pref || DEFAULT_LANG_VALUE)
       })
       .catch(() => {})
       .finally(() => setLoadingPrefs(false))
@@ -97,7 +98,10 @@ export function DisplayForm() {
   const handleSubmit = async (data: DisplayFormValues) => {
     try {
       await api.patch('/api/auth/me', {
-        preferredLanguage: data.preferredLanguage || null,
+        preferredLanguage:
+          data.preferredLanguage === DEFAULT_LANG_VALUE || !data.preferredLanguage
+            ? null
+            : data.preferredLanguage,
       })
       toast.success('Preferred language updated')
     } catch {
@@ -122,7 +126,7 @@ export function DisplayForm() {
               </FormDescription>
               <Select
                 onValueChange={field.onChange}
-                value={field.value ?? ''}
+                value={field.value || DEFAULT_LANG_VALUE}
                 disabled={loadingPrefs}
               >
                 <FormControl>
@@ -132,7 +136,7 @@ export function DisplayForm() {
                 </FormControl>
                 <SelectContent>
                   {LANGUAGE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value || 'default'} value={opt.value || ''}>
+                    <SelectItem key={opt.value} value={opt.value}>
                       {opt.label}
                     </SelectItem>
                   ))}
