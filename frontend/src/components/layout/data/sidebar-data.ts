@@ -1,7 +1,6 @@
 import {
   IconBarrierBlock,
   IconBox,
-  IconBrowserCheck,
   IconBug,
   IconChecklist,
   IconError404,
@@ -10,6 +9,7 @@ import {
   IconLayoutSidebarLeftExpand,
   IconLock,
   IconLockAccess,
+  IconMail,
   IconMessages,
   IconNotification,
   IconPackages,
@@ -36,13 +36,7 @@ export const settingsNavGroups: NavGroup[] = [
     items: [
       { title: "Profile", url: "/settings", icon: IconUserCog },
       { title: "Account", url: "/settings/account", icon: IconTool },
-      { title: "Appearance", url: "/settings/appearance", icon: IconPalette },
-      {
-        title: "Notifications",
-        url: "/settings/notifications",
-        icon: IconNotification
-      },
-      { title: "Display", url: "/settings/display", icon: IconBrowserCheck }
+      { title: "Appearance", url: "/settings/appearance", icon: IconPalette }
     ]
   },
   {
@@ -67,6 +61,24 @@ export const settingsNavGroups: NavGroup[] = [
   {
     title: "Administration",
     items: [
+      {
+        title: "Email",
+        url: "/settings/email",
+        icon: IconMail,
+        adminOnly: true
+      },
+      {
+        title: "Email Templates",
+        url: "/settings/email-templates",
+        icon: IconMail,
+        adminOnly: true
+      },
+      {
+        title: "Notification Settings",
+        url: "/settings/notification-settings",
+        icon: IconNotification,
+        adminOnly: true
+      },
       {
         title: "Object Manager",
         url: "/settings/object-manager",
