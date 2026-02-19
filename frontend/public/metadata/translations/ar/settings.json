@@ -186,5 +186,15 @@
   "optionalDescription": "وصف اختياري",
   "communicationEmails": "رسائل التواصل",
   "marketingEmails": "رسائل التسويق",
-  "signingIn": "جاري تسجيل الدخول..."
+  "signingIn": "جاري تسجيل الدخول...",
+  "globalActionPermissions": "أذونات الإجراءات العامة",
+  "globalActionPermissionsDesc": "السماح أو منع كل إجراء عام لهذا الملف الشخصي. تتضمن الإجراءات العامة أزرار الإنشاء السريع والأدوات وإجراءات شريط الرأس الأخرى.",
+  "globalActionPermissionsEmpty": "لم يتم تعريف إجراءات عامة. أضف إجراءات إلى metadata/global-actions.json لتكوين الأذونات.",
+  "globalActionPermissionsConfigureDesc": "تكوين الإجراءات العامة (الإنشاء السريع، الأدوات، إلخ) المتاحة للملف الشخصي \"{{profileName}}\"",
+  "globalActionPermissionsAdminNote": "لدى ملف المسؤول الشخصي وصول كامل لجميع الإجراءات العامة بغض النظر عن هذه الإعدادات.",
+  "globalActionPermissionsProfileDesc": "السماح أو منع الإجراءات العامة (الإنشاء السريع، الأدوات، إلخ) لهذا الملف الشخصي.",
+  "savePermissions": "حفظ الأذونات",
+  "action": "الإجراء",
+  "allowed": "مسموح",
+  "profileNotFound": "الملف الشخصي غير موجود"
 }

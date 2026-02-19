@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Table,
   TableBody,
@@ -23,6 +24,7 @@ export function GlobalActionsPermissionsForm({
   initialPermissions,
   onSave,
 }: GlobalActionsPermissionsFormProps) {
+  const { t } = useTranslation('settings')
   const [perms, setPerms] = useState<Record<string, boolean>>(() => {
     const result: Record<string, boolean> = {}
     for (const action of actions) {
@@ -49,9 +51,11 @@ export function GlobalActionsPermissionsForm({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Global action permissions</CardTitle>
+          <CardTitle>{t('globalActionPermissions', { defaultValue: 'Global action permissions' })}</CardTitle>
           <CardDescription>
-            No global actions defined. Add actions to metadata/global-actions.json to configure permissions.
+            {t('globalActionPermissionsEmpty', {
+              defaultValue: 'No global actions defined. Add actions to metadata/global-actions.json to configure permissions.',
+            })}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -62,17 +66,20 @@ export function GlobalActionsPermissionsForm({
     <div className='space-y-6'>
       <Card>
         <CardHeader>
-          <CardTitle>Global action permissions</CardTitle>
+          <CardTitle>{t('globalActionPermissions', { defaultValue: 'Global action permissions' })}</CardTitle>
           <CardDescription>
-            Allow or deny each global action for this profile. Global actions include quick create buttons, tools, and other header bar actions.
+            {t('globalActionPermissionsDesc', {
+              defaultValue:
+                'Allow or deny each global action for this profile. Global actions include quick create buttons, tools, and other header bar actions.',
+            })}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Action</TableHead>
-                <TableHead className='w-[100px]'>Allowed</TableHead>
+                <TableHead>{t('action', { defaultValue: 'Action' })}</TableHead>
+                <TableHead className='w-[100px]'>{t('allowed', { defaultValue: 'Allowed' })}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -101,7 +108,7 @@ export function GlobalActionsPermissionsForm({
       </Card>
 
       <Button onClick={handleSubmit} disabled={saving}>
-        {saving ? 'Saving...' : 'Save permissions'}
+        {saving ? t('saving', { defaultValue: 'Saving...' }) : t('savePermissions', { defaultValue: 'Save permissions' })}
       </Button>
     </div>
   )

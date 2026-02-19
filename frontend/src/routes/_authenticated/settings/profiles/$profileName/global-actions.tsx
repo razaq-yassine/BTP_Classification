@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft } from 'lucide-react'
 import { getProfile, updateProfile } from '@/services/profiles-api'
 import { getGlobalActions } from '@/services/metadata-api'
@@ -14,6 +15,7 @@ export const Route = createFileRoute('/_authenticated/settings/profiles/$profile
 })
 
 function GlobalActionsPermissionsPage() {
+  const { t } = useTranslation('settings')
   const { profileName } = Route.useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -38,7 +40,7 @@ function GlobalActionsPermissionsPage() {
         globalActionPermissions: data,
       })
       queryClient.invalidateQueries({ queryKey: ['profile', profileName] })
-      toast.success('Global action permissions saved')
+      toast.success(t('globalActionPermissionsSaved', { defaultValue: 'Global action permissions saved' }))
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to save'
       toast.error(msg)
@@ -50,7 +52,7 @@ function GlobalActionsPermissionsPage() {
   if (isLoading) {
     return (
       <Main>
-        <div className='rounded-md border p-4 text-muted-foreground'>Loading...</div>
+        <div className='rounded-md border p-4 text-muted-foreground'>{t('loading', { defaultValue: 'Loading...' })}</div>
       </Main>
     )
   }
@@ -58,7 +60,7 @@ function GlobalActionsPermissionsPage() {
   if (!profile) {
     return (
       <Main>
-        <div className='rounded-md border p-4 text-destructive'>Profile not found</div>
+        <div className='rounded-md border p-4 text-destructive'>{t('profileNotFound', { defaultValue: 'Profile not found' })}</div>
       </Main>
     )
   }
@@ -75,16 +77,21 @@ function GlobalActionsPermissionsPage() {
             <ArrowLeft className='h-4 w-4' />
           </Button>
           <div>
-            <h2 className='text-lg font-semibold'>Global action permissions</h2>
+            <h2 className='text-lg font-semibold'>{t('globalActionPermissions', { defaultValue: 'Global action permissions' })}</h2>
             <p className='text-sm text-muted-foreground'>
-              Configure which global actions (quick create, tools, etc.) are available for profile &quot;{profileName}&quot;
+              {t('globalActionPermissionsConfigureDesc', {
+                defaultValue: 'Configure which global actions (quick create, tools, etc.) are available for profile "{{profileName}}"',
+                profileName,
+              })}
             </p>
           </div>
         </div>
 
         {profileName === 'admin' && (
           <p className='text-sm text-muted-foreground rounded-md border p-3 bg-muted/50'>
-            Admin profile has full access to all global actions regardless of these settings.
+            {t('globalActionPermissionsAdminNote', {
+              defaultValue: 'Admin profile has full access to all global actions regardless of these settings.',
+            })}
           </p>
         )}
 

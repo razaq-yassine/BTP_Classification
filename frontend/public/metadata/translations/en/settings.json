@@ -186,5 +186,15 @@
   "createProfile": "Create profile",
   "createProfileDescription": "Create a new profile. You can configure object and field permissions after creation.",
   "lowercaseLettersNumbersHyphens": "Lowercase letters, numbers, hyphens. Used as identifier.",
-  "optionalDescription": "Optional description"
+  "optionalDescription": "Optional description",
+  "globalActionPermissions": "Global action permissions",
+  "globalActionPermissionsDesc": "Allow or deny each global action for this profile. Global actions include quick create buttons, tools, and other header bar actions.",
+  "globalActionPermissionsEmpty": "No global actions defined. Add actions to metadata/global-actions.json to configure permissions.",
+  "globalActionPermissionsConfigureDesc": "Configure which global actions (quick create, tools, etc.) are available for profile \"{{profileName}}\"",
+  "globalActionPermissionsAdminNote": "Admin profile has full access to all global actions regardless of these settings.",
+  "globalActionPermissionsProfileDesc": "Allow or deny global actions (quick create, tools, etc.) for this profile.",
+  "savePermissions": "Save permissions",
+  "action": "Action",
+  "allowed": "Allowed",
+  "profileNotFound": "Profile not found"
 }

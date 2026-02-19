@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft, Shield, ChevronRight } from 'lucide-react'
 import { getProfile } from '@/services/profiles-api'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,7 @@ export const Route = createFileRoute('/_authenticated/settings/profiles/$profile
 })
 
 function ProfileDetailPage() {
+  const { t } = useTranslation('settings')
   const { profileName } = Route.useParams()
   const navigate = useNavigate()
   const { data: profile, isLoading } = useQuery({
@@ -100,9 +102,11 @@ function ProfileDetailPage() {
               )}
             >
               <div>
-                <p className='font-medium'>Global action permissions</p>
+                <p className='font-medium'>{t('globalActionPermissions', { defaultValue: 'Global action permissions' })}</p>
                 <p className='text-sm text-muted-foreground'>
-                  Allow or deny global actions (quick create, tools, etc.) for this profile.
+                  {t('globalActionPermissionsProfileDesc', {
+                    defaultValue: 'Allow or deny global actions (quick create, tools, etc.) for this profile.',
+                  })}
                 </p>
               </div>
               <ChevronRight className='h-5 w-5 text-muted-foreground' />

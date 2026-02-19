@@ -186,5 +186,15 @@
   "optionalDescription": "Description optionnelle",
   "communicationEmails": "E-mails de communication",
   "marketingEmails": "E-mails marketing",
-  "signingIn": "Connexion en cours..."
+  "signingIn": "Connexion en cours...",
+  "globalActionPermissions": "Permissions des actions globales",
+  "globalActionPermissionsDesc": "Autoriser ou refuser chaque action globale pour ce profil. Les actions globales incluent les boutons de création rapide, les outils et autres actions de la barre d'en-tête.",
+  "globalActionPermissionsEmpty": "Aucune action globale définie. Ajoutez des actions dans metadata/global-actions.json pour configurer les permissions.",
+  "globalActionPermissionsConfigureDesc": "Configurez les actions globales (création rapide, outils, etc.) disponibles pour le profil \"{{profileName}}\"",
+  "globalActionPermissionsAdminNote": "Le profil admin a un accès complet à toutes les actions globales, quel que soit ces paramètres.",
+  "globalActionPermissionsProfileDesc": "Autoriser ou refuser les actions globales (création rapide, outils, etc.) pour ce profil.",
+  "savePermissions": "Enregistrer les permissions",
+  "action": "Action",
+  "allowed": "Autorisé",
+  "profileNotFound": "Profil introuvable"
 }

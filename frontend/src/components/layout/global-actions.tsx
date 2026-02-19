@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@tanstack/react-router'
 import { GenericCreateDialog } from '@/components/generic/GenericCreateDialog'
 import { GlobalActionsBar } from '@/components/layout/global-actions-bar'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
+import { translateObjectLabel } from '@/utils/translateMetadata'
 
 /**
  * Example global actions for the header bar.
@@ -11,14 +13,15 @@ import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
  * Configure permissions at Settings → Administration → Profiles → [Profile] → Global action permissions.
  */
 const QUICK_CREATE_CONFIG = [
-  { actionId: 'quick-create-order', objectName: 'order', label: 'New Order' },
-  { actionId: 'quick-create-customer', objectName: 'customer', label: 'New Customer' },
-  { actionId: 'quick-create-product', objectName: 'product', label: 'New Product' },
-  { actionId: 'quick-create-opportunity', objectName: 'opportunity', label: 'New Opportunity' },
-  { actionId: 'quick-create-category', objectName: 'category', label: 'New Category' },
+  { actionId: 'quick-create-order', objectName: 'order' },
+  { actionId: 'quick-create-customer', objectName: 'customer' },
+  { actionId: 'quick-create-product', objectName: 'product' },
+  { actionId: 'quick-create-opportunity', objectName: 'opportunity' },
+  { actionId: 'quick-create-category', objectName: 'category' },
 ] as const
 
 export function GlobalActions() {
+  const { t } = useTranslation('common')
   const navigate = useNavigate()
   const { canUseGlobalAction, canCreate } = usePermissions()
   const { data: defs } = useObjectDefinitionsQuery()
@@ -35,10 +38,17 @@ export function GlobalActions() {
   const actions = QUICK_CREATE_CONFIG.filter(({ actionId, objectName }) => {
     const def = defs?.find((d) => d.name === objectName)
     return canUseGlobalAction(actionId) && canCreate(objectName) && def
-  }).map(({ objectName, label }) => ({
-    label,
-    onClick: () => setOpenObject(objectName),
-  }))
+  }).map(({ objectName }) => {
+    const def = defs?.find((d) => d.name === objectName)
+    const label = t('newObject', {
+      label: translateObjectLabel(objectName, def?.label ?? objectName),
+      defaultValue: `New ${def?.label ?? objectName}`,
+    })
+    return {
+      label,
+      onClick: () => setOpenObject(objectName),
+    }
+  })
 
   return (
     <GlobalActionsBar actions={actions}>
