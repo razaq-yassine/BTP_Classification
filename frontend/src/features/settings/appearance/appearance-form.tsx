@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { ChevronDownIcon } from '@radix-ui/react-icons'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
@@ -35,6 +36,7 @@ const appearanceFormSchema = z.object({
 type AppearanceFormValues = z.infer<typeof appearanceFormSchema>
 
 export function AppearanceForm() {
+  const { t } = useTranslation('settings')
   const { font, setFont } = useFont()
   const { fontSize, setFontSize } = useFontSize()
   const { theme, setTheme } = useTheme()
@@ -60,8 +62,8 @@ export function AppearanceForm() {
     if (data.sidebarBehavior != sidebarBehavior)
       setSidebarBehavior(data.sidebarBehavior as SidebarBehavior)
 
-    toast.success('Preferences saved successfully', {
-      description: 'Your appearance settings have been updated.',
+    toast.success(t('preferencesSavedSuccess'), {
+      description: t('appearanceSettingsUpdated'),
       duration: 3000,
     })
   }
@@ -74,7 +76,7 @@ export function AppearanceForm() {
           name='font'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Font</FormLabel>
+              <FormLabel>{t('font')}</FormLabel>
               <div className='relative w-max'>
                 <FormControl>
                   <select
@@ -95,7 +97,7 @@ export function AppearanceForm() {
                 <ChevronDownIcon className='absolute top-2.5 right-3 h-4 w-4 opacity-50' />
               </div>
               <FormDescription className='font-manrope'>
-                Set the font you want to use in the dashboard.
+                {t('fontDescription')}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -106,9 +108,9 @@ export function AppearanceForm() {
           name='theme'
           render={({ field }) => (
             <FormItem className='space-y-1'>
-              <FormLabel>Theme</FormLabel>
+              <FormLabel>{t('common:theme')}</FormLabel>
               <FormDescription>
-                Select the theme for the dashboard.
+                {t('selectTheme')}
               </FormDescription>
               <FormMessage />
               <RadioGroup
@@ -177,10 +179,9 @@ export function AppearanceForm() {
           name='sidebarBehavior'
           render={({ field }) => (
             <FormItem className='space-y-1'>
-              <FormLabel>Sidebar behavior</FormLabel>
+              <FormLabel>{t('sidebarBehavior')}</FormLabel>
               <FormDescription>
-                When collapsed, the sidebar can expand on hover or stay locked
-                until you click to toggle.
+                {t('sidebarBehaviorDescription')}
               </FormDescription>
               <FormMessage />
               <RadioGroup
@@ -227,7 +228,7 @@ export function AppearanceForm() {
           name='fontSize'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Font Size</FormLabel>
+              <FormLabel>{t('fontSize')}</FormLabel>
               <div className='space-y-2'>
                 <div className='flex items-center gap-2 w-max'>
                   <FormControl>
@@ -253,7 +254,7 @@ export function AppearanceForm() {
                   <span className='text-sm text-muted-foreground'>px</span>
                 </div>
                 <FormDescription>
-                  Adjust the font size for the entire website. Range: 12px - 24px
+                  {t('fontSizeDescription')}
                 </FormDescription>
                 <FormMessage />
               </div>
@@ -261,7 +262,7 @@ export function AppearanceForm() {
           )}
         />
 
-        <Button type='submit'>Update preferences</Button>
+        <Button type='submit'>{t('updatePreferences')}</Button>
       </form>
     </Form>
   )

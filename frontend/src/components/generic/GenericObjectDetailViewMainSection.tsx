@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { getObjectBorderAccentClasses, getObjectButtonClasses } from '@/utils/object-color'
 import api from '@/services/api'
 import { isNetworkError } from '@/utils/handle-server-error'
+import { playSaveSound } from '@/utils/sound-effects'
 import { toast } from 'sonner'
 
 // Field validation result
@@ -304,7 +305,7 @@ function DetailsTabContent({
   const handleStartEdit = () => {
     // Check update permission
     if (!canUpdate(objectDefinition.name)) {
-      setError('You do not have permission to edit this record')
+      setError(t('noPermissionToEdit', { defaultValue: 'You do not have permission to edit this record' }))
       return
     }
 
@@ -394,6 +395,7 @@ function DetailsTabContent({
       onRecordUpdate(response.data)
 
       // Show success toast with undo button
+      playSaveSound()
       toast.success(t('changesSaved'), {
         description: t('recordUpdated', { label: objectDefinition.label || objectDefinition.name }),
         duration: 5000,
@@ -413,11 +415,11 @@ function DetailsTabContent({
     } catch (err: any) {
       // Handle authentication errors specifically
       if (err.response?.status === 401) {
-        setError('Authentication failed. Please try logging in again.')
+        setError(t('authFailedRetry', { defaultValue: 'Authentication failed. Please try logging in again.' }))
       } else {
         const msg = isNetworkError(err)
           ? 'Connection lost. Please wait and try again.'
-          : err.response?.data?.detail || err.response?.data?.message || 'Failed to save changes'
+          : err.response?.data?.detail || err.response?.data?.message || t('failedToSaveChanges', { defaultValue: 'Failed to save changes' })
         setError(msg)
       }
     } finally {
@@ -509,17 +511,31 @@ function DetailsTabContent({
     } catch (err: any) {
       // Handle authentication errors specifically
       if (err.response?.status === 401) {
-        setError('Authentication failed. Please try logging in again.')
+        setError(t('authFailedRetry', { defaultValue: 'Authentication failed. Please try logging in again.' }))
       } else {
         const msg = isNetworkError(err)
           ? 'Connection lost. Please wait and try again.'
-          : err.response?.data?.detail || err.response?.data?.message || 'Failed to save changes'
+          : err.response?.data?.detail || err.response?.data?.message || t('failedToSaveChanges', { defaultValue: 'Failed to save changes' })
         setError(msg)
       }
     } finally {
       setSaving(false)
     }
   }
+
+  // Cmd+S / Ctrl+S to save when in edit mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault()
+        if (tabState.isEditing && !saving && tabState.hasChanges && Object.keys(tabState.fieldErrors).length === 0) {
+          handleSaveAll()
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [tabState.isEditing, tabState.hasChanges, tabState.fieldErrors, saving])
 
   const handleCancelEdit = () => {
     setTabState(prev => ({
@@ -537,8 +553,8 @@ function DetailsTabContent({
   const handleUndo = async () => {
     if (!previousRecordState) {
       console.warn('No previous state available for undo')
-      toast.error('No changes to undo', {
-        description: 'Previous state not found.',
+      toast.error(t('noChangesToUndo', { defaultValue: 'No changes to undo' }), {
+        description: t('previousStateNotFound', { defaultValue: 'Previous state not found.' }),
         duration: 3000,
       })
       return

@@ -427,7 +427,11 @@ export function GenericDetailInputFormatter({
                   disabled={disabled}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {value ? formatDateLocale(dateValue!) : <span>{t('pickDate')}</span>}
+                  {value ? (
+                    <span dir="ltr" className="tabular-nums">{formatDateLocale(dateValue!)}</span>
+                  ) : (
+                    <span>{t('pickDate')}</span>
+                  )}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -586,7 +590,7 @@ export function GenericDetailInputFormatter({
         return (
           <div className="flex gap-2">
             <div className="flex-1">
-              <Label className="text-xs text-muted-foreground">Latitude</Label>
+              <Label className="text-xs text-muted-foreground">{t('latitude', { defaultValue: 'Latitude' })}</Label>
               <Input
                 type="number"
                 step="any"
@@ -604,7 +608,7 @@ export function GenericDetailInputFormatter({
               />
             </div>
             <div className="flex-1">
-              <Label className="text-xs text-muted-foreground">Longitude</Label>
+              <Label className="text-xs text-muted-foreground">{t('longitude', { defaultValue: 'Longitude' })}</Label>
               <Input
                 type="number"
                 step="any"

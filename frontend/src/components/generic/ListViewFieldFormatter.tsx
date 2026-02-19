@@ -2,7 +2,6 @@ import React from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { translateSelectOptionLabel } from '@/utils/translateMetadata'
 import { isValid } from 'date-fns'
-import i18n from 'i18next'
 import { formatDateShort, formatDateTimeShort } from '@/utils/formatDateLocale'
 import { formatCurrency } from '@/stores/appConfigStore'
 
@@ -46,7 +45,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
         const date = new Date(value)
         if (!isValid(date)) return null
         const formattedDate = dateFormat ? formatDateShort(date, dateFormat) : formatDateShort(date)
-        return <span className="text-sm tabular-nums whitespace-nowrap">{formattedDate}</span>
+        return <span dir="ltr" className="text-sm tabular-nums whitespace-nowrap">{formattedDate}</span>
       } catch {
         return null
       }
@@ -206,9 +205,8 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
         const date = new Date(value)
         if (!isValid(date)) return null
         const formatted = dateFormat ? formatDateTimeShort(date, dateFormat) : formatDateTimeShort(date)
-        const lang = i18n.language ?? 'en'
         return (
-          <span className="text-sm tabular-nums whitespace-nowrap" title={date.toLocaleString(lang)}>
+          <span dir="ltr" className="text-sm tabular-nums whitespace-nowrap" title={formatted}>
             {formatted}
           </span>
         )

@@ -1,4 +1,5 @@
 import { HTMLAttributes, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -20,18 +21,17 @@ import { PasswordInput } from '@/components/password-input'
 
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>
 
-const formSchema = z.object({
-  username: z.string().min(1, 'Please enter your username'),
-  password: z
-    .string()
-    .min(1, 'Please enter your password'),
-})
-
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
+  const { t } = useTranslation('common')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const login = useAuthStore((state) => state.login)
+
+  const formSchema = z.object({
+    username: z.string().min(1, t('pleaseEnterUsername', { defaultValue: 'Please enter your username' })),
+    password: z.string().min(1, t('pleaseEnterPassword', { defaultValue: 'Please enter your password' })),
+  })
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -53,7 +53,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         setError(result.error || 'Login failed')
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      setError(t('errors:unexpectedError', { defaultValue: 'An unexpected error occurred' }))
     } finally {
       setIsLoading(false)
     }
@@ -76,7 +76,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           name='username'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username</FormLabel>
+              <FormLabel>{t('username', { defaultValue: 'Username' })}</FormLabel>
               <FormControl>
                 <Input placeholder='admin' {...field} />
               </FormControl>

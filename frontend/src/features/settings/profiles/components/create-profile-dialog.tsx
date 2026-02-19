@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import {
@@ -22,6 +23,7 @@ interface CreateProfileDialogProps {
 }
 
 export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogProps) {
+  const { t } = useTranslation(['settings', 'common'])
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const [name, setName] = useState('')
@@ -33,7 +35,7 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
     e.preventDefault()
     const profileName = name.trim().toLowerCase().replace(/\s+/g, '-')
     if (!profileName || !/^[a-z][a-z0-9-]*$/.test(profileName)) {
-      toast.error('Invalid name. Use lowercase letters, numbers, and hyphens.')
+      toast.error(t('invalidProfileName'))
       return
     }
     setSaving(true)
@@ -50,9 +52,9 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
       setLabel('')
       setDescription('')
       navigate({ to: '/settings/profiles/$profileName', params: { profileName } })
-      toast.success('Profile created')
+      toast.success(t('profileCreated'))
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to create profile'
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? t('failedToCreateProfile')
       toast.error(msg)
     } finally {
       setSaving(false)
@@ -64,9 +66,9 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
       <DialogContent>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Create profile</DialogTitle>
+            <DialogTitle>{t('createProfile')}</DialogTitle>
             <DialogDescription>
-              Create a new profile. You can configure object and field permissions after creation.
+              {t('createProfileDescription')}
             </DialogDescription>
           </DialogHeader>
           <div className='grid gap-4 py-4'>
@@ -80,11 +82,11 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
                 className='font-mono'
               />
               <p className='text-xs text-muted-foreground'>
-                Lowercase letters, numbers, hyphens. Used as identifier.
+                {t('lowercaseLettersNumbersHyphens')}
               </p>
             </div>
             <div className='grid gap-2'>
-              <Label htmlFor='label'>Label</Label>
+              <Label htmlFor='label'>{t('label')}</Label>
               <Input
                 id='label'
                 placeholder='e.g. Sales Representative'
@@ -96,7 +98,7 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
               <Label htmlFor='description'>Description</Label>
               <Textarea
                 id='description'
-                placeholder='Optional description'
+                placeholder={t('optionalDescription')}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={2}
@@ -105,10 +107,10 @@ export function CreateProfileDialog({ open, onOpenChange }: CreateProfileDialogP
           </div>
           <DialogFooter>
             <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('cancel', { ns: 'common' })}
             </Button>
             <Button type='submit' disabled={saving}>
-              {saving ? 'Creating...' : 'Create'}
+              {saving ? t('creating') : t('create', { ns: 'common' })}
             </Button>
           </DialogFooter>
         </form>

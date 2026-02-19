@@ -1,4 +1,5 @@
 import { HTMLAttributes, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -16,21 +17,23 @@ import { Input } from '@/components/ui/input'
 
 type ForgotFormProps = HTMLAttributes<HTMLFormElement>
 
-const formSchema = z.object({
-  email: z.email({
-    error: (iss) => (iss.input === '' ? 'Please enter your email' : undefined),
-  }),
-})
+const getFormSchema = (t: (key: string) => string) =>
+  z.object({
+    email: z.email({
+      error: (iss) => (iss.input === '' ? t('pleaseEnterEmail') : undefined),
+    }),
+  })
 
 export function ForgotPasswordForm({ className, ...props }: ForgotFormProps) {
+  const { t } = useTranslation('common')
   const [isLoading, setIsLoading] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<ReturnType<typeof getFormSchema>>>({
+    resolver: zodResolver(getFormSchema(t)),
     defaultValues: { email: '' },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  function onSubmit(data: z.infer<ReturnType<typeof getFormSchema>>) {
     setIsLoading(true)
     // eslint-disable-next-line no-console
     console.log(data)

@@ -28,7 +28,7 @@ export function DatePicker({
           className='data-[empty=true]:text-muted-foreground w-[240px] justify-start text-left font-normal'
         >
           {selected ? (
-            formatDateShort(selected, 'MMM d, yyyy')
+            <span dir="ltr" className="tabular-nums">{formatDateShort(selected, 'MMM d, yyyy')}</span>
           ) : (
             <span>{placeholder}</span>
           )}

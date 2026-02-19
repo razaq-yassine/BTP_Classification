@@ -24,6 +24,7 @@ import {
   SYSTEM_OBJECTS_WITH_EXTENSIONS,
   SYSTEM_OBJECT_BASE_FIELDS,
 } from '../../../shared/dist/protected-metadata.js'
+import { findHardcodedStrings } from '../translation/translation-hardcoded.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const backendRoot = path.join(__dirname, '..', '..')
@@ -33,6 +34,8 @@ const OBJECTS_PATH = path.join(METADATA_PATH, 'objects')
 const PROFILES_PATH = path.join(METADATA_PATH, 'profiles')
 const SYSTEM_EXTENSIONS_PATH = path.join(METADATA_PATH, 'system-extensions')
 const TRANSLATIONS_PATH = path.join(METADATA_PATH, 'translations')
+const FRONTEND_SRC_PATH =
+  process.env.FRONTEND_SRC_PATH || path.join(backendRoot, '../frontend/src')
 
 const TRANSLATION_NAMESPACES = ['common', 'navigation', 'settings', 'errors', 'objects'] as const
 const LOCALE_REGEX = /^[a-z]{2}(-[A-Z]{2})?$/
@@ -853,7 +856,22 @@ metadataRoutes.get('/translations/coverage', (c) => {
         }
       }
     }
-    return c.json({ referenceLocale: REF, locales: otherLocales, byLocale })
+
+    let hardcodedStrings: Array<{ str: string; file: string; line: number }> = []
+    try {
+      if (fs.existsSync(FRONTEND_SRC_PATH)) {
+        hardcodedStrings = findHardcodedStrings(TRANSLATIONS_PATH, FRONTEND_SRC_PATH)
+      }
+    } catch (err) {
+      console.error('Hardcoded string scan error:', err)
+    }
+
+    return c.json({
+      referenceLocale: REF,
+      locales: otherLocales,
+      byLocale,
+      hardcodedStrings,
+    })
   } catch (err) {
     console.error('Translation coverage error:', err)
     return c.json({ message: 'Failed to compute coverage' }, 500)

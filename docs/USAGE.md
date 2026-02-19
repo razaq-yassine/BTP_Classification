@@ -899,7 +899,12 @@ Use the translation report to find untranslated elements until all locales are f
 - **CLI**: Run `pnpm run translation-report` (or `cd backend && pnpm run translation-report`) to print a coverage report to the console. Use `--verify order` to inspect a specific object's keys, or `--output report.md` to write to a file.
 - **Admin dashboard**: In **Settings** → **Translations**, the coverage panel shows donut charts per locale. Click **Generate report** to load it, then use the eye icon next to "Missing" or "Empty" to view the list of untranslated keys in a modal.
 
-Compare each locale against the reference (`en`). Add missing keys and fill empty values until the report shows 100% for all locales.
+The report does two checks:
+
+1. **Key coverage**: Compares each locale's translation files to the reference (`en`). Lists missing keys and empty values.
+2. **Hardcoded strings**: Scans frontend source for user-facing strings that are not yet converted to translation keys (e.g. `errorMessage: '...'`, `toast.error('...')`, etc.). These should be replaced with `t('namespace:key', { defaultValue: '...' })` and the key added to each locale.
+
+Add missing keys, fill empty values, and convert hardcoded strings until the report shows 100% for all locales and no hardcoded strings.
 
 ### Adding a New Locale
 

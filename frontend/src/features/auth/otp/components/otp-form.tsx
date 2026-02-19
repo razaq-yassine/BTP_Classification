@@ -1,4 +1,5 @@
 import { HTMLAttributes, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -23,22 +24,24 @@ import {
 
 type OtpFormProps = HTMLAttributes<HTMLFormElement>
 
-const formSchema = z.object({
-  otp: z.string().min(6, 'Please enter your otp code.'),
-})
+const getFormSchema = (t: (key: string) => string) =>
+  z.object({
+    otp: z.string().min(6, t('pleaseEnterOtpCode')),
+  })
 
 export function OtpForm({ className, ...props }: OtpFormProps) {
+  const { t } = useTranslation('common')
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<ReturnType<typeof getFormSchema>>>({
+    resolver: zodResolver(getFormSchema(t)),
     defaultValues: { otp: '' },
   })
 
   const otp = form.watch('otp')
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  function onSubmit(data: z.infer<ReturnType<typeof getFormSchema>>) {
     setIsLoading(true)
     showSubmittedData(data)
 
@@ -60,7 +63,7 @@ export function OtpForm({ className, ...props }: OtpFormProps) {
           name='otp'
           render={({ field }) => (
             <FormItem>
-              <FormLabel className='sr-only'>One-Time Password</FormLabel>
+              <FormLabel className='sr-only'>{t('oneTimePassword')}</FormLabel>
               <FormControl>
                 <InputOTP
                   maxLength={6}

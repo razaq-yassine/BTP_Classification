@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
@@ -27,14 +28,18 @@ export function MultiSelect({
   options,
   value = [],
   onValueChange,
-  placeholder = "Select options...",
-  searchPlaceholder = "Search options...",
+  placeholder,
+  searchPlaceholder,
   disabled = false,
   className,
-  emptyMessage = "No options found.",
+  emptyMessage,
   maxDisplay = 3
 }: MultiSelectProps) {
+  const { t } = useTranslation('common')
   const [open, setOpen] = useState(false)
+  const effectivePlaceholder = placeholder ?? t('selectOptions')
+  const effectiveSearchPlaceholder = searchPlaceholder ?? t('searchOptions')
+  const effectiveEmptyMessage = emptyMessage ?? t('noOptionsFound')
 
   const selectedOptions = options.filter(option => value.includes(option.value))
   
@@ -69,7 +74,7 @@ export function MultiSelect({
         >
           <div className="flex flex-wrap gap-1 flex-1">
             {selectedOptions.length === 0 ? (
-              <span className="text-muted-foreground">{placeholder}</span>
+              <span className="text-muted-foreground">{effectivePlaceholder}</span>
             ) : selectedOptions.length <= maxDisplay ? (
               selectedOptions.map((option) => (
                 <Badge
@@ -132,9 +137,9 @@ export function MultiSelect({
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+          <CommandInput placeholder={effectiveSearchPlaceholder} />
           <CommandList>
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
+            <CommandEmpty>{effectiveEmptyMessage}</CommandEmpty>
             <CommandGroup>
               {sortedOptions.map((option) => (
                 <CommandItem

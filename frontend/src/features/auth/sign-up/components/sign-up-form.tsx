@@ -1,4 +1,5 @@
 import { HTMLAttributes, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -18,28 +19,30 @@ import { PasswordInput } from '@/components/password-input'
 
 type SignUpFormProps = HTMLAttributes<HTMLFormElement>
 
-const formSchema = z
-  .object({
-    email: z.email({
-      error: (iss) =>
-        iss.input === '' ? 'Please enter your email' : undefined,
-    }),
-    password: z
-      .string()
-      .min(1, 'Please enter your password')
-      .min(7, 'Password must be at least 7 characters long'),
-    confirmPassword: z.string().min(1, 'Please confirm your password'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match.",
-    path: ['confirmPassword'],
-  })
+const getFormSchema = (t: (key: string) => string) =>
+  z
+    .object({
+      email: z.email({
+        error: (iss) =>
+          iss.input === '' ? t('pleaseEnterEmail') : undefined,
+      }),
+      password: z
+        .string()
+        .min(1, t('pleaseEnterPassword'))
+        .min(7, t('passwordMinLength')),
+      confirmPassword: z.string().min(1, t('pleaseConfirmPassword')),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: "Passwords don't match.",
+      path: ['confirmPassword'],
+    })
 
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
+  const { t } = useTranslation('common')
   const [isLoading, setIsLoading] = useState(false)
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<ReturnType<typeof getFormSchema>>>({
+    resolver: zodResolver(getFormSchema(t)),
     defaultValues: {
       email: '',
       password: '',
@@ -47,7 +50,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
+  function onSubmit(data: z.infer<ReturnType<typeof getFormSchema>>) {
     setIsLoading(true)
     // eslint-disable-next-line no-console
     console.log(data)
@@ -95,7 +98,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           name='confirmPassword'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+              <FormLabel>{t('confirmPassword')}</FormLabel>
               <FormControl>
                 <PasswordInput placeholder='********' {...field} />
               </FormControl>

@@ -18,6 +18,7 @@ import type { ListViewDefinition } from '@/types/object-definition'
 import api from '@/services/api'
 import { Main } from '@/components/layout/main'
 import { isNetworkError } from '@/utils/handle-server-error'
+import { playDeleteSound } from '@/utils/sound-effects'
 import { trackRecentlyViewed, getRecentlyViewedIds } from '@/utils/recently-viewed'
 import { useAuthStore, selectUser } from '@/stores/authStore'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -412,6 +413,7 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
         ? objectDefinition.apiEndpoint.slice(0, -1)
         : objectDefinition.apiEndpoint
       await Promise.all(selectedIds.map((id) => api.delete(`${endpoint}/${id}`)))
+      playDeleteSound()
       setSelectedIds([])
       setDeleteCounter((c) => c + 1)
       fetchRecords()

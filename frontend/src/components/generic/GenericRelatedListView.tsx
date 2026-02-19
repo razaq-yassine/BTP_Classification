@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { RelatedObjectDefinition, GenericRecord } from '@/types/object-definition'
+import { RelatedObjectDefinition, GenericRecord, ObjectDefinition } from '@/types/object-definition'
 import { getObjectDefinition } from '@/metadata/loader'
 import { cn } from '@/lib/utils'
 import { pluralize } from '@/metadata/utils'
 import { translateObjectLabel } from '@/utils/translateMetadata'
 import { GenericDataTable } from './GenericDataTable'
+import { GenericCreateDialog } from './GenericCreateDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -38,6 +39,8 @@ export function GenericRelatedListView({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [relatedObjectDef, setRelatedObjectDef] = useState<ObjectDefinition | null>(null)
 
   useEffect(() => {
     fetchRelatedRecords()
@@ -95,9 +98,40 @@ export function GenericRelatedListView({
     fetchRelatedRecords()
   }
 
-  const handleAddNew = () => {
-    // TODO: Navigate to create new related record
+  const handleAddNew = async () => {
+    try {
+      const def = await getObjectDefinition(relatedObjectDefinition.objectDefinition)
+      if (!def) return
+      setRelatedObjectDef(def)
+      setCreateDialogOpen(true)
+    } catch {
+      // Object definition not found
+    }
   }
+
+  const handleRecordCreated = () => {
+    fetchRelatedRecords()
+  }
+
+  // Build initial values from parent: foreignKey "customer.id" -> { customer: parentRecord.id }
+  const getCreateInitialValues = useCallback((): Record<string, any> => {
+    const fkMatch = relatedObjectDefinition.foreignKey?.match(/^(\w+)\.id$/)
+    const parentField = fkMatch ? fkMatch[1] : null
+    if (!parentField || !parentRecord?.id) return {}
+    const initial: Record<string, any> = { [parentField]: parentRecord.id }
+    // When parent is tenant, also pre-fill organization if available
+    if (parentField === 'tenant' && parentRecord.organizationId != null) {
+      initial.organization = parentRecord.organizationId
+    }
+    // When parent is customer (or other tenant-scoped), pre-fill org/tenant from parent
+    if (parentRecord.organizationId != null) {
+      initial.organization = parentRecord.organizationId
+    }
+    if (parentRecord.tenantId != null) {
+      initial.tenant = parentRecord.tenantId
+    }
+    return initial
+  }, [relatedObjectDefinition.foreignKey, parentRecord])
 
   // Filter records based on search term
   const filteredRecords = records.filter(record => {
@@ -190,62 +224,84 @@ export function GenericRelatedListView({
 
   if (collapsible) {
     return (
-      <Collapsible defaultOpen={true} className="w-full border rounded-lg overflow-hidden">
-        <CollapsibleTrigger className="flex w-full items-center gap-2 px-4 py-3 bg-muted shadow-sm hover:bg-muted/90 transition-colors [&[data-state=open]>svg.chevron]:rotate-180 border-b border-border">
-          <ChevronDown className="chevron h-4 w-4 shrink-0 text-muted-foreground transition-transform" />
-          {headerContent}
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <div className="w-full">
-            {tableContent}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      <>
+        <Collapsible defaultOpen={true} className="w-full border rounded-lg overflow-hidden">
+          <CollapsibleTrigger className="flex w-full items-center gap-2 px-4 py-3 bg-muted shadow-sm hover:bg-muted/90 transition-colors [&[data-state=open]>svg.chevron]:rotate-180 border-b border-border">
+            <ChevronDown className="chevron h-4 w-4 shrink-0 text-muted-foreground transition-transform" />
+            {headerContent}
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <div className="w-full">
+              {tableContent}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+        {relatedObjectDef && (
+          <GenericCreateDialog
+            objectDefinition={relatedObjectDef}
+            open={createDialogOpen}
+            onOpenChange={setCreateDialogOpen}
+            onRecordCreated={handleRecordCreated}
+            initialValues={getCreateInitialValues()}
+          />
+        )}
+      </>
     )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-medium">{translateObjectLabel(relatedObjectDefinition.objectDefinition, relatedObjectDefinition.labelPlural, true)}</h3>
-          <span className="text-xs text-muted-foreground">({records.length})</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={loading}
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
-          {showAddButton && (
+    <>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium">{translateObjectLabel(relatedObjectDefinition.objectDefinition, relatedObjectDefinition.labelPlural, true)}</h3>
+            <span className="text-xs text-muted-foreground">({records.length})</span>
+          </div>
+          <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              onClick={handleAddNew}
+              onClick={handleRefresh}
+              disabled={loading}
             >
-              <Plus className="h-4 w-4 mr-1" />
-              {t('common:add')}
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
-          )}
+            {showAddButton && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAddNew}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {t('common:add')}
+              </Button>
+            )}
+          </div>
         </div>
+
+        {showSearch && (
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t('common:searchObject', { objectName: translateObjectLabel(relatedObjectDefinition.objectDefinition, relatedObjectDefinition.labelPlural, true).toLowerCase() })}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8 h-8"
+            />
+          </div>
+        )}
+
+        {tableContent}
       </div>
-
-      {showSearch && (
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t('common:searchObject', { objectName: translateObjectLabel(relatedObjectDefinition.objectDefinition, relatedObjectDefinition.labelPlural, true).toLowerCase() })}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 h-8"
-          />
-        </div>
+      {relatedObjectDef && (
+        <GenericCreateDialog
+          objectDefinition={relatedObjectDef}
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          onRecordCreated={handleRecordCreated}
+          initialValues={getCreateInitialValues()}
+        />
       )}
-
-      {tableContent}
-    </div>
+    </>
   )
 }

@@ -1,6 +1,7 @@
 /**
  * Translation coverage report.
- * Detects which strings are missing or empty for each locale compared to the reference (en).
+ * 1. Detects keys missing or empty in other locales (vs reference en).
+ * 2. Detects hardcoded strings in frontend code that should be converted to translation keys.
  *
  * Run: pnpm run translation-report
  * Or:  pnpm run translation-report -- --output report.md
@@ -9,11 +10,14 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { findHardcodedStrings } from '../src/translation/translation-hardcoded.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const backendRoot = path.join(__dirname, '..')
 const defaultTranslationsPath = path.join(backendRoot, '../frontend/public/metadata/translations')
+const defaultFrontendSrcPath = path.join(backendRoot, '../frontend/src')
 const TRANSLATIONS_PATH = process.env.TRANSLATIONS_PATH || defaultTranslationsPath
+const FRONTEND_SRC_PATH = process.env.FRONTEND_SRC_PATH || defaultFrontendSrcPath
 
 const REFERENCE_LOCALE = 'en'
 const NAMESPACES = ['common', 'navigation', 'settings', 'errors', 'objects'] as const
@@ -60,6 +64,11 @@ function getNamespaceKeys(locale: string, ns: string): Flattened {
   return data ? flattenObject(data) : {}
 }
 
+/** Uses shared module for hardcoded string detection */
+function getHardcodedStrings(): Array<{ str: string; file: string; line: number }> {
+  return findHardcodedStrings(TRANSLATIONS_PATH, FRONTEND_SRC_PATH)
+}
+
 function generateVerifyReport(objectName: string): string {
   const locales = getLocales()
   const refKeys = getNamespaceKeys(REFERENCE_LOCALE, 'objects')
@@ -103,7 +112,7 @@ function generateVerifyReport(objectName: string): string {
   return lines.join('\n')
 }
 
-function generateReport(): string {
+function generateReport(useColor = false): string {
   const locales = getLocales()
   if (!locales.includes(REFERENCE_LOCALE)) {
     return `# Translation Report\n\nError: Reference locale "${REFERENCE_LOCALE}" not found in ${TRANSLATIONS_PATH}\n`
@@ -184,6 +193,27 @@ function generateReport(): string {
   lines.push(`**Total:** ${totalMissing} missing, ${totalEmpty} empty across all locales`)
   lines.push('')
 
+  // Hardcoded strings (not yet converted to keys)
+  const hardcoded = getHardcodedStrings()
+  if (hardcoded.length > 0) {
+    const WARN = '\x1b[33m' // yellow/warning
+    const RST = '\x1b[0m'
+    const c = (s: string) => (useColor ? WARN + s + RST : s)
+
+    lines.push('---')
+    lines.push('')
+    lines.push(c('## Hardcoded strings (not yet converted to translation keys)'))
+    lines.push('')
+    lines.push(c('These strings appear in the frontend source but are not in any translation file.'))
+    lines.push(c('Convert them to `t(\'namespace:key\', { defaultValue: \'...\' })` and add the key to each locale.'))
+    lines.push('')
+    for (const { str, file, line } of hardcoded) {
+      const preview = str.length > 70 ? str.slice(0, 67) + '...' : str
+      lines.push(c(`- \`${file}:${line}\` — "${preview}"`))
+    }
+    lines.push('')
+  }
+
   return lines.join('\n')
 }
 
@@ -194,7 +224,7 @@ function main(): void {
   const verifyIdx = args.indexOf('--verify')
   const verifyObject = verifyIdx >= 0 ? args[verifyIdx + 1] : null
 
-  const report = verifyObject ? generateVerifyReport(verifyObject) : generateReport()
+  const report = verifyObject ? generateVerifyReport(verifyObject) : generateReport(!outputFile)
 
   if (outputFile) {
     fs.writeFileSync(outputFile, report, 'utf-8')

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -43,6 +44,7 @@ const defaultValues: EmailConfigFormValues = {
 }
 
 export function EmailConfigForm() {
+  const { t } = useTranslation(['settings', 'common'])
   const [loading, setLoading] = useState(true)
   const form = useForm<EmailConfigFormValues>({
     resolver: zodResolver(emailConfigSchema),
@@ -86,14 +88,14 @@ export function EmailConfigForm() {
         emailConfig: data,
       })
       .then(() => {
-        toast.success('Email configuration saved')
+        toast.success(t('emailConfigSaved'))
       })
       .catch((err) => {
-        toast.error(err.response?.data?.message ?? 'Failed to save')
+        toast.error(err.response?.data?.message ?? t('saveFailed'))
       })
   }
 
-  if (loading) return <div className='text-muted-foreground text-sm'>Loading...</div>
+  if (loading) return <div className='text-muted-foreground text-sm'>{t('loading')}</div>
 
   return (
     <Form {...form}>
@@ -104,9 +106,9 @@ export function EmailConfigForm() {
           render={({ field }) => (
             <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
               <div className='space-y-0.5'>
-                <FormLabel className='text-base'>Enable email sending</FormLabel>
+                <FormLabel className='text-base'>{t('enableEmailSending')}</FormLabel>
                 <FormDescription>
-                  When enabled, transactional emails will be sent via SMTP.
+                  {t('enableEmailSendingDesc')}
                 </FormDescription>
               </div>
               <FormControl>
@@ -120,7 +122,7 @@ export function EmailConfigForm() {
           name='fromEmail'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>From email</FormLabel>
+              <FormLabel>{t('fromEmail')}</FormLabel>
               <FormControl>
                 <Input type='email' placeholder='noreply@example.com' {...field} />
               </FormControl>
@@ -133,7 +135,7 @@ export function EmailConfigForm() {
           name='fromName'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>From name</FormLabel>
+              <FormLabel>{t('fromName')}</FormLabel>
               <FormControl>
                 <Input placeholder='My App' {...field} />
               </FormControl>
@@ -147,7 +149,7 @@ export function EmailConfigForm() {
             name='smtpHost'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>SMTP host</FormLabel>
+                <FormLabel>{t('smtpHost')}</FormLabel>
                 <FormControl>
                   <Input placeholder='smtp.example.com' {...field} />
                 </FormControl>
@@ -160,7 +162,7 @@ export function EmailConfigForm() {
             name='smtpPort'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>SMTP port</FormLabel>
+                <FormLabel>{t('smtpPort')}</FormLabel>
                 <FormControl>
                   <Input
                     type='number'
@@ -182,7 +184,7 @@ export function EmailConfigForm() {
           name='smtpSecure'
           render={({ field }) => (
             <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
-              <FormLabel className='text-base'>Use TLS/SSL</FormLabel>
+              <FormLabel className='text-base'>{t('useTlsSsl')}</FormLabel>
               <FormControl>
                 <Switch checked={field.value} onCheckedChange={field.onChange} />
               </FormControl>
@@ -194,9 +196,9 @@ export function EmailConfigForm() {
           name='smtpUser'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>SMTP username</FormLabel>
+              <FormLabel>{t('smtpUsername')}</FormLabel>
               <FormControl>
-                <Input type='text' placeholder='Optional' {...field} />
+                <Input type='text' placeholder={t('optional')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -207,16 +209,16 @@ export function EmailConfigForm() {
           name='smtpPassword'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>SMTP password</FormLabel>
+              <FormLabel>{t('smtpPassword')}</FormLabel>
               <FormControl>
-                <Input type='password' placeholder='Leave blank to keep current' {...field} />
+                <Input type='password' placeholder={t('leaveBlankToKeep')} {...field} />
               </FormControl>
-              <FormDescription>Leave blank to keep the existing password.</FormDescription>
+              <FormDescription>{t('leaveBlankToKeepPassword')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type='submit'>Save</Button>
+        <Button type='submit'>{t('save', { ns: 'common' })}</Button>
       </form>
     </Form>
   )

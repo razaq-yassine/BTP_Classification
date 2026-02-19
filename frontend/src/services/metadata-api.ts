@@ -139,10 +139,17 @@ export interface TranslationCoverageLocale {
   byNamespace: Record<string, TranslationCoverageNamespace>
 }
 
+export interface HardcodedString {
+  str: string
+  file: string
+  line: number
+}
+
 export interface TranslationCoverageResponse {
   referenceLocale: string
   locales: string[]
   byLocale: Record<string, TranslationCoverageLocale>
+  hardcodedStrings?: HardcodedString[]
 }
 
 export async function getTranslationCoverage(): Promise<TranslationCoverageResponse> {

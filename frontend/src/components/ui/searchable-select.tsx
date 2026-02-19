@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
@@ -27,14 +28,18 @@ export function SearchableSelect({
   options,
   value,
   onValueChange,
-  placeholder = "Select option...",
-  searchPlaceholder = "Search options...",
+  placeholder,
+  searchPlaceholder,
   disabled = false,
   className,
-  emptyMessage = "No options found.",
+  emptyMessage,
   renderValue,
 }: SearchableSelectProps) {
+  const { t } = useTranslation('common')
   const [open, setOpen] = useState(false)
+  const effectivePlaceholder = placeholder ?? t('selectOption')
+  const effectiveSearchPlaceholder = searchPlaceholder ?? t('searchOptions')
+  const effectiveEmptyMessage = emptyMessage ?? t('noOptionsFound')
 
   const selectedOption = options.find(option => option.value === value)
 
@@ -50,15 +55,15 @@ export function SearchableSelect({
         >
           {selectedOption ? (
             renderValue ? renderValue(selectedOption) : selectedOption.label
-          ) : placeholder}
+          ) : effectivePlaceholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+          <CommandInput placeholder={effectiveSearchPlaceholder} />
           <CommandList>
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
+            <CommandEmpty>{effectiveEmptyMessage}</CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
                 <CommandItem

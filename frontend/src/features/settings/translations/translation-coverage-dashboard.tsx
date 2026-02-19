@@ -28,6 +28,7 @@ const CHART_COLORS = {
 export function TranslationCoverageDashboard() {
   const { t } = useTranslation('settings')
   const [modalLocale, setModalLocale] = useState<string | null>(null)
+  const [showHardcodedModal, setShowHardcodedModal] = useState(false)
   const { data, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ['translation-coverage'],
     queryFn: getTranslationCoverage,
@@ -82,7 +83,7 @@ export function TranslationCoverageDashboard() {
     )
   }
 
-  const { referenceLocale, locales, byLocale } = data
+  const { referenceLocale, locales, byLocale, hardcodedStrings = [] } = data
 
   if (locales.length === 0) {
     return (
@@ -263,6 +264,42 @@ export function TranslationCoverageDashboard() {
         })}
       </div>
 
+      {hardcodedStrings.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className='text-sm font-medium'>
+              {t('coverageHardcoded', { defaultValue: 'Hardcoded strings' })}
+            </CardTitle>
+            <p className='text-xs text-muted-foreground'>
+              {t('coverageHardcodedDesc', {
+                defaultValue:
+                  'Strings in source code not yet converted to translation keys',
+              })}
+            </p>
+          </CardHeader>
+          <CardContent>
+            <div className='flex items-center justify-between'>
+              <span className='text-sm text-muted-foreground'>
+                {hardcodedStrings.length}{' '}
+                {t('coverageHardcoded', { defaultValue: 'hardcoded strings' })}{' '}
+                found in frontend source
+              </span>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='h-6 w-6 text-violet-600 hover:text-violet-700 hover:bg-violet-50'
+                onClick={() => setShowHardcodedModal(true)}
+                title={t('coverageViewHardcoded', {
+                  defaultValue: 'View hardcoded strings',
+                })}
+              >
+                <Eye className='h-3.5 w-3.5' />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className='text-sm font-medium'>
@@ -333,6 +370,44 @@ export function TranslationCoverageDashboard() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog
+        open={showHardcodedModal}
+        onOpenChange={(open) => !open && setShowHardcodedModal(false)}
+      >
+        <DialogContent className='max-h-[80vh] max-w-md sm:max-w-lg'>
+          <DialogHeader>
+            <DialogTitle>
+              {t('coverageHardcodedTitle', {
+                defaultValue: 'Hardcoded strings',
+              })}
+            </DialogTitle>
+          </DialogHeader>
+          <div className='space-y-2 overflow-y-auto max-h-[60vh]'>
+            <p className='text-sm text-muted-foreground'>
+              {t('coverageHardcodedDesc', {
+                defaultValue:
+                  'Strings in source code not yet converted to translation keys',
+              })}
+            </p>
+            <ul className='list-none space-y-2 text-sm'>
+              {hardcodedStrings.map((item, i) => (
+                <li
+                  key={`${item.file}:${item.line}:${i}`}
+                  className='rounded border bg-muted/30 p-2 font-mono text-xs'
+                >
+                  <span className='text-foreground block break-words'>
+                    &quot;{item.str}&quot;
+                  </span>
+                  <span className='text-muted-foreground'>
+                    {item.file}:{item.line}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={modalLocale !== null}

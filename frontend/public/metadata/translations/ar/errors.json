@@ -10,5 +10,10 @@
   "connectionLost": "انقطع الاتصال. يرجى الانتظار والمحاولة مرة أخرى.",
   "failedToFetch": "فشل جلب {{object}}",
   "failedToDelete": "فشل الحذف",
-  "failedToFetchRelated": "فشل جلب {{object}} المرتبطة"
+  "failedToFetchRelated": "فشل جلب {{object}} المرتبطة",
+  "unexpectedError": "حدث خطأ غير متوقع",
+  "maintenanceError": "خطأ الصيانة",
+  "internalServerErrorPage": "خطأ داخلي في الخادم",
+  "somethingWentWrong": "حدث خطأ ما!",
+  "contentNotFound": "المحتوى غير موجود."
 }

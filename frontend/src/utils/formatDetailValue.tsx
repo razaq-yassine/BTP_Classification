@@ -60,7 +60,7 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
     case 'date':
       if (val) {
         const date = new Date(val)
-        return toLocaleDateString(date)
+        return <span dir="ltr" className="tabular-nums">{toLocaleDateString(date)}</span>
       }
       return i18n.t('common:empty')
     case 'email':
@@ -125,7 +125,7 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
     case 'datetime':
       if (val) {
         const dt = new Date(val)
-        return toLocaleDateTimeString(dt)
+        return <span dir="ltr" className="tabular-nums">{toLocaleDateTimeString(dt)}</span>
       }
       return i18n.t('common:empty')
     case 'text': {

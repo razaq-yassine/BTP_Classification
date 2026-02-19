@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import { EditorContent, EditorContext, useEditor } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
 import { Image } from '@tiptap/extension-image'
@@ -48,9 +49,10 @@ export function RichTextEditor({
   value,
   onChange,
   disabled = false,
-  placeholder: _placeholder = 'Enter text...',
+  placeholder: _placeholder,
   className,
 }: RichTextEditorProps) {
+  const { t } = useTranslation('common')
   const editor = useEditor({
     immediatelyRender: false,
     editable: !disabled,
@@ -60,7 +62,7 @@ export function RichTextEditor({
         autocomplete: 'off',
         autocorrect: 'off',
         autocapitalize: 'off',
-        'aria-label': 'Rich text content',
+        'aria-label': t('richTextContent'),
         class: 'simple-editor',
       },
     },

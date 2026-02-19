@@ -10,5 +10,10 @@
   "connectionLost": "Connection lost. Please wait and try again.",
   "failedToFetch": "Failed to fetch {{object}}",
   "failedToDelete": "Failed to delete",
-  "failedToFetchRelated": "Failed to fetch related {{object}}"
+  "failedToFetchRelated": "Failed to fetch related {{object}}",
+  "unexpectedError": "An unexpected error occurred",
+  "maintenanceError": "Maintenance Error",
+  "internalServerErrorPage": "Internal Server Error",
+  "somethingWentWrong": "Something went wrong!",
+  "contentNotFound": "Content not found."
 }

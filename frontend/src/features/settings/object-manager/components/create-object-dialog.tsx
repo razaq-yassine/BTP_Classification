@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { invalidateObjectDefinitions } from '@/hooks/useObjectDefinitionsQuery'
@@ -22,6 +23,7 @@ interface CreateObjectDialogProps {
 }
 
 export function CreateObjectDialog({ open, onOpenChange }: CreateObjectDialogProps) {
+  const { t } = useTranslation(['settings', 'common'])
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const queryClient = useQueryClient()
@@ -38,7 +40,7 @@ export function CreateObjectDialog({ open, onOpenChange }: CreateObjectDialogPro
       navigate({ to: '/settings/object-manager/$objectName', params: { objectName: data.name } })
     },
     onError: (err: { response?: { data?: { message?: string } } }) => {
-      setError(err.response?.data?.message || 'Failed to create object')
+      setError(err.response?.data?.message || t('failedToCreateObject'))
     },
   })
 
@@ -47,11 +49,11 @@ export function CreateObjectDialog({ open, onOpenChange }: CreateObjectDialogPro
     setError(null)
     const trimmed = name.trim().toLowerCase()
     if (!trimmed) {
-      setError('Object name is required')
+      setError(t('objectNameRequired'))
       return
     }
     if (!/^[a-z][a-z0-9]*$/.test(trimmed)) {
-      setError('Use lowercase letters and numbers only (e.g. product, orderItem)')
+      setError(t('objectNameFormat'))
       return
     }
     createMutation.mutate(trimmed)
@@ -77,10 +79,10 @@ export function CreateObjectDialog({ open, onOpenChange }: CreateObjectDialogPro
         <form onSubmit={handleSubmit}>
           <div className='space-y-4 py-4'>
             <div className='space-y-2'>
-              <Label htmlFor='object-name'>Object name</Label>
+              <Label htmlFor='object-name'>{t('objectName')}</Label>
               <Input
                 id='object-name'
-                placeholder='e.g. product, orderItem'
+                placeholder={t('objectNameExample')}
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value)
@@ -99,10 +101,10 @@ export function CreateObjectDialog({ open, onOpenChange }: CreateObjectDialogPro
               variant='outline'
               onClick={() => handleOpenChange(false)}
             >
-              Cancel
+              {t('cancel', { ns: 'common' })}
             </Button>
             <Button type='submit' disabled={createMutation.isPending}>
-              {createMutation.isPending ? 'Creating...' : 'Create'}
+              {createMutation.isPending ? t('creating') : t('create', { ns: 'common' })}
             </Button>
           </DialogFooter>
         </form>

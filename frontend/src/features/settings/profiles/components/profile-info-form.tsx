@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,6 +14,7 @@ interface ProfileInfoFormProps {
 }
 
 export function ProfileInfoForm({ profile }: ProfileInfoFormProps) {
+  const { t } = useTranslation(['settings', 'common'])
   const queryClient = useQueryClient()
   const [label, setLabel] = useState(profile.label)
   const [description, setDescription] = useState(profile.description || '')
@@ -25,9 +27,9 @@ export function ProfileInfoForm({ profile }: ProfileInfoFormProps) {
     try {
       await updateProfile(profile.name, { ...profile, label, description })
       queryClient.invalidateQueries({ queryKey: ['profile', profile.name] })
-      toast.success('Profile updated')
+      toast.success(t('profileUpdated'))
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to update'
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? t('failedToUpdate')
       toast.error(msg)
     } finally {
       setSaving(false)
@@ -37,8 +39,8 @@ export function ProfileInfoForm({ profile }: ProfileInfoFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profile information</CardTitle>
-        <CardDescription>Basic profile details. Name cannot be changed.</CardDescription>
+        <CardTitle>{t('profileInformation')}</CardTitle>
+        <CardDescription>{t('profileInfoDescription')}</CardDescription>
       </CardHeader>
       <CardContent className='space-y-4'>
         <div className='grid gap-2'>
@@ -51,7 +53,7 @@ export function ProfileInfoForm({ profile }: ProfileInfoFormProps) {
             id='label'
             value={label}
             onChange={(e) => setLabel(e.target.value)}
-            placeholder='Display name'
+            placeholder={t('displayName')}
           />
         </div>
         <div className='grid gap-2'>
@@ -60,13 +62,13 @@ export function ProfileInfoForm({ profile }: ProfileInfoFormProps) {
             id='description'
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder='Optional description'
+            placeholder={t('optionalDescription')}
             rows={2}
           />
         </div>
         {hasChanges && (
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save changes'}
+            {saving ? t('saving') : t('saveChanges')}
           </Button>
         )}
       </CardContent>

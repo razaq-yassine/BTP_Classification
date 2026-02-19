@@ -32,7 +32,7 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
       try {
         const date = new Date(value)
         const formattedDate = dateFormat ? formatDateLocale(date, dateFormat) : formatDateTimeLocale(date, 'PPP p')
-        return <span>{formattedDate}</span>
+        return <span dir="ltr" className="tabular-nums">{formattedDate}</span>
       } catch {
         return <span className="text-muted-foreground">{value}</span>
       }

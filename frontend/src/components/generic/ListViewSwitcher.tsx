@@ -151,7 +151,7 @@ export function ListViewSwitcher({
             size="icon"
             className="h-7 w-7 sm:h-9 sm:w-9 shrink-0 rounded-full"
             onClick={handlePinClick}
-            title={isPinned ? 'Unpin as default view' : 'Pin as default view'}
+            title={isPinned ? t('common:unpinAsDefaultView', { defaultValue: 'Unpin as default view' }) : t('common:pinAsDefaultView', { defaultValue: 'Pin as default view' })}
           >
             <Pin className={cn("h-3 w-3 sm:h-4 sm:w-4", isPinned && "fill-current")} />
           </Button>

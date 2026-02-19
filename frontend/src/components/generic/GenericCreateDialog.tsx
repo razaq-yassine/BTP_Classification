@@ -11,6 +11,7 @@ import { getObjectBorderAccentClasses, getObjectButtonClasses } from '@/utils/ob
 import api from '@/services/api'
 import { toast } from 'sonner'
 import { isNetworkError } from '@/utils/handle-server-error'
+import { playSaveSound } from '@/utils/sound-effects'
 import { useTranslation } from 'react-i18next'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useTenantConfig } from '@/hooks/useTenantConfig'
@@ -26,6 +27,8 @@ interface GenericCreateDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onRecordCreated?: (newRecord: GenericRecord) => void
+  /** Pre-fill form fields (e.g. parent reference when creating from related list) */
+  initialValues?: Record<string, any>
 }
 
 // Component for displaying field in create mode
@@ -81,7 +84,8 @@ export function GenericCreateDialog({
   objectDefinition,
   open,
   onOpenChange,
-  onRecordCreated
+  onRecordCreated,
+  initialValues
 }: GenericCreateDialogProps) {
   const { t } = useTranslation('common')
   const { isFieldVisible, canEditField, profile } = usePermissions()
@@ -174,12 +178,16 @@ export function GenericCreateDialog({
             }
           })
         })
+      // Merge initial values (e.g. parent reference when creating from related list)
+      if (initialValues && Object.keys(initialValues).length > 0) {
+        Object.assign(initialFormData, initialValues)
+      }
       setFormData(initialFormData)
       setHasChanges(false)
       setError('')
       setFieldErrors({})
     }
-  }, [open, objectDefinition, isFieldVisible, canEditField, profile, isTenantModeNone])
+  }, [open, objectDefinition, isFieldVisible, canEditField, profile, isTenantModeNone, initialValues])
 
   // Validate individual field
   const validateField = (fieldDefinition: FieldDefinition, value: any): FieldValidation => {
@@ -207,7 +215,7 @@ export function GenericCreateDialog({
       if (!phoneRegex.test(value.toString().replace(/\s/g, ''))) {
         return {
           isValid: false,
-          errorMessage: 'Please enter a valid phone number (10-15 digits)'
+          errorMessage: t('phoneValidationError', { defaultValue: 'Please enter a valid phone number (10-15 digits)' })
         }
       }
     }
@@ -228,7 +236,7 @@ export function GenericCreateDialog({
       if (isNaN(Number(value))) {
         return {
           isValid: false,
-          errorMessage: 'Please enter a valid number'
+          errorMessage: t('numberValidationError', { defaultValue: 'Please enter a valid number' })
         }
       }
     }
@@ -237,15 +245,15 @@ export function GenericCreateDialog({
     if (fieldDefinition.type === 'url' && value && value.toString().trim() !== '') {
       const url = value.toString().trim()
       if (url.includes(' ')) {
-        return { isValid: false, errorMessage: 'URL must not contain spaces' }
+        return { isValid: false, errorMessage: t('urlNoSpacesError', { defaultValue: 'URL must not contain spaces' }) }
       }
       if (!url.includes('.') || !/\w/.test(url)) {
-        return { isValid: false, errorMessage: 'Please enter a valid URL with a domain' }
+        return { isValid: false, errorMessage: t('urlDomainError', { defaultValue: 'Please enter a valid URL with a domain' }) }
       }
       const parts = url.split('.')
       const lastPart = parts[parts.length - 1]
       if (lastPart.length < 2 || !/^[a-zA-Z0-9-]+$/.test(lastPart)) {
-        return { isValid: false, errorMessage: 'Please enter a valid URL with a domain' }
+        return { isValid: false, errorMessage: t('urlDomainError', { defaultValue: 'Please enter a valid URL with a domain' }) }
       }
     }
 
@@ -256,13 +264,13 @@ export function GenericCreateDialog({
         const lat = loc?.latitude
         const lng = loc?.longitude
         if (lat != null && (typeof lat !== 'number' || lat < -90 || lat > 90)) {
-          return { isValid: false, errorMessage: 'Latitude must be between -90 and 90' }
+          return { isValid: false, errorMessage: t('latitudeRangeError', { defaultValue: 'Latitude must be between -90 and 90' }) }
         }
         if (lng != null && (typeof lng !== 'number' || lng < -180 || lng > 180)) {
-          return { isValid: false, errorMessage: 'Longitude must be between -180 and 180' }
+          return { isValid: false, errorMessage: t('longitudeRangeError', { defaultValue: 'Longitude must be between -180 and 180' }) }
         }
       } catch {
-        return { isValid: false, errorMessage: 'Please enter valid geolocation data' }
+        return { isValid: false, errorMessage: t('geolocationError', { defaultValue: 'Please enter valid geolocation data' }) }
       }
     }
 
@@ -370,6 +378,7 @@ export function GenericCreateDialog({
       const response = await api.post(endpoint, createData)
 
       // Show success toast
+      playSaveSound()
       toast.success(t('recordCreated', { label: objectDefinition.label || objectDefinition.name }), {
         description: t('recordCreated', { label: objectDefinition.label || objectDefinition.name }),
         duration: 3000,
@@ -394,11 +403,11 @@ export function GenericCreateDialog({
 
       // Handle authentication errors specifically
       if (err.response?.status === 401) {
-        setError('Authentication failed. Please try logging in again.')
+        setError(t('authFailedRetry', { defaultValue: 'Authentication failed. Please try logging in again.' }))
       } else {
         const msg = isNetworkError(err)
           ? 'Connection lost. Please wait and try again.'
-          : err.response?.data?.detail || err.response?.data?.message || 'Failed to create record'
+          : err.response?.data?.detail || err.response?.data?.message || t('failedToCreateRecord', { defaultValue: 'Failed to create record' })
         setError(msg)
       }
     } finally {
@@ -494,11 +503,11 @@ export function GenericCreateDialog({
 
       // Handle authentication errors specifically
       if (err.response?.status === 401) {
-        setError('Authentication failed. Please try logging in again.')
+        setError(t('authFailedRetry', { defaultValue: 'Authentication failed. Please try logging in again.' }))
       } else {
         const msg = isNetworkError(err)
           ? 'Connection lost. Please wait and try again.'
-          : err.response?.data?.detail || err.response?.data?.message || 'Failed to create record'
+          : err.response?.data?.detail || err.response?.data?.message || t('failedToCreateRecord', { defaultValue: 'Failed to create record' })
         setError(msg)
       }
     } finally {

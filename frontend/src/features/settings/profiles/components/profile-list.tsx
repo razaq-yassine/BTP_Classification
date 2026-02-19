@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
@@ -11,6 +12,7 @@ interface ProfileListProps {
 }
 
 export function ProfileList({ profiles, isLoading, onSelect }: ProfileListProps) {
+  const { t } = useTranslation('settings')
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
@@ -24,7 +26,7 @@ export function ProfileList({ profiles, isLoading, onSelect }: ProfileListProps)
   if (isLoading) {
     return (
       <div className='rounded-md border p-4 text-muted-foreground'>
-        Loading profiles...
+        {t('loadingProfiles')}
       </div>
     )
   }
@@ -34,7 +36,7 @@ export function ProfileList({ profiles, isLoading, onSelect }: ProfileListProps)
       <div className='relative'>
         <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
         <Input
-          placeholder='Search profiles...'
+          placeholder={t('searchProfilesPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className='pl-9'
@@ -44,7 +46,7 @@ export function ProfileList({ profiles, isLoading, onSelect }: ProfileListProps)
         <div className='p-2'>
           {filtered.length === 0 ? (
             <p className='py-4 text-center text-muted-foreground'>
-              No profiles found
+              {t('noProfilesFound')}
             </p>
           ) : (
             filtered.map((name) => (

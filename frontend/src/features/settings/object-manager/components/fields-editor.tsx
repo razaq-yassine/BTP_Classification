@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import { getMetadataFile, getField, saveField, saveMetadataFile, getObjectNames } from '@/services/metadata-api'
 import { Button } from '@/components/ui/button'
@@ -61,10 +62,10 @@ function isValidFieldKey(key: string): boolean {
 }
 
 /** Validate autoNumber pattern: must contain exactly one {0+} placeholder, e.g. MSG-{00000} */
-function validateAutoNumberPattern(pattern: string): string | null {
+function validateAutoNumberPattern(pattern: string, t: (key: string) => string): string | null {
   const match = pattern.match(/\{0+\}/g)
   if (!match || match.length !== 1) {
-    return 'Pattern must contain exactly one digit placeholder, e.g. {000} or MSG-{00000}'
+    return t('patternPlaceholderError')
   }
   return null
 }
@@ -72,9 +73,11 @@ function validateAutoNumberPattern(pattern: string): string | null {
 function SelectOptionsEditor({
   options,
   onChange,
+  t,
 }: {
   options: SelectOption[]
   onChange: (options: SelectOption[]) => void
+  t: (key: string) => string
 }) {
   const updateOption = (index: number, updates: Partial<SelectOption>) => {
     const next = [...options]
@@ -90,10 +93,10 @@ function SelectOptionsEditor({
   return (
     <div className='space-y-3 rounded-md border p-3'>
       <div className='flex items-center justify-between'>
-        <Label className='text-sm font-medium'>Options *</Label>
+        <Label className='text-sm font-medium'>{t('optionsRequired')}</Label>
         <Button type='button' variant='outline' size='sm' onClick={addOption}>
           <Plus className='mr-1 size-4' />
-          Add option
+          {t('addOption')}
         </Button>
       </div>
       <p className='text-muted-foreground text-xs'>At least one option required. Value is stored, label is displayed.</p>
@@ -101,19 +104,19 @@ function SelectOptionsEditor({
         {options.map((opt, i) => (
           <div key={i} className='flex gap-2 items-center'>
             <Input
-              placeholder='Value'
+              placeholder={t('value')}
               value={opt.value}
               onChange={(e) => updateOption(i, { value: e.target.value })}
               className='flex-1'
             />
             <Input
-              placeholder='Label'
+              placeholder={t('label')}
               value={opt.label}
               onChange={(e) => updateOption(i, { label: e.target.value })}
               className='flex-1'
             />
             <Input
-              placeholder='Color'
+              placeholder={t('color')}
               value={opt.color ?? ''}
               onChange={(e) => updateOption(i, { color: e.target.value || undefined })}
               className='w-24'
@@ -133,6 +136,7 @@ interface FieldsEditorProps {
 }
 
 export function FieldsEditor({ objectName }: FieldsEditorProps) {
+  const { t } = useTranslation(['settings', 'common'])
   const queryClient = useQueryClient()
   const [selectedField, setSelectedField] = useState<string | null>(null)
   const [fieldsOrder, setFieldsOrder] = useState<string>('')
@@ -165,9 +169,9 @@ export function FieldsEditor({ objectName }: FieldsEditorProps) {
       const order = ['id', ...userOrder.filter((k) => !SYSTEM_FIELDS_SET.has(k)), ...SYSTEM_FIELDS.filter((f) => f !== 'id')]
       await saveMetadataFile(objectName, 'fields.json', order)
       invalidateObjectDefinitions(queryClient)
-      toast.success('Fields order saved')
+      toast.success(t('fieldsOrderSaved'))
     } catch (err) {
-      toast.error('Failed to save')
+      toast.error(t('saveFailed'))
     }
   }
 
@@ -181,15 +185,15 @@ export function FieldsEditor({ objectName }: FieldsEditorProps) {
 
   const validateFieldByType = (data: FieldDef): string | null => {
     if (data.type === 'reference' || data.type === 'masterDetail') {
-      if (!data.objectName?.trim()) return 'Reference object is required'
+      if (!data.objectName?.trim()) return t('referenceObjectRequired')
     }
     if (data.type === 'select' || data.type === 'multiselect') {
-      if (!data.options?.length) return 'At least one option is required for select fields'
+      if (!data.options?.length) return t('atLeastOneOptionRequired')
       const empty = data.options.find((o) => !o.value?.trim() || !o.label?.trim())
-      if (empty) return 'Each option must have a value and label'
+      if (empty) return t('eachOptionMustHaveValueAndLabel')
     }
     if (data.type === 'formula') {
-      if (!data.formulaExpression?.trim()) return 'Formula expression is required'
+      if (!data.formulaExpression?.trim()) return t('formulaExpressionRequired')
     }
     return null
   }
@@ -197,7 +201,7 @@ export function FieldsEditor({ objectName }: FieldsEditorProps) {
   const handleCreateField = async (data: FieldDef) => {
     const key = (data.key || '').trim().toLowerCase()
     if (!key) {
-      toast.error('Field key is required')
+      toast.error(t('fieldKeyRequired'))
       return
     }
     if (!isValidFieldKey(key)) {
@@ -205,7 +209,7 @@ export function FieldsEditor({ objectName }: FieldsEditorProps) {
       return
     }
     if (editableFieldsList.includes(key)) {
-      toast.error(`Field "${key}" already exists`)
+      toast.error(t('fieldAlreadyExists', { key }))
       return
     }
     const typeErr = validateFieldByType(data)
@@ -228,10 +232,10 @@ export function FieldsEditor({ objectName }: FieldsEditorProps) {
       queryClient.invalidateQueries({ queryKey: ['metadata', objectName, 'fields', key] })
       setSelectedField(key)
       setFieldsOrder('')
-      toast.success('Field created')
+      toast.success(t('fieldCreated'))
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      toast.error(msg || 'Failed to create field')
+      toast.error(msg || t('failedToCreateField'))
     }
   }
 
@@ -243,14 +247,14 @@ export function FieldsEditor({ objectName }: FieldsEditorProps) {
     }
     if (key === 'name') {
       if (data.type === 'autoNumber') {
-        const patternErr = validateAutoNumberPattern(data.autoNumberPattern || '')
+        const patternErr = validateAutoNumberPattern(data.autoNumberPattern || '', t)
         if (patternErr) {
           toast.error(patternErr)
           return
         }
         const start = data.autoNumberStart ?? 1
         if (!Number.isInteger(start) || start < 1) {
-          toast.error('Starting number must be a positive integer')
+          toast.error(t('startingNumberPositive'))
           return
         }
         data.autoNumberStart = start
@@ -263,19 +267,19 @@ export function FieldsEditor({ objectName }: FieldsEditorProps) {
       invalidateObjectDefinitions(queryClient)
       toast.success('Field saved')
     } catch (err) {
-      toast.error('Failed to save')
+      toast.error(t('saveFailed'))
     }
   }
 
   if (listLoading) {
-    return <div className='text-muted-foreground'>Loading...</div>
+    return <div className='text-muted-foreground'>{t('loading')}</div>
   }
 
   return (
     <div className='flex gap-6'>
       <div className='w-64 shrink-0 space-y-4'>
         <div>
-          <Label>Fields order (comma-separated)</Label>
+          <Label>{t('fieldsOrderCommaSeparated')}</Label>
           <p className='text-muted-foreground mb-1 text-xs'>System fields ({SYSTEM_FIELDS.join(', ')}) are fixed.</p>
           <div className='mt-2 flex gap-2'>
             <Input
@@ -289,13 +293,13 @@ export function FieldsEditor({ objectName }: FieldsEditorProps) {
               size='sm'
               onClick={handleSaveFieldsOrder}
             >
-              Save
+              {t('save', { ns: 'common' })}
             </Button>
           </div>
         </div>
         <div>
           <div className='flex items-center justify-between'>
-            <Label>Fields</Label>
+            <Label>{t('fieldsLabel')}</Label>
             <Button
               type='button'
               variant='outline'
@@ -303,7 +307,7 @@ export function FieldsEditor({ objectName }: FieldsEditorProps) {
               onClick={() => setSelectedField('__new__')}
             >
               <Plus className='mr-1 size-4' />
-              Create field
+              {t('createField')}
             </Button>
           </div>
           <ScrollArea className='mt-2 h-[300px] rounded-md border'>
@@ -335,6 +339,7 @@ export function FieldsEditor({ objectName }: FieldsEditorProps) {
             isCreateMode={isCreateMode}
             objectNames={objectNames}
             onSave={(data) => (isCreateMode ? handleCreateField(data) : handleSaveField(selectedField, data))}
+            t={t}
           />
         )}
       </div>
@@ -350,6 +355,7 @@ function FieldEditor({
   isCreateMode,
   objectNames,
   onSave,
+  t,
 }: {
   objectName: string
   fieldKey: string
@@ -358,6 +364,7 @@ function FieldEditor({
   isCreateMode?: boolean
   objectNames?: string[]
   onSave: (data: FieldDef) => void
+  t: (key: string) => string
 }) {
   const isNameField = !isCreateMode && fieldKey === 'name'
   const [form, setForm] = useState<FieldDef>(() => {
@@ -625,6 +632,7 @@ function FieldEditor({
               <SelectOptionsEditor
                 options={form.options || []}
                 onChange={(options) => update({ options })}
+                t={t}
               />
             )}
             {(form.type === 'date' || form.type === 'datetime') && (
@@ -782,7 +790,7 @@ function FieldEditor({
             </div>
           </>
         )}
-        <Button onClick={() => onSave(form)}>{isCreateMode ? 'Create Field' : 'Save Field'}</Button>
+        <Button onClick={() => onSave(form)}>{isCreateMode ? t('createField') : t('saveField')}</Button>
       </div>
     </div>
   )

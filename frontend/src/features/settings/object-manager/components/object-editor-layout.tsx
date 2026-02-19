@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Trash2 } from 'lucide-react'
@@ -10,6 +11,7 @@ import { FieldsEditor } from './fields-editor'
 import { ListViewForm } from './list-view-form'
 import { DetailViewForm } from './detail-view-form'
 import { deleteObject } from '@/services/metadata-api'
+import { playDeleteSound } from '@/utils/sound-effects'
 import { toast } from 'sonner'
 import { clearObjectCache } from '@/metadata/loader'
 import { invalidateObjectDefinitions } from '@/hooks/useObjectDefinitionsQuery'
@@ -28,6 +30,7 @@ interface ObjectEditorProps {
 }
 
 export function ObjectEditor({ objectName }: ObjectEditorProps) {
+  const { t } = useTranslation('common')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [section, setSection] = useState<SectionId>('details')
@@ -38,6 +41,7 @@ export function ObjectEditor({ objectName }: ObjectEditorProps) {
     try {
       setDeleting(true)
       await deleteObject(objectName)
+      playDeleteSound()
       clearObjectCache()
       invalidateObjectDefinitions(queryClient)
       queryClient.invalidateQueries({ queryKey: ['metadata', 'objects'] })
@@ -45,7 +49,7 @@ export function ObjectEditor({ objectName }: ObjectEditorProps) {
       setShowDeleteDialog(false)
       navigate({ to: '/settings/object-manager' })
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to delete object'
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? t('failedToDeleteObject')
       toast.error(msg)
     } finally {
       setDeleting(false)
@@ -72,14 +76,14 @@ export function ObjectEditor({ objectName }: ObjectEditorProps) {
           onClick={() => setShowDeleteDialog(true)}
         >
           <Trash2 className='h-4 w-4 mr-2' />
-          Delete Object
+          {t('deleteObject')}
         </Button>
       </div>
 
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        title='Delete Object'
+        title={t('deleteObject')}
         desc={
           <p>
             Are you sure you want to delete the object <strong>{objectName}</strong>? This will remove all

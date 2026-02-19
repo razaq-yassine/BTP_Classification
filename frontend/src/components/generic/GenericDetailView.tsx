@@ -14,6 +14,7 @@ import { SalesforcePath, type SalesforcePathStep } from '@/components/ui/salesfo
 import { translateSelectOptionLabel, translateObjectLabel } from '@/utils/translateMetadata'
 import api from '@/services/api'
 import { isNetworkError } from '@/utils/handle-server-error'
+import { playDeleteSound } from '@/utils/sound-effects'
 import { trackRecentlyViewed } from '@/utils/recently-viewed'
 import { useAuthStore, selectUser } from '@/stores/authStore'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -89,6 +90,7 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
         ? objectDefinition.apiEndpoint.slice(0, -1)
         : objectDefinition.apiEndpoint
       await api.delete(`${endpoint}/${record.id}`)
+      playDeleteSound()
       toast.success(t('common:recordDeleted', { label: translateObjectLabel(objectDefinition.name, objectDefinition.label, false) }))
       setShowDeleteDialog(false)
       handleBack()

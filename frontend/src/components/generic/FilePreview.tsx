@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ interface FilePreviewProps {
 }
 
 export function FilePreview({ fileId, filename, mimeType, onClose }: FilePreviewProps) {
+  const { t } = useTranslation('common')
   const [blobUrl, setBlobUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -54,7 +56,7 @@ export function FilePreview({ fileId, filename, mimeType, onClose }: FilePreview
         }
       } catch (err) {
         if (!revoked) {
-          setError(err instanceof Error ? err.message : 'Failed to load file')
+          setError(err instanceof Error ? err.message : t('failedToLoadFile', { defaultValue: 'Failed to load file' }))
         }
       } finally {
         if (!revoked) setLoading(false)
@@ -66,7 +68,7 @@ export function FilePreview({ fileId, filename, mimeType, onClose }: FilePreview
       revoked = true
       controller.abort()
     }
-  }, [fileId])
+  }, [fileId, mimeType, filename, t])
 
   useEffect(() => {
     return () => {

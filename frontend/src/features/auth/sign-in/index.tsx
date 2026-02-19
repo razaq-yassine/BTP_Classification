@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   Card,
   CardContent,
@@ -10,11 +11,12 @@ import AuthLayout from '../auth-layout'
 import { UserAuthForm } from './components/user-auth-form'
 
 export default function SignIn() {
+  const { t } = useTranslation('common')
   return (
     <AuthLayout>
       <Card className='gap-4'>
         <CardHeader>
-          <CardTitle className='text-lg tracking-tight'>Login</CardTitle>
+          <CardTitle className='text-lg tracking-tight'>{t('login', { defaultValue: 'Login' })}</CardTitle>
           <CardDescription>
             Enter your email and password below to <br />
             log into your account

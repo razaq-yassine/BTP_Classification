@@ -162,7 +162,7 @@ export function RecordHistorySection({
           const dateStr = entry.changedAt
             ? formatDateTimeShort(new Date(entry.changedAt), 'MMM d, HH:mm')
             : ''
-          const meta = [entry.changedBy, dateStr].filter(Boolean).join(' · ')
+          const metaParts = [entry.changedBy, dateStr].filter(Boolean)
           return (
             <div
               key={entry.id}
@@ -176,8 +176,12 @@ export function RecordHistorySection({
                   <span className="text-foreground break-words line-clamp-2">{newDisplay}</span>
                 </span>
                 <span className="flex items-center gap-1 shrink-0">
-                  {meta && (
-                    <span className="text-muted-foreground text-[11px]">{meta}</span>
+                  {metaParts.length > 0 && (
+                    <span className="text-muted-foreground text-[11px]">
+                      {entry.changedBy && <span>{entry.changedBy}</span>}
+                      {entry.changedBy && dateStr && ' · '}
+                      {dateStr && <span dir="ltr" className="tabular-nums">{dateStr}</span>}
+                    </span>
                   )}
                   <button
                     type="button"
@@ -233,8 +237,11 @@ export function RecordHistorySection({
                   <div className="text-muted-foreground text-xs pt-1 border-t">
                     {detailEntry.changedBy && <span>{detailEntry.changedBy}</span>}
                     {detailEntry.changedBy && detailEntry.changedAt && ' · '}
-                    {detailEntry.changedAt &&
-                      formatDateTimeShort(new Date(detailEntry.changedAt), 'MMM d, yyyy HH:mm')}
+                    {detailEntry.changedAt && (
+                      <span dir="ltr" className="tabular-nums">
+                        {formatDateTimeShort(new Date(detailEntry.changedAt), 'MMM d, yyyy HH:mm')}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>

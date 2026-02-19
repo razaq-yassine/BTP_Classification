@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -29,13 +30,14 @@ import {
 } from '@/components/ui/form'
 import api from '@/services/api'
 
-const templateSchema = z.object({
-  label: z.string().min(1, 'Label required'),
-  subject: z.string().min(1, 'Subject required'),
-  bodyHtml: z.string().min(1, 'Body required'),
-})
+const getTemplateSchema = (t: (key: string) => string) =>
+  z.object({
+    label: z.string().min(1, t('labelRequired')),
+    subject: z.string().min(1, t('subjectRequired')),
+    bodyHtml: z.string().min(1, t('bodyRequired')),
+  })
 
-type TemplateFormValues = z.infer<typeof templateSchema>
+type TemplateFormValues = z.infer<ReturnType<typeof getTemplateSchema>>
 
 interface EmailTemplate {
   key: string
@@ -69,6 +71,7 @@ interface TemplateEditorProps {
 }
 
 export function TemplateEditor({ templateKey }: TemplateEditorProps) {
+  const { t } = useTranslation('settings')
   const [template, setTemplate] = useState<EmailTemplate | null>(null)
   const [loading, setLoading] = useState(true)
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -76,7 +79,7 @@ export function TemplateEditor({ templateKey }: TemplateEditorProps) {
   const { theme } = useTheme()
 
   const form = useForm<TemplateFormValues>({
-    resolver: zodResolver(templateSchema),
+    resolver: zodResolver(getTemplateSchema(t)),
     defaultValues: { label: '', subject: '', bodyHtml: '' },
   })
 
@@ -112,11 +115,11 @@ export function TemplateEditor({ templateKey }: TemplateEditorProps) {
         variables: template?.variables ?? [],
       })
       .then(() => {
-        toast.success('Template saved')
+        toast.success(t('templateSaved'))
         setTemplate((prev) => (prev ? { ...prev, ...data } : null))
       })
       .catch((err) => {
-        toast.error(err.response?.data?.message ?? 'Failed to save')
+        toast.error(err.response?.data?.message ?? t('saveFailed'))
       })
   }
 
@@ -138,7 +141,7 @@ export function TemplateEditor({ templateKey }: TemplateEditorProps) {
         setPreview(res.data ?? null)
         setPreviewOpen(true)
       })
-      .catch(() => toast.error('Preview failed'))
+      .catch(() => toast.error(t('previewFailed')))
   }
 
   const isDark =
@@ -152,8 +155,8 @@ export function TemplateEditor({ templateKey }: TemplateEditorProps) {
   )
 
   if (loading)
-    return <div className='text-muted-foreground text-sm'>Loading...</div>
-  if (!template) return <div className='text-muted-foreground text-sm'>Template not found.</div>
+    return <div className='text-muted-foreground text-sm'>{t('loading')}</div>
+  if (!template) return <div className='text-muted-foreground text-sm'>{t('noTemplatesFound')}</div>
 
   return (
     <div className='space-y-6'>
@@ -172,7 +175,7 @@ export function TemplateEditor({ templateKey }: TemplateEditorProps) {
             name='label'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Label</FormLabel>
+                <FormLabel>{t('label')}</FormLabel>
                 <FormControl>
                   <Input {...field} />
                 </FormControl>
@@ -185,9 +188,9 @@ export function TemplateEditor({ templateKey }: TemplateEditorProps) {
             name='subject'
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Subject</FormLabel>
+                <FormLabel>{t('subject')}</FormLabel>
                 <FormControl>
-                  <Input placeholder='Use {{variable}} for placeholders' {...field} />
+                  <Input placeholder={t('useVariablePlaceholders')} {...field} />
                 </FormControl>
                 <FormDescription>
                   Variables: {template.variables?.join(', ') || 'none'}
@@ -201,7 +204,7 @@ export function TemplateEditor({ templateKey }: TemplateEditorProps) {
             name='bodyHtml'
             render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Body (HTML)</FormLabel>
+                  <FormLabel>{t('bodyHtml')}</FormLabel>
                   <div className='space-y-2'>
                     <div className='flex justify-end'>
                       <Button
@@ -216,7 +219,7 @@ export function TemplateEditor({ templateKey }: TemplateEditorProps) {
             preserve_newlines: false,
           })
                           field.onChange(formatted)
-                          toast.success('HTML formatted')
+                          toast.success(t('htmlFormatted'))
                         }}
                       >
                         Format
@@ -244,7 +247,7 @@ export function TemplateEditor({ templateKey }: TemplateEditorProps) {
                 </FormItem>
             )}
           />
-          <Button type='submit'>Save</Button>
+          <Button type='submit'>{t('save', { ns: 'common' })}</Button>
         </form>
       </Form>
 

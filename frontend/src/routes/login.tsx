@@ -1,5 +1,6 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore, selectLogin, selectIsLoading, selectIsAuthenticated } from '@/stores/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -39,6 +40,7 @@ export const Route = createFileRoute('/login')({
 })
 
 function LoginPage() {
+  const { t } = useTranslation('settings')
   const navigate = useNavigate()
   const login = useAuthStore(selectLogin)
   const isLoading = useAuthStore(selectIsLoading)
@@ -68,7 +70,7 @@ function LoginPage() {
       <div className="min-h-screen flex items-center justify-center bg-muted">
         <div className="flex items-center space-x-2">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span>Loading...</span>
+          <span>{t('loading')}</span>
         </div>
       </div>
     )
@@ -91,7 +93,7 @@ function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Sign in</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">{t('signIn')}</CardTitle>
           <CardDescription className="text-center">
             Enter your credentials to access the dashboard
           </CardDescription>
@@ -105,25 +107,25 @@ function LoginPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
+              <Label htmlFor="username">{t('username', { ns: 'common' })}</Label>
               <Input
                 id="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
-                placeholder="Enter your username"
+                placeholder={t('enterUsername')}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('password', { ns: 'common' })}</Label>
               <PasswordInput
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="Enter your password"
+                placeholder={t('enterPassword')}
               />
             </div>
 
@@ -135,10 +137,10 @@ function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  {t('signingIn')}
                 </>
               ) : (
-                'Sign in'
+                t('signIn')
               )}
             </Button>
           </form>

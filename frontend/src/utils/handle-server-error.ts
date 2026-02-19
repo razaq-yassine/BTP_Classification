@@ -1,4 +1,5 @@
 import { AxiosError } from 'axios'
+import i18n from '@/i18n'
 import { toast } from 'sonner'
 
 export function isNetworkError(err: unknown): boolean {
@@ -22,7 +23,7 @@ export function handleServerError(error: unknown) {
   // Don't toast for network errors (backend restart, etc.) - avoids flooding the user
   if (isNetworkError(error)) return
 
-  let errMsg = 'Something went wrong!'
+  let errMsg = i18n.t('errors:somethingWentWrong')
 
   if (
     error &&
@@ -30,7 +31,7 @@ export function handleServerError(error: unknown) {
     'status' in error &&
     Number(error.status) === 204
   ) {
-    errMsg = 'Content not found.'
+    errMsg = i18n.t('errors:contentNotFound')
   }
 
   if (error instanceof AxiosError && error.response?.data) {

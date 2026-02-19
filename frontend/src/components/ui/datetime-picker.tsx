@@ -87,7 +87,7 @@ export function DateTimePicker({
             disabled={disabled}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {formatDisplayValue()}
+            <span dir="ltr" className="tabular-nums">{formatDisplayValue()}</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">

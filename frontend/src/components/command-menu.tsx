@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from '@tanstack/react-router'
 import {
   IconArrowRightDashed,
@@ -24,6 +25,7 @@ import { useAuthStore, selectUser } from '@/stores/authStore'
 import { searchObjects, getRecentRecords } from '@/services/search-api'
 import { getGlobalRecentlyViewed } from '@/utils/recently-viewed'
 import { pluralize } from '@/metadata/utils'
+import { translateObjectLabel } from '@/utils/translateMetadata'
 import { useQuery } from '@tanstack/react-query'
 import type { ObjectDefinition } from '@/types/object-definition'
 
@@ -49,6 +51,7 @@ function useDebouncedValue<T>(value: T, delay: number): T {
 }
 
 export function CommandMenu() {
+  const { t } = useTranslation(['common', 'objects'])
   const navigate = useNavigate()
   const { setTheme } = useTheme()
   const { open, setOpen } = useSearch()
@@ -154,7 +157,7 @@ export function CommandMenu() {
       shouldFilter={!showSearchOrRecent}
     >
       <CommandInput
-        placeholder="Type a command or search..."
+        placeholder={t('globalSearchPlaceholder')}
         value={searchValue}
         onValueChange={setSearchValue}
       />
@@ -163,16 +166,19 @@ export function CommandMenu() {
           <>
             {isLoading ? (
               <div className="py-6 text-center text-sm text-muted-foreground">
-                Searching...
+                {t('searching')}
               </div>
             ) : Object.keys(results).length === 0 ? (
-              <CommandEmpty>No results found.</CommandEmpty>
+              <CommandEmpty>{t('noResultsFound')}</CommandEmpty>
             ) : (
               Object.entries(results).map(([entityPath, records]) => {
                 const def = entityPathToDef.get(entityPath)
-                const label =
+                const fallbackLabel =
                   def?.labelPlural ??
                   entityPath.charAt(0).toUpperCase() + entityPath.slice(1)
+                const label = def
+                  ? translateObjectLabel(def.name, fallbackLabel, true)
+                  : fallbackLabel
                 const Icon = def?.icon
 
                 return (
@@ -198,7 +204,7 @@ export function CommandMenu() {
           </>
         ) : (
           <>
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>{t('noResultsFound')}</CommandEmpty>
             {sidebarData.navGroups.map((group) => (
               <CommandGroup key={group.title} heading={group.title}>
                 {group.items.map((navItem, i) => {
@@ -236,17 +242,17 @@ export function CommandMenu() {
               </CommandGroup>
             ))}
             <CommandSeparator />
-            <CommandGroup heading="Theme">
+            <CommandGroup heading={t('theme')}>
               <CommandItem onSelect={() => runCommand(() => setTheme('light'))}>
-                <IconSun /> <span>Light</span>
+                <IconSun /> <span>{t('themeLight')}</span>
               </CommandItem>
               <CommandItem onSelect={() => runCommand(() => setTheme('dark'))}>
                 <IconMoon className="scale-90" />
-                <span>Dark</span>
+                <span>{t('themeDark')}</span>
               </CommandItem>
               <CommandItem onSelect={() => runCommand(() => setTheme('system'))}>
                 <IconDeviceLaptop />
-                <span>System</span>
+                <span>{t('themeSystem')}</span>
               </CommandItem>
             </CommandGroup>
           </>

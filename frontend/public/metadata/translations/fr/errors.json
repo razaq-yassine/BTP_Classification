@@ -10,5 +10,10 @@
   "connectionLost": "Connexion perdue. Veuillez patienter et réessayer.",
   "failedToFetch": "Échec de la récupération de {{object}}",
   "failedToDelete": "Échec de la suppression",
-  "failedToFetchRelated": "Échec de la récupération des {{object}} associés"
+  "failedToFetchRelated": "Échec de la récupération des {{object}} associés",
+  "unexpectedError": "Une erreur inattendue s'est produite",
+  "maintenanceError": "Erreur de maintenance",
+  "internalServerErrorPage": "Erreur interne du serveur",
+  "somethingWentWrong": "Une erreur s'est produite !",
+  "contentNotFound": "Contenu introuvable."
 }

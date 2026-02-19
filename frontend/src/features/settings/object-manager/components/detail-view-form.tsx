@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { getMetadataFile, saveMetadataFile } from '@/services/metadata-api'
@@ -41,6 +42,7 @@ interface DetailViewFormProps {
 }
 
 export function DetailViewForm({ objectName }: DetailViewFormProps) {
+  const { t } = useTranslation(['settings', 'common'])
   const queryClient = useQueryClient()
   const { data, isLoading } = useQuery({
     queryKey: ['metadata', objectName, 'detailView.json'],
@@ -58,14 +60,14 @@ export function DetailViewForm({ objectName }: DetailViewFormProps) {
       const payload = { ...data, ...values }
       await saveMetadataFile(objectName, 'detailView.json', payload)
       invalidateObjectDefinitions(queryClient)
-      toast.success('Detail view saved')
+      toast.success(t('detailViewSaved'))
     } catch (err) {
-      toast.error('Failed to save')
+      toast.error(t('saveFailed'))
     }
   }
 
   if (isLoading || !data) {
-    return <div className='text-muted-foreground'>Loading...</div>
+    return <div className='text-muted-foreground'>{t('loading')}</div>
   }
 
   return (
@@ -76,11 +78,11 @@ export function DetailViewForm({ objectName }: DetailViewFormProps) {
           name='layout'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Layout</FormLabel>
+              <FormLabel>{t('layout')}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder='Select layout' />
+                    <SelectValue placeholder={t('selectLayout')} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -97,7 +99,7 @@ export function DetailViewForm({ objectName }: DetailViewFormProps) {
           name='sections'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Sections (JSON)</FormLabel>
+              <FormLabel>{t('sectionsJson')}</FormLabel>
               <FormControl>
                 <textarea
                   className='min-h-[200px] w-full rounded-md border bg-background px-3 py-2 font-mono text-sm'
@@ -115,7 +117,7 @@ export function DetailViewForm({ objectName }: DetailViewFormProps) {
             </FormItem>
           )}
         />
-        <Button type='submit'>Save</Button>
+        <Button type='submit'>{t('save', { ns: 'common' })}</Button>
       </form>
     </Form>
   )
