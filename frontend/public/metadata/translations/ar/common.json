@@ -243,5 +243,17 @@
   "learnMore": "اعرف المزيد",
   "newOpportunity": "فرصة جديدة",
   "failedToDeleteObject": "فشل حذف الكائن",
-  "deleteObject": "حذف الكائن"
+  "deleteObject": "حذف الكائن",
+  "verifyEmailNoToken": "لم يتم توفير رمز التحقق.",
+  "verifyEmailSuccess": "تم التحقق من بريدك الإلكتروني بنجاح.",
+  "verifyEmailError": "رابط التحقق غير صالح أو منتهي الصلاحية.",
+  "verifyEmailAlreadyUsedHint": "إذا قمت بالفعل بالتحقق من بريدك الإلكتروني، يمكنك الذهاب إلى الإعدادات للتأكيد.",
+  "verifyEmailAlreadyVerified": "تم التحقق من بريدك الإلكتروني بالفعل. يمكنك الذهاب إلى الإعدادات للتأكيد.",
+  "verifying": "جاري التحقق من بريدك الإلكتروني...",
+  "goToLogin": "الذهاب لتسجيل الدخول",
+  "goToSettings": "الذهاب للإعدادات",
+  "confirmEmailChangeNoToken": "لم يتم توفير رمز التأكيد.",
+  "confirmEmailChangeSuccess": "تم تغيير بريدك الإلكتروني بنجاح. يمكنك الآن تسجيل الدخول باستخدام بريدك الجديد.",
+  "confirmEmailChangeError": "رابط التأكيد غير صالح أو منتهي الصلاحية.",
+  "confirming": "جاري تأكيد بريدك الإلكتروني الجديد..."
 }

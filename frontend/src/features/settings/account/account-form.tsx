@@ -1,19 +1,8 @@
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { CaretSortIcon, CheckIcon } from '@radix-ui/react-icons'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { cn } from '@/lib/utils'
-import { showSubmittedData } from '@/utils/show-submitted-data'
 import { Button } from '@/components/ui/button'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command'
 import {
   Form,
   FormControl,
@@ -23,153 +12,98 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { DatePicker } from '@/components/date-picker'
+import { PasswordInput } from '@/components/password-input'
+import api from '@/services/api'
+import { toast } from 'sonner'
 
-const languages = [
-  { label: 'English', value: 'en' },
-  { label: 'French', value: 'fr' },
-  { label: 'German', value: 'de' },
-  { label: 'Spanish', value: 'es' },
-  { label: 'Portuguese', value: 'pt' },
-  { label: 'Russian', value: 'ru' },
-  { label: 'Japanese', value: 'ja' },
-  { label: 'Korean', value: 'ko' },
-  { label: 'Chinese', value: 'zh' },
-] as const
+const getChangePasswordSchema = (t: (key: string) => string) =>
+  z
+    .object({
+      currentPassword: z.string().min(1, t('currentPasswordRequired')),
+      newPassword: z
+        .string()
+        .min(8, t('passwordMinLength'))
+        .refine((p) => /[a-z]/.test(p), t('passwordLowercase'))
+        .refine((p) => /\d/.test(p), t('passwordNumber')),
+      confirmPassword: z.string().min(1, t('confirmPasswordRequired')),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+      message: t('passwordsDoNotMatch'),
+      path: ['confirmPassword'],
+    })
 
-const getAccountFormSchema = (t: (key: string) => string) =>
-  z.object({
-    name: z
-      .string()
-      .min(1, t('pleaseEnterName'))
-      .min(2, t('nameMinLength'))
-      .max(30, t('nameMaxLength')),
-    dob: z.date(t('pleaseSelectDateOfBirth')),
-    language: z.string(t('pleaseSelectLanguage')),
-  })
-
-type AccountFormValues = z.infer<ReturnType<typeof getAccountFormSchema>>
-
-// This can come from your database or API.
-const defaultValues: Partial<AccountFormValues> = {
-  name: '',
-}
+type ChangePasswordFormValues = z.infer<ReturnType<typeof getChangePasswordSchema>>
 
 export function AccountForm() {
   const { t } = useTranslation('settings')
-  const accountFormSchema = getAccountFormSchema(t)
-  const form = useForm<AccountFormValues>({
-    resolver: zodResolver(accountFormSchema),
-    defaultValues,
+  const form = useForm<ChangePasswordFormValues>({
+    resolver: zodResolver(getChangePasswordSchema(t)),
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+    mode: 'onChange',
   })
 
-  function onSubmit(data: AccountFormValues) {
-    showSubmittedData(data)
+  const handleSubmit = async (data: ChangePasswordFormValues) => {
+    try {
+      await api.post('/api/auth/change-password', {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      })
+      form.reset({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      toast.success(t('passwordChanged', { defaultValue: 'Password updated successfully' }))
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? t('failedToUpdate', { defaultValue: 'Failed to update' })
+      toast.error(msg)
+    }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-        <FormField
-          control={form.control}
-          name='name'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('yourName')}</FormLabel>
-              <FormControl>
-                <Input placeholder={t('yourName')} {...field} />
-              </FormControl>
-              <FormDescription>
-                {t('nameDisplayDescription')}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='dob'
-          render={({ field }) => (
-            <FormItem className='flex flex-col'>
-              <FormLabel>{t('dateOfBirth')}</FormLabel>
-              <DatePicker selected={field.value} onSelect={field.onChange} />
-              <FormDescription>
-                {t('dateOfBirthDescription')}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name='language'
-          render={({ field }) => (
-            <FormItem className='flex flex-col'>
-              <FormLabel>{t('language')}</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant='outline'
-                      role='combobox'
-                      className={cn(
-                        'w-[200px] justify-between',
-                        !field.value && 'text-muted-foreground'
-                      )}
-                    >
-                      {field.value
-                        ? languages.find(
-                            (language) => language.value === field.value
-                          )?.label
-                        : t('selectLanguage')}
-                      <CaretSortIcon className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className='w-[200px] p-0'>
-                  <Command>
-                    <CommandInput placeholder={t('searchLanguage')} />
-                    <CommandEmpty>{t('noLanguageFound')}</CommandEmpty>
-                    <CommandGroup>
-                      <CommandList>
-                        {languages.map((language) => (
-                          <CommandItem
-                            value={language.label}
-                            key={language.value}
-                            onSelect={() => {
-                              form.setValue('language', language.value)
-                            }}
-                          >
-                            <CheckIcon
-                              className={cn(
-                                'mr-2 h-4 w-4',
-                                language.value === field.value
-                                  ? 'opacity-100'
-                                  : 'opacity-0'
-                              )}
-                            />
-                            {language.label}
-                          </CommandItem>
-                        ))}
-                      </CommandList>
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <FormDescription>
-                {t('languageDashboardDescription')}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type='submit'>{t('updateAccount')}</Button>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-8'>
+        <div className='space-y-4'>
+          <h3 className='text-lg font-medium'>{t('changePassword', { defaultValue: 'Change password' })}</h3>
+          <FormField
+            control={form.control}
+            name='currentPassword'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('currentPassword', { defaultValue: 'Current password' })}</FormLabel>
+                <FormControl>
+                  <PasswordInput placeholder='••••••••' {...field} />
+                </FormControl>
+                <FormDescription>{t('currentPasswordDescription', { defaultValue: 'Enter your current password to verify your identity.' })}</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='newPassword'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('newPassword', { defaultValue: 'New password' })}</FormLabel>
+                <FormControl>
+                  <PasswordInput placeholder='••••••••' {...field} />
+                </FormControl>
+                <FormDescription>{t('passwordRequirements', { defaultValue: 'At least 8 characters, one lowercase letter, and one number.' })}</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='confirmPassword'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('confirmPassword', { defaultValue: 'Confirm new password' })}</FormLabel>
+                <FormControl>
+                  <PasswordInput placeholder='••••••••' {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <Button type='submit'>{t('updatePassword', { defaultValue: 'Update password' })}</Button>
       </form>
     </Form>
   )

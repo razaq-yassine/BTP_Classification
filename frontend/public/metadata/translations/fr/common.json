@@ -243,5 +243,17 @@
   "learnMore": "En savoir plus",
   "newOpportunity": "Nouvelle opportunité",
   "failedToDeleteObject": "Échec de la suppression de l'objet",
-  "deleteObject": "Supprimer l'objet"
+  "deleteObject": "Supprimer l'objet",
+  "verifyEmailNoToken": "Aucun jeton de vérification fourni.",
+  "verifyEmailSuccess": "Votre e-mail a été vérifié avec succès.",
+  "verifyEmailError": "Lien de vérification invalide ou expiré.",
+  "verifyEmailAlreadyUsedHint": "Si vous avez déjà vérifié votre e-mail, vous pouvez aller dans Paramètres pour confirmer.",
+  "verifyEmailAlreadyVerified": "Votre e-mail est déjà vérifié. Vous pouvez aller dans Paramètres pour confirmer.",
+  "verifying": "Vérification de votre e-mail...",
+  "goToLogin": "Aller à la connexion",
+  "goToSettings": "Aller aux paramètres",
+  "confirmEmailChangeNoToken": "Aucun jeton de confirmation fourni.",
+  "confirmEmailChangeSuccess": "Votre e-mail a été modifié avec succès. Vous pouvez maintenant vous connecter avec votre nouvelle adresse.",
+  "confirmEmailChangeError": "Lien de confirmation invalide ou expiré.",
+  "confirming": "Confirmation de votre nouvelle adresse e-mail..."
 }

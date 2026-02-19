@@ -514,7 +514,14 @@ function main() {
   lastName: varchar('last_name', { length: 255 }),
   profile: varchar('profile', { length: 255 }).default('standard-user'),
   isActive: boolean('is_active').default(true),
-  dateJoined: datetime('date_joined'),${userOrgCol}${userTenantCol}${userExtCols}
+  dateJoined: datetime('date_joined'),${userOrgCol}${userTenantCol}
+  emailVerified: boolean('email_verified').default(false),
+  emailVerificationToken: varchar('email_verification_token', { length: 255 }),
+  emailVerificationTokenExpires: datetime('email_verification_token_expires'),
+  twoFactorEnabled: boolean('two_factor_enabled').default(false),
+  pendingEmail: varchar('pending_email', { length: 255 }),
+  pendingEmailToken: varchar('pending_email_token', { length: 255 }),
+  pendingEmailTokenExpires: datetime('pending_email_token_expires'),${userExtCols}
 })`
       : `export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -525,7 +532,14 @@ function main() {
   lastName: text('last_name'),
   profile: text('profile').default('standard-user'),
   isActive: integer('is_active', { mode: 'boolean' }).default(true),
-  dateJoined: integer('date_joined', { mode: 'timestamp' }),${userOrgCol}${userTenantCol}${userExtCols}
+  dateJoined: integer('date_joined', { mode: 'timestamp' }),${userOrgCol}${userTenantCol}
+  emailVerified: integer('email_verified', { mode: 'boolean' }).default(false),
+  emailVerificationToken: text('email_verification_token'),
+  emailVerificationTokenExpires: integer('email_verification_token_expires', { mode: 'timestamp' }),
+  twoFactorEnabled: integer('two_factor_enabled', { mode: 'boolean' }).default(false),
+  pendingEmail: text('pending_email'),
+  pendingEmailToken: text('pending_email_token'),
+  pendingEmailTokenExpires: integer('pending_email_token_expires', { mode: 'timestamp' }),${userExtCols}
 })`;
 
   const tables: string[] = [usersTable];

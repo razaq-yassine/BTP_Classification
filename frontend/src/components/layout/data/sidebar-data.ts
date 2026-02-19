@@ -17,7 +17,6 @@ import {
   IconPalette,
   IconServerOff,
   IconSettings,
-  IconTool,
   IconUserCog,
   IconUserOff,
   IconUsers
@@ -37,9 +36,7 @@ export const settingsNavGroups: NavGroup[] = [
     titleKey: "navigation.personal",
     items: [
       { title: "Profile", titleKey: "navigation.profile", url: "/settings", icon: IconUserCog },
-      { title: "Account", titleKey: "navigation.account", url: "/settings/account", icon: IconTool },
-      { title: "Appearance", titleKey: "navigation.appearance", url: "/settings/appearance", icon: IconPalette },
-      { title: "Display", titleKey: "navigation.display", url: "/settings/display", icon: IconLayoutDashboard }
+      { title: "Appearance", titleKey: "navigation.appearance", url: "/settings/appearance", icon: IconPalette }
     ]
   },
   {

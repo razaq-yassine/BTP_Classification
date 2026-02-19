@@ -27,6 +27,9 @@ export interface AuthUser {
   organizationId?: number | null
   tenantId?: number | null
   preferredLanguage?: string | null
+  emailVerified?: boolean
+  twoFactorEnabled?: boolean
+  pendingEmail?: string | null
 }
 
 /**
@@ -90,7 +93,9 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
         profile: userData.profile || 'standard-user',
         organizationId: userData.organizationId ?? null,
         tenantId: userData.tenantId ?? null,
-        preferredLanguage: userData.preferredLanguage ?? null
+        preferredLanguage: userData.preferredLanguage ?? null,
+        emailVerified: userData.emailVerified ?? false,
+        twoFactorEnabled: userData.twoFactorEnabled ?? false,
       }
 
       // Update state
@@ -172,7 +177,10 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
         profile: userData.profile || 'standard-user',
         organizationId: userData.organizationId ?? null,
         tenantId: userData.tenantId ?? null,
-        preferredLanguage: userData.preferredLanguage ?? null
+        preferredLanguage: userData.preferredLanguage ?? null,
+        emailVerified: userData.emailVerified ?? false,
+        twoFactorEnabled: userData.twoFactorEnabled ?? false,
+        pendingEmail: userData.pendingEmail ?? null,
       }
 
       // Update state

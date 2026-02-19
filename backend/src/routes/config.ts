@@ -15,6 +15,7 @@ import { adminOnlyMiddleware } from "../middleware/admin.js";
 import { db } from "../db/index.js";
 import { organizations, tenants } from "../db/schema.js";
 import { tenantConfig } from "./entity-registry.generated.js";
+import { loadEmailConfig } from "../services/email.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const backendRoot = path.join(__dirname, "..", "..");
@@ -95,6 +96,16 @@ configRoutes.get("/tenant-context", async (c) => {
   }
 
   return c.json(null);
+});
+
+configRoutes.get("/email-ready", (c) => {
+  const config = loadEmailConfig();
+  const emailConfigured =
+    !!config?.enabled &&
+    !!config?.smtpHost &&
+    !!config?.smtpUser &&
+    !!config?.smtpPassword;
+  return c.json({ emailConfigured });
 });
 
 configRoutes.get("/tenant-config", (c) => {

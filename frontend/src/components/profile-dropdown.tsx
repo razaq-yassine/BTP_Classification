@@ -2,7 +2,6 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  BadgeCheck,
   Bell,
   CreditCard,
   LogOut,
@@ -80,16 +79,10 @@ export function ProfileDropdown() {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link to='/profile' target='_blank' rel='noopener noreferrer'>
+            <Link to='/settings' target='_blank' rel='noopener noreferrer'>
               <User className='mr-2 h-4 w-4' />
               {t('profile')}
               <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to='/settings/account' target='_blank' rel='noopener noreferrer'>
-              <BadgeCheck className='mr-2 h-4 w-4' />
-              {t('account')}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>

@@ -12,7 +12,14 @@ export const users = mysqlTable('users', {
   dateJoined: datetime('date_joined'),
   organizationId: int('organization_id').references(() => organizations.id),
   tenantId: int('tenant_id').references(() => tenants.id),
-    preferredLanguage: varchar('preferred_language', { length: 255 }),
+  preferredLanguage: varchar('preferred_language', { length: 255 }),
+  emailVerified: boolean('email_verified').default(false),
+  emailVerificationToken: varchar('email_verification_token', { length: 255 }),
+  emailVerificationTokenExpires: datetime('email_verification_token_expires'),
+  twoFactorEnabled: boolean('two_factor_enabled').default(false),
+  pendingEmail: varchar('pending_email', { length: 255 }),
+  pendingEmailToken: varchar('pending_email_token', { length: 255 }),
+  pendingEmailTokenExpires: datetime('pending_email_token_expires'),
 })
 
 export const organizations = mysqlTable('organizations', {

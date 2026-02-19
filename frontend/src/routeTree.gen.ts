@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ConfirmEmailChangeRouteImport } from './routes/confirm-email-change'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -43,7 +45,6 @@ import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes
 import { Route as AuthenticatedSettingsNotificationSettingsRouteImport } from './routes/_authenticated/settings/notification-settings'
 import { Route as AuthenticatedSettingsEmailTemplatesRouteImport } from './routes/_authenticated/settings/email-templates'
 import { Route as AuthenticatedSettingsEmailRouteImport } from './routes/_authenticated/settings/email'
-import { Route as AuthenticatedSettingsDisplayRouteImport } from './routes/_authenticated/settings/display'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
 import { Route as AuthenticatedDevComponentsSalesforcePathRouteImport } from './routes/_authenticated/dev-components/salesforce-path'
@@ -65,9 +66,19 @@ import { Route as AuthenticatedSettingsProfilesProfileNameGlobalActionsRouteImpo
 import { Route as AuthenticatedSettingsProfilesProfileNameObjectsIndexRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects/index'
 import { Route as AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects/$objectName'
 
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfirmEmailChangeRoute = ConfirmEmailChangeRouteImport.update({
+  id: '/confirm-email-change',
+  path: '/confirm-email-change',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -248,12 +259,6 @@ const AuthenticatedSettingsEmailRoute =
     path: '/email',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
-const AuthenticatedSettingsDisplayRoute =
-  AuthenticatedSettingsDisplayRouteImport.update({
-    id: '/display',
-    path: '/display',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
 const AuthenticatedSettingsAppearanceRoute =
   AuthenticatedSettingsAppearanceRouteImport.update({
     id: '/appearance',
@@ -377,7 +382,9 @@ const AuthenticatedSettingsProfilesProfileNameObjectsObjectNameRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/login': typeof LoginRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
@@ -398,7 +405,6 @@ export interface FileRoutesByFullPath {
   '/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
-  '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/email': typeof AuthenticatedSettingsEmailRoute
   '/settings/email-templates': typeof AuthenticatedSettingsEmailTemplatesRouteWithChildren
   '/settings/notification-settings': typeof AuthenticatedSettingsNotificationSettingsRoute
@@ -433,7 +439,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/login': typeof LoginRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
   '/sign-in': typeof authSignInRoute
@@ -453,7 +461,6 @@ export interface FileRoutesByTo {
   '/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
-  '/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/settings/email': typeof AuthenticatedSettingsEmailRoute
   '/settings/notification-settings': typeof AuthenticatedSettingsNotificationSettingsRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
@@ -483,7 +490,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/confirm-email-change': typeof ConfirmEmailChangeRoute
   '/login': typeof LoginRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/otp': typeof authOtpRoute
@@ -504,7 +513,6 @@ export interface FileRoutesById {
   '/_authenticated/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
-  '/_authenticated/settings/display': typeof AuthenticatedSettingsDisplayRoute
   '/_authenticated/settings/email': typeof AuthenticatedSettingsEmailRoute
   '/_authenticated/settings/email-templates': typeof AuthenticatedSettingsEmailTemplatesRouteWithChildren
   '/_authenticated/settings/notification-settings': typeof AuthenticatedSettingsNotificationSettingsRoute
@@ -541,7 +549,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/confirm-email-change'
     | '/login'
+    | '/verify-email'
     | '/settings'
     | '/forgot-password'
     | '/otp'
@@ -562,7 +572,6 @@ export interface FileRouteTypes {
     | '/dev-components/salesforce-path'
     | '/settings/account'
     | '/settings/appearance'
-    | '/settings/display'
     | '/settings/email'
     | '/settings/email-templates'
     | '/settings/notification-settings'
@@ -597,7 +606,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/confirm-email-change'
     | '/login'
+    | '/verify-email'
     | '/forgot-password'
     | '/otp'
     | '/sign-in'
@@ -617,7 +628,6 @@ export interface FileRouteTypes {
     | '/dev-components/salesforce-path'
     | '/settings/account'
     | '/settings/appearance'
-    | '/settings/display'
     | '/settings/email'
     | '/settings/notification-settings'
     | '/settings/notifications'
@@ -646,7 +656,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/confirm-email-change'
     | '/login'
+    | '/verify-email'
     | '/_authenticated/settings'
     | '/(auth)/forgot-password'
     | '/(auth)/otp'
@@ -667,7 +679,6 @@ export interface FileRouteTypes {
     | '/_authenticated/dev-components/salesforce-path'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
-    | '/_authenticated/settings/display'
     | '/_authenticated/settings/email'
     | '/_authenticated/settings/email-templates'
     | '/_authenticated/settings/notification-settings'
@@ -704,7 +715,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  ConfirmEmailChangeRoute: typeof ConfirmEmailChangeRoute
   LoginRoute: typeof LoginRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   authForgotPasswordRoute: typeof authForgotPasswordRoute
   authOtpRoute: typeof authOtpRoute
   authSignInRoute: typeof authSignInRoute
@@ -719,11 +732,25 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confirm-email-change': {
+      id: '/confirm-email-change'
+      path: '/confirm-email-change'
+      fullPath: '/confirm-email-change'
+      preLoaderRoute: typeof ConfirmEmailChangeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -955,13 +982,6 @@ declare module '@tanstack/react-router' {
       path: '/email'
       fullPath: '/settings/email'
       preLoaderRoute: typeof AuthenticatedSettingsEmailRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/settings/display': {
-      id: '/_authenticated/settings/display'
-      path: '/display'
-      fullPath: '/settings/display'
-      preLoaderRoute: typeof AuthenticatedSettingsDisplayRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
     '/_authenticated/settings/appearance': {
@@ -1236,7 +1256,6 @@ const AuthenticatedSettingsTranslationsRouteWithChildren =
 interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsAccountRoute: typeof AuthenticatedSettingsAccountRoute
   AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
-  AuthenticatedSettingsDisplayRoute: typeof AuthenticatedSettingsDisplayRoute
   AuthenticatedSettingsEmailRoute: typeof AuthenticatedSettingsEmailRoute
   AuthenticatedSettingsEmailTemplatesRoute: typeof AuthenticatedSettingsEmailTemplatesRouteWithChildren
   AuthenticatedSettingsNotificationSettingsRoute: typeof AuthenticatedSettingsNotificationSettingsRoute
@@ -1254,7 +1273,6 @@ const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteCh
   {
     AuthenticatedSettingsAccountRoute: AuthenticatedSettingsAccountRoute,
     AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
-    AuthenticatedSettingsDisplayRoute: AuthenticatedSettingsDisplayRoute,
     AuthenticatedSettingsEmailRoute: AuthenticatedSettingsEmailRoute,
     AuthenticatedSettingsEmailTemplatesRoute:
       AuthenticatedSettingsEmailTemplatesRouteWithChildren,
@@ -1324,7 +1342,9 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  ConfirmEmailChangeRoute: ConfirmEmailChangeRoute,
   LoginRoute: LoginRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   authForgotPasswordRoute: authForgotPasswordRoute,
   authOtpRoute: authOtpRoute,
   authSignInRoute: authSignInRoute,

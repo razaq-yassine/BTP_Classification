@@ -243,5 +243,17 @@
   "overview": "Overview",
   "recentSales": "Recent Sales",
   "learnMore": "Learn more",
-  "newOpportunity": "New Opportunity"
+  "newOpportunity": "New Opportunity",
+  "verifyEmailNoToken": "No verification token provided.",
+  "verifyEmailSuccess": "Your email has been verified successfully.",
+  "verifyEmailError": "Invalid or expired verification link.",
+  "verifyEmailAlreadyUsedHint": "If you already verified your email, you can go to Settings to confirm.",
+  "verifyEmailAlreadyVerified": "Your email is already verified. You can go to Settings to confirm.",
+  "verifying": "Verifying your email...",
+  "goToLogin": "Go to login",
+  "goToSettings": "Go to settings",
+  "confirmEmailChangeNoToken": "No confirmation token provided.",
+  "confirmEmailChangeSuccess": "Your email has been changed successfully. You can now sign in with your new email.",
+  "confirmEmailChangeError": "Invalid or expired confirmation link.",
+  "confirming": "Confirming your new email..."
 }
