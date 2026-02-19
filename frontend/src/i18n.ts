@@ -10,11 +10,15 @@ void i18n
   .init({
     backend: {
       loadPath: '/metadata/translations/{{lng}}/{{ns}}.json',
+      requestOptions: {
+        cache: 'no-store', // Bypass cache so translation updates are picked up
+      },
     },
     defaultNS: 'common',
     fallbackLng: DEFAULT_LANGUAGE,
     lng: DEFAULT_LANGUAGE,
     ns: ['common', 'navigation', 'settings', 'errors', 'objects'],
+    keySeparator: '.', // Ensure nested keys like order.sections.orderInformation work
     interpolation: {
       escapeValue: false, // React already escapes
     },

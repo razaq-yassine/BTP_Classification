@@ -1,5 +1,8 @@
 import React from 'react'
 import { Link } from '@tanstack/react-router'
+import i18n from 'i18next'
+import { translateSelectOptionLabel } from './translateMetadata'
+import { toLocaleDateString, toLocaleDateTimeString } from '@/utils/formatDateLocale'
 import { RichTextView } from '@/components/rich-text-view'
 import { apiBaseUrl } from '@/services/api'
 import type { FieldDefinition, GenericRecord } from '@/types/object-definition'
@@ -13,19 +16,21 @@ const linkClass = 'text-blue-600 dark:text-primary hover:underline'
 /**
  * Formats a field value for read-only display in the detail view.
  * Used by GenericObjectDetailViewMainSection and the dev-components detail-view-formatter.
+ * @param objectName - Object name (e.g. 'order') for translating select/multiselect options
  */
-export function formatDetailValue(field: FieldDefinition, val: any, record?: GenericRecord): React.ReactNode {
+export function formatDetailValue(field: FieldDefinition, val: any, record?: GenericRecord, objectName?: string): React.ReactNode {
   // Formula fields: evaluate expression
   if (field.type === 'formula' && field.formulaExpression && record) {
     const result = evaluateFormula(field.formulaExpression, record)
     // Format result based on type
     if (typeof result === 'number') {
-      return result.toLocaleString()
+      const lang = i18n.language ?? 'en'
+      return result.toLocaleString(lang)
     }
     return String(result)
   }
   if (val === null || val === undefined || val === '') {
-    return '(Empty)'
+    return i18n.t('common:empty')
   }
   if (field.type === 'reference' || field.type === 'masterDetail') {
     const refId = typeof val === 'object' ? val?.id : val
@@ -51,13 +56,13 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
   }
   switch (field.type) {
     case 'boolean':
-      return val ? 'Yes' : 'No'
+      return val ? i18n.t('common:yes') : i18n.t('common:no')
     case 'date':
       if (val) {
         const date = new Date(val)
-        return date.toLocaleDateString()
+        return toLocaleDateString(date)
       }
-      return '(Empty)'
+      return i18n.t('common:empty')
     case 'email':
       return (
         <a
@@ -92,7 +97,7 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
       )
     case 'color': {
       const hex = typeof val === 'string' ? val : ''
-      if (!hex) return '(Empty)'
+      if (!hex) return i18n.t('common:empty')
       const displayHex = hex.startsWith('#') ? hex : `#${hex}`
       return (
         <span className="inline-flex items-center gap-2">
@@ -114,14 +119,15 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
       if (field.renderType === 'currency') {
         return formatCurrency(numVal)
       }
-      return numVal.toLocaleString()
+      const lang = i18n.language ?? 'en'
+      return numVal.toLocaleString(lang)
     }
     case 'datetime':
       if (val) {
         const dt = new Date(val)
-        return dt.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+        return toLocaleDateTimeString(dt)
       }
-      return '(Empty)'
+      return i18n.t('common:empty')
     case 'text': {
       const text = typeof val === 'object' ? JSON.stringify(val) : String(val)
       return <ExpandableText maxLines={3}>{text}</ExpandableText>
@@ -133,13 +139,13 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
       try {
         loc = typeof val === 'string' ? JSON.parse(val) : val
       } catch {
-        return '(Empty)'
+        return i18n.t('common:empty')
       }
-      if (loc?.latitude == null && loc?.longitude == null) return '(Empty)'
+      if (loc?.latitude == null && loc?.longitude == null) return i18n.t('common:empty')
       const lat = loc.latitude ?? ''
       const lng = loc.longitude ?? ''
       const label = [lat, lng].filter((x) => x !== '').join(', ')
-      if (!label) return '(Empty)'
+      if (!label) return i18n.t('common:empty')
       return (
         <a
           href={`https://www.google.com/maps?q=${lat},${lng}`}
@@ -157,14 +163,14 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
       try {
         addr = typeof val === 'string' ? JSON.parse(val) : val
       } catch {
-        return val ? String(val) : '(Empty)'
+        return val ? String(val) : i18n.t('common:empty')
       }
-      if (!addr || typeof addr !== 'object') return '(Empty)'
+      if (!addr || typeof addr !== 'object') return i18n.t('common:empty')
       const parts = [addr.street, addr.city, addr.state, addr.zip, addr.country].filter(Boolean)
       return parts.length ? (
         <div className="whitespace-pre-wrap break-words">{parts.join(', ')}</div>
       ) : (
-        '(Empty)'
+        i18n.t('common:empty')
       )
     }
     case 'richText': {
@@ -189,7 +195,7 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
           </a>
         )
       }
-      if (!path || path.trim() === '') return '(Empty)'
+      if (!path || path.trim() === '') return i18n.t('common:empty')
       const filename = path.split('/').pop() || path
       const normalizedPath = path.startsWith('/') ? path : `/${path}`
       if (normalizedPath.startsWith('/uploads/')) {
@@ -218,7 +224,8 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
     case 'select':
       if (field.options?.length) {
         const opt = field.options.find((o) => o.value === val)
-        return opt?.label ?? val
+        const fallback = opt?.label ?? val
+        return objectName ? translateSelectOptionLabel(objectName, field.key, val, fallback) : fallback
       }
       return val
     case 'multiselect': {
@@ -231,9 +238,13 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
           arr = val ? [val] : []
         }
       }
-      if (arr.length === 0) return '(Empty)'
+      if (arr.length === 0) return i18n.t('common:empty')
       if (field.options?.length) {
-        const labels = arr.map((v) => field.options!.find((o) => o.value === v)?.label ?? v)
+        const labels = arr.map((v) => {
+          const opt = field.options!.find((o) => o.value === v)
+          const fallback = opt?.label ?? v
+          return objectName ? translateSelectOptionLabel(objectName, field.key, v, fallback) : fallback
+        })
         return labels.join(', ')
       }
       return arr.join(', ')

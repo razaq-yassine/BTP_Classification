@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { ObjectDefinition, GenericRecord } from '@/types/object-definition'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -10,6 +11,7 @@ import { GenericObjectDetailViewSideSection } from './GenericObjectDetailViewSid
 import { GenericDetailViewSkeleton } from './GenericDetailViewSkeleton'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { SalesforcePath, type SalesforcePathStep } from '@/components/ui/salesforce-path'
+import { translateSelectOptionLabel, translateObjectLabel } from '@/utils/translateMetadata'
 import api from '@/services/api'
 import { isNetworkError } from '@/utils/handle-server-error'
 import { trackRecentlyViewed } from '@/utils/recently-viewed'
@@ -24,12 +26,14 @@ interface GenericDetailViewProps {
 }
 
 export function GenericDetailView({ objectDefinition, recordId, basePath }: GenericDetailViewProps) {
+  const { t } = useTranslation(['common', 'errors'])
   const navigate = useNavigate()
   const user = useAuthStore(selectUser)
   const { canDelete } = usePermissions()
   const [record, setRecord] = useState<GenericRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [isConnectionError, setIsConnectionError] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -50,9 +54,11 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
         trackRecentlyViewed(objectDefinition.name, fetchedRecord.id, user?.id)
       }
     } catch (err: any) {
-      const msg = isNetworkError(err)
-        ? 'Connection lost. Please wait and try again.'
-        : err.response?.data?.message || err.response?.data?.error || `Failed to fetch ${objectDefinition.label.toLowerCase()}`
+      const networkErr = isNetworkError(err)
+      setIsConnectionError(networkErr)
+      const msg = networkErr
+        ? t('errors:connectionLost')
+        : err.response?.data?.message || err.response?.data?.error || t('errors:failedToFetch', { object: translateObjectLabel(objectDefinition.name, objectDefinition.label, false).toLowerCase() })
       setError(msg)
     } finally {
       setLoading(false)
@@ -83,11 +89,11 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
         ? objectDefinition.apiEndpoint.slice(0, -1)
         : objectDefinition.apiEndpoint
       await api.delete(`${endpoint}/${record.id}`)
-      toast.success(`${objectDefinition.label} deleted successfully.`)
+      toast.success(t('common:recordDeleted', { label: translateObjectLabel(objectDefinition.name, objectDefinition.label, false) }))
       setShowDeleteDialog(false)
       handleBack()
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to delete'
+      const msg = err.response?.data?.message || err.response?.data?.error || t('errors:failedToDelete')
       toast.error(msg)
     } finally {
       setDeleting(false)
@@ -106,15 +112,15 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
         <div className="flex items-center justify-between">
           <Button variant="ghost" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            {t('common:back')}
           </Button>
         </div>
         <Alert variant="destructive">
           <AlertDescription className="flex items-center justify-between gap-4">
             {error}
-            {error.includes('Connection lost') && (
+            {isConnectionError && (
               <Button variant="outline" size="sm" onClick={() => fetchRecord()}>
-                Retry
+                {t('common:retry')}
               </Button>
             )}
           </AlertDescription>
@@ -129,11 +135,11 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
         <div className="flex items-center justify-between">
           <Button variant="ghost" onClick={handleBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            {t('common:back')}
           </Button>
         </div>
         <Alert>
-          <AlertDescription>{objectDefinition.label} not found.</AlertDescription>
+          <AlertDescription>{t('common:recordNotFound', { label: translateObjectLabel(objectDefinition.name, objectDefinition.label, false) })}</AlertDescription>
         </Alert>
       </main>
     )
@@ -147,7 +153,7 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
     path?.enabled && path?.steps
       ? path.steps.map((s) => ({
         value: s.value,
-        label: s.label,
+        label: translateSelectOptionLabel(objectDefinition.name, path.field, s.value, s.label),
         color: s.color,
         colorHover: s.colorHover,
       }))
@@ -203,9 +209,9 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        title={`Delete ${objectDefinition.label}?`}
-        desc={`Are you sure you want to delete this ${objectDefinition.label.toLowerCase()}? This cannot be undone.`}
-        confirmText="Delete"
+        title={t('common:deleteRecordTitle', { label: translateObjectLabel(objectDefinition.name, objectDefinition.label, false) })}
+        desc={t('common:deleteRecordDesc', { label: translateObjectLabel(objectDefinition.name, objectDefinition.label, false).toLowerCase() })}
+        confirmText={t('common:delete')}
         destructive
         isLoading={deleting}
         handleConfirm={handleDeleteConfirm}

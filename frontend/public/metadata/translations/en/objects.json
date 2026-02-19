@@ -2,6 +2,12 @@
   "customer": {
     "label": "Customer",
     "labelPlural": "Customers",
+    "sections": {
+      "basicInformation": "Basic Information",
+      "companyInformation": "Company Information",
+      "tenantScope": "Tenant Scope",
+      "systemInformation": "System Information"
+    },
     "fields": {
       "name": "Name",
       "firstName": "First Name",
@@ -33,11 +39,44 @@
       "customerName": "Customer",
       "organization": "Organization",
       "tenant": "Tenant"
+    },
+    "fieldOptions": {
+      "status": {
+        "PENDING": "Pending",
+        "CONFIRMED": "Confirmed",
+        "SHIPPED": "Shipped",
+        "DELIVERED": "Delivered",
+        "CANCELLED": "Cancelled"
+      }
+    },
+    "listViews": {
+      "all": "All Orders",
+      "recentlyViewed": "Recently Viewed",
+      "openOrders": "Open Orders"
+    },
+    "statistics": {
+      "totalOrders": "Total Orders",
+      "totalRevenue": "Total Revenue",
+      "averageOrder": "Average Order",
+      "largestOrder": "Largest Order",
+      "openCount": "Open Orders",
+      "openRevenue": "Open Revenue"
+    },
+    "sections": {
+      "orderInformation": "Order Information",
+      "customerDelivery": "Customer & Delivery",
+      "tenantScope": "Tenant Scope",
+      "systemInformation": "System Information"
     }
   },
   "orderitem": {
     "label": "Order Item",
     "labelPlural": "Order Items",
+    "sections": {
+      "lineItemDetails": "Line Item Details",
+      "tenantScope": "Tenant Scope",
+      "systemInformation": "System Information"
+    },
     "fields": {
       "name": "Item",
       "order": "Order",
@@ -52,6 +91,10 @@
   "product": {
     "label": "Product",
     "labelPlural": "Products",
+    "sections": {
+      "productInformation": "Product Information",
+      "systemInformation": "System Information"
+    },
     "fields": {
       "name": "Name",
       "sku": "SKU",
@@ -62,6 +105,10 @@
   "category": {
     "label": "Category",
     "labelPlural": "Categories",
+    "sections": {
+      "categoryInformation": "Category Information",
+      "systemInformation": "System Information"
+    },
     "fields": {
       "name": "Name",
       "description": "Description",
@@ -71,6 +118,10 @@
   "supplier": {
     "label": "Supplier",
     "labelPlural": "Suppliers",
+    "sections": {
+      "supplierInformation": "Supplier Information",
+      "systemInformation": "System Information"
+    },
     "fields": {
       "name": "Name",
       "slug": "Slug",
@@ -81,6 +132,10 @@
   "warehouse": {
     "label": "Warehouse",
     "labelPlural": "Warehouses",
+    "sections": {
+      "warehouseInformation": "Warehouse Information",
+      "systemInformation": "System Information"
+    },
     "fields": {
       "name": "Name",
       "slug": "Slug",
@@ -92,6 +147,10 @@
   "opportunity": {
     "label": "Opportunity",
     "labelPlural": "Opportunities",
+    "sections": {
+      "basicInformation": "Basic Information",
+      "systemInformation": "System Information"
+    },
     "fields": {
       "name": "Name"
     }
@@ -99,6 +158,10 @@
   "deploytest": {
     "label": "Deploy Test",
     "labelPlural": "Deploy Tests",
+    "sections": {
+      "allFieldTypes": "All Field Types",
+      "systemInformation": "System Information"
+    },
     "fields": {
       "name": "Name",
       "fString": "String",
@@ -125,17 +188,55 @@
   "organization": {
     "label": "Organization",
     "labelPlural": "Organizations",
+    "sections": {
+      "basicInformation": "Basic Information",
+      "regionalSettings": "Regional Settings",
+      "appearance": "Appearance",
+      "systemInformation": "System Information"
+    },
     "fields": {
       "name": "Name",
-      "slug": "Slug"
+      "slug": "Slug",
+      "logo": "Logo",
+      "address": "Address",
+      "defaultCurrency": "Default Currency",
+      "currencySymbol": "Currency Symbol",
+      "timezone": "Timezone",
+      "defaultPreferredLanguage": "Default Preferred Language",
+      "sidebarTheme": "Sidebar Theme",
+      "id": "ID",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "createdBy": "Created By",
+      "ownerId": "Owner",
+      "editedBy": "Edited By"
     }
   },
   "tenant": {
     "label": "Tenant",
     "labelPlural": "Tenants",
+    "sections": {
+      "basicInformation": "Basic Information",
+      "regionalSettings": "Regional Settings",
+      "appearance": "Appearance",
+      "systemInformation": "System Information"
+    },
     "fields": {
       "name": "Name",
-      "organization": "Organization"
+      "organization": "Organization",
+      "logo": "Logo",
+      "address": "Address",
+      "defaultCurrency": "Default Currency",
+      "currencySymbol": "Currency Symbol",
+      "timezone": "Timezone",
+      "defaultPreferredLanguage": "Default Preferred Language",
+      "sidebarTheme": "Sidebar Theme",
+      "id": "ID",
+      "createdAt": "Created At",
+      "updatedAt": "Updated At",
+      "createdBy": "Created By",
+      "ownerId": "Owner",
+      "editedBy": "Edited By"
     }
   }
 }

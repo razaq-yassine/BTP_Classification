@@ -22,13 +22,15 @@ When adding or changing user-facing content, **always add translations** for all
 3. **New locale**:
    - Create `metadata/translations/{locale}/` with all namespace files
    - Copy structure from `en/` and translate values
+   - Add to `LANGUAGE_OPTIONS` in `display-form.tsx` if it should appear in the selector
+   - For RTL (e.g. Arabic `ar`): `useEffectiveLanguage` already sets `dir` and `lang` on `document.documentElement`
 
 ## Checklist for New Features
 
 - [ ] New UI strings added to `common.json`, `navigation.json`, `settings.json`, or `errors.json` (per locale)
 - [ ] New object/field labels added to `objects.json` (per locale)
 - [ ] Code uses `t()` with translation key and `defaultValue` fallback
-- [ ] All supported locales updated (currently: `en`; add `es`, `fr`, etc. as needed)
+- [ ] All supported locales updated (currently: `en`, `fr`, `ar`; add `es`, etc. as needed)
 
 ## References
 

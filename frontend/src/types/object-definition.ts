@@ -158,6 +158,8 @@ export interface ObjectDefinition {
     layout?: 'single-column' | 'two-column' | 'tabs'
     sections?: {
       title: string
+      /** Translation key for section title (bypasses slugify when present) */
+      titleKey?: string
       fields: string[] | FieldDefinition[]
       columns?: number // Number of columns for this section
       defaultOpen?: boolean // Whether section is open by default in accordion

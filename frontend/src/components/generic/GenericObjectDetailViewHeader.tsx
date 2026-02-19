@@ -1,5 +1,7 @@
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { ObjectDefinition, GenericRecord } from '@/types/object-definition'
+import { translateObjectLabel } from '@/utils/translateMetadata'
 import { Button } from '@/components/ui/button'
 import { getObjectAvatarClasses, getObjectButtonClasses } from '@/utils/object-color'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -20,6 +22,7 @@ export function GenericObjectDetailViewHeader({
   record,
   onDelete
 }: GenericObjectDetailViewHeaderProps) {
+  const { t } = useTranslation('common')
   const { canUpdate, canDelete } = usePermissions()
   const Icon = objectDefinition.icon
   const headerConfig = objectDefinition.header
@@ -58,7 +61,7 @@ export function GenericObjectDetailViewHeader({
               </Avatar>
               <div className="min-w-0 flex-1">
                 <h1 className="text-base font-bold tracking-tight truncate sm:text-2xl">{displayName}</h1>
-                <p className="text-xs text-muted-foreground truncate sm:text-base">{objectDefinition.label}</p>
+                <p className="text-xs text-muted-foreground truncate sm:text-base">{translateObjectLabel(objectDefinition.name, objectDefinition.label, false)}</p>
               </div>
             </div>
             
@@ -81,7 +84,7 @@ export function GenericObjectDetailViewHeader({
                     className={cn("hidden lg:flex items-center gap-2", isPrimary && getObjectButtonClasses(objectDefinition.color))}
                   >
                     {ActionIcon && <ActionIcon className="h-4 w-4 shrink-0" />}
-                    {action.label}
+                    {t(action.key, { defaultValue: action.label })}
                   </Button>
                 )
               })}
@@ -119,7 +122,7 @@ export function GenericObjectDetailViewHeader({
                             className="flex items-center gap-2 lg:hidden"
                           >
                             {ActionIcon && <ActionIcon className="h-4 w-4" />}
-                            {action.label}
+                            {t(action.key, { defaultValue: action.label })}
                           </DropdownMenuItem>
                         )
                       })}
@@ -141,7 +144,7 @@ export function GenericObjectDetailViewHeader({
                             className="flex items-center gap-2"
                           >
                             {ActionIcon && <ActionIcon className="h-4 w-4" />}
-                            {action.label}
+                            {t(action.key, { defaultValue: action.label })}
                           </DropdownMenuItem>
                         )
                       })}
@@ -171,7 +174,7 @@ export function GenericObjectDetailViewHeader({
                         </div>
                       )}
                       <div className="min-w-0 flex-1 truncate">
-                        <p className="text-[11px] sm:text-xs font-medium text-muted-foreground truncate">{calc.label}</p>
+                        <p className="text-[11px] sm:text-xs font-medium text-muted-foreground truncate">{t(calc.key, { defaultValue: calc.label })}</p>
                         <p className="text-xs sm:text-sm font-semibold truncate">{value}</p>
                       </div>
                     </div>

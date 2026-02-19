@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
@@ -61,7 +62,7 @@ export function RecordLookup({
   searchPlaceholder,
   disabled = false,
   className,
-  emptyMessage = "No records found.",
+  emptyMessage,
   apiEndpoint,
   userId
 }: RecordLookupProps) {
@@ -71,6 +72,8 @@ export function RecordLookup({
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRecord, setSelectedRecord] = useState<LookupRecord | null>(null)
 
+  const { t } = useTranslation('common')
+  const displayEmptyMessage = emptyMessage ?? t('noRecordsFound')
   const { definition } = useObjectDefinition(objectName)
   const ObjectIcon = definition?.icon
   const iconClasses = getObjectIconClasses(definition?.color)
@@ -81,8 +84,8 @@ export function RecordLookup({
   }
 
   // Generate dynamic placeholders based on searchBy field
-  const dynamicPlaceholder = placeholder || `Search ${objectName.toLowerCase()}...`
-  const dynamicSearchPlaceholder = searchPlaceholder || `Search by ${searchBy.replace('_', ' ')}...`
+  const dynamicPlaceholder = placeholder || t('searchObject', { objectName: objectName.toLowerCase() })
+  const dynamicSearchPlaceholder = searchPlaceholder || t('searchBy', { field: searchBy.replace('_', ' ') })
 
   // Construct API endpoint - use the object's API endpoint or construct from object name
   const endpoint = apiEndpoint || `/api/${pluralize(objectName)}`
@@ -261,12 +264,12 @@ export function RecordLookup({
               onValueChange={setSearchQuery}
             />
             <CommandList>
-              {loading ? (
+              {              loading ? (
                 <div className="p-4 text-center text-sm text-muted-foreground">
-                  Searching...
+                  {t('searching')}
                 </div>
               ) : records.length === 0 ? (
-                <CommandEmpty>{emptyMessage}</CommandEmpty>
+                <CommandEmpty>{displayEmptyMessage}</CommandEmpty>
               ) : (
                 <CommandGroup>
                   {records.map((record) => (

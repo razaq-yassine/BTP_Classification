@@ -1,0 +1,242 @@
+{
+  "customer": {
+    "label": "عميل",
+    "labelPlural": "العملاء",
+    "sections": {
+      "basicInformation": "المعلومات الأساسية",
+      "companyInformation": "معلومات الشركة",
+      "tenantScope": "نطاق المستأجر",
+      "systemInformation": "معلومات النظام"
+    },
+    "fields": {
+      "name": "الاسم",
+      "firstName": "الاسم الأول",
+      "lastName": "اسم العائلة",
+      "fullName": "الاسم الكامل",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "company": "الشركة",
+      "address": "العنوان",
+      "notes": "ملاحظات",
+      "tags": "الوسوم",
+      "priority": "الأولوية",
+      "organization": "المنظمة",
+      "tenant": "المستأجر",
+      "bignotes": "ملاحظات كبيرة"
+    }
+  },
+  "order": {
+    "label": "طلب",
+    "labelPlural": "الطلبات",
+    "fields": {
+      "name": "رقم الطلب",
+      "status": "الحالة",
+      "totalAmount": "المبلغ الإجمالي",
+      "description": "الوصف",
+      "orderDate": "تاريخ الطلب",
+      "deliveryDate": "تاريخ التسليم",
+      "customer": "العميل",
+      "customerName": "العميل",
+      "organization": "المنظمة",
+      "tenant": "المستأجر"
+    },
+    "fieldOptions": {
+      "status": {
+        "PENDING": "قيد الانتظار",
+        "CONFIRMED": "مؤكد",
+        "SHIPPED": "تم الشحن",
+        "DELIVERED": "تم التسليم",
+        "CANCELLED": "ملغى"
+      }
+    },
+    "listViews": {
+      "all": "جميع الطلبات",
+      "recentlyViewed": "المشاهدة مؤخراً",
+      "openOrders": "الطلبات المفتوحة"
+    },
+    "statistics": {
+      "totalOrders": "إجمالي الطلبات",
+      "totalRevenue": "إجمالي الإيرادات",
+      "averageOrder": "متوسط الطلب",
+      "largestOrder": "أكبر طلب",
+      "openCount": "الطلبات المفتوحة",
+      "openRevenue": "إيرادات مفتوحة"
+    },
+    "sections": {
+      "orderInformation": "معلومات الطلب",
+      "customerDelivery": "العميل والتسليم",
+      "tenantScope": "نطاق المستأجر",
+      "systemInformation": "معلومات النظام"
+    }
+  },
+  "orderitem": {
+    "label": "عنصر الطلب",
+    "labelPlural": "عناصر الطلب",
+    "sections": {
+      "lineItemDetails": "تفاصيل البند",
+      "tenantScope": "نطاق المستأجر",
+      "systemInformation": "معلومات النظام"
+    },
+    "fields": {
+      "name": "العنصر",
+      "order": "الطلب",
+      "product": "المنتج",
+      "quantity": "الكمية",
+      "unitPrice": "السعر الوحدوي",
+      "lineTotal": "إجمالي السطر",
+      "organization": "المنظمة",
+      "tenant": "المستأجر"
+    }
+  },
+  "product": {
+    "label": "منتج",
+    "labelPlural": "المنتجات",
+    "sections": {
+      "productInformation": "معلومات المنتج",
+      "systemInformation": "معلومات النظام"
+    },
+    "fields": {
+      "name": "الاسم",
+      "sku": "رمز المنتج",
+      "description": "الوصف",
+      "price": "السعر"
+    }
+  },
+  "category": {
+    "label": "فئة",
+    "labelPlural": "الفئات",
+    "sections": {
+      "categoryInformation": "معلومات الفئة",
+      "systemInformation": "معلومات النظام"
+    },
+    "fields": {
+      "name": "الاسم",
+      "description": "الوصف",
+      "slug": "المعرّف"
+    }
+  },
+  "supplier": {
+    "label": "مورد",
+    "labelPlural": "الموردون",
+    "sections": {
+      "supplierInformation": "معلومات المورد",
+      "systemInformation": "معلومات النظام"
+    },
+    "fields": {
+      "name": "الاسم",
+      "slug": "المعرّف",
+      "website": "الموقع الإلكتروني",
+      "contactEmail": "البريد الإلكتروني للاتصال"
+    }
+  },
+  "warehouse": {
+    "label": "مستودع",
+    "labelPlural": "المستودعات",
+    "sections": {
+      "warehouseInformation": "معلومات المستودع",
+      "systemInformation": "معلومات النظام"
+    },
+    "fields": {
+      "name": "الاسم",
+      "slug": "المعرّف",
+      "description": "الوصف",
+      "capacity": "سعة التخزين (م²)",
+      "location": "الموقع"
+    }
+  },
+  "opportunity": {
+    "label": "فرصة",
+    "labelPlural": "الفرص",
+    "sections": {
+      "basicInformation": "المعلومات الأساسية",
+      "systemInformation": "معلومات النظام"
+    },
+    "fields": {
+      "name": "الاسم"
+    }
+  },
+  "deploytest": {
+    "label": "اختبار النشر",
+    "labelPlural": "اختبارات النشر",
+    "sections": {
+      "allFieldTypes": "جميع أنواع الحقول",
+      "systemInformation": "معلومات النظام"
+    },
+    "fields": {
+      "name": "الاسم",
+      "fString": "نص",
+      "fText": "نص طويل",
+      "fNumber": "رقم (كنص)",
+      "fBoolean": "منطقي",
+      "fDate": "تاريخ",
+      "fDatetime": "تاريخ ووقت",
+      "fEmail": "البريد الإلكتروني",
+      "fPhone": "الهاتف",
+      "fUrl": "رابط",
+      "fSelect": "اختيار",
+      "fMultiselect": "اختيار متعدد",
+      "fReference": "العميل",
+      "fFormula": "معادلة",
+      "fComputed": "محسوب",
+      "fFile": "ملف",
+      "fAddress": "عنوان",
+      "fRichText": "نص منسق",
+      "fGeolocation": "الموقع الجغرافي",
+      "fPassword": "كلمة المرور"
+    }
+  },
+  "organization": {
+    "label": "منظمة",
+    "labelPlural": "المنظمات",
+    "sections": {
+      "basicInformation": "المعلومات الأساسية",
+      "regionalSettings": "الإعدادات الإقليمية",
+      "appearance": "المظهر",
+      "systemInformation": "معلومات النظام"
+    },
+    "fields": {
+      "name": "الاسم",
+      "slug": "المعرّف",
+      "logo": "الشعار",
+      "address": "العنوان",
+      "defaultCurrency": "العملة الافتراضية",
+      "currencySymbol": "رمز العملة",
+      "timezone": "المنطقة الزمنية",
+      "defaultPreferredLanguage": "اللغة المفضلة الافتراضية",
+      "sidebarTheme": "مظهر الشريط الجانبي",
+      "id": "المعرف",
+      "createdAt": "تاريخ الإنشاء",
+      "updatedAt": "تاريخ التحديث",
+      "createdBy": "أنشئ بواسطة",
+      "ownerId": "المالك",
+      "editedBy": "عدّل بواسطة"
+    }
+  },
+  "tenant": {
+    "label": "مستأجر",
+    "labelPlural": "المستأجرون",
+    "sections": {
+      "basicInformation": "المعلومات الأساسية",
+      "regionalSettings": "الإعدادات الإقليمية",
+      "appearance": "المظهر",
+      "systemInformation": "معلومات النظام"
+    },
+    "fields": {
+      "name": "الاسم",
+      "organization": "المنظمة",
+      "logo": "الشعار",
+      "address": "العنوان",
+      "defaultCurrency": "العملة الافتراضية",
+      "currencySymbol": "رمز العملة",
+      "timezone": "المنطقة الزمنية",
+      "defaultPreferredLanguage": "اللغة المفضلة الافتراضية",
+      "sidebarTheme": "مظهر الشريط الجانبي",
+      "id": "المعرف",
+      "createdAt": "تاريخ الإنشاء",
+      "updatedAt": "تاريخ التحديث",
+      "createdBy": "أنشئ بواسطة",
+      "ownerId": "المالك",
+      "editedBy": "عدّل بواسطة"
+    }
+  }
+}

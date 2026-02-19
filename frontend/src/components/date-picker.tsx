@@ -1,4 +1,4 @@
-import { format } from 'date-fns'
+import { formatDateShort } from '@/utils/formatDateLocale'
 import { Calendar as CalendarIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -28,7 +28,7 @@ export function DatePicker({
           className='data-[empty=true]:text-muted-foreground w-[240px] justify-start text-left font-normal'
         >
           {selected ? (
-            format(selected, 'MMM d, yyyy')
+            formatDateShort(selected, 'MMM d, yyyy')
           ) : (
             <span>{placeholder}</span>
           )}

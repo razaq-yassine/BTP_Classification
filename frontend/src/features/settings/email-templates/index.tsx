@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import ContentSection from '../components/content-section'
 import { Button } from '@/components/ui/button'
 import api from '@/services/api'
@@ -13,6 +14,7 @@ interface EmailTemplate {
 }
 
 export default function SettingsEmailTemplates() {
+  const { t } = useTranslation('settings')
   const [templates, setTemplates] = useState<EmailTemplate[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -26,30 +28,30 @@ export default function SettingsEmailTemplates() {
 
   return (
     <ContentSection
-      title='Email Templates'
-      desc='Edit email templates used for notifications. Use {{variable}} for placeholders.'
+      title={t('emailTemplatesTitle')}
+      desc={t('emailTemplatesDesc')}
     >
       {loading ? (
-        <div className='text-muted-foreground text-sm'>Loading...</div>
+        <div className='text-muted-foreground text-sm'>{t('loading')}</div>
       ) : templates.length === 0 ? (
-        <div className='text-muted-foreground text-sm'>No templates found.</div>
+        <div className='text-muted-foreground text-sm'>{t('noTemplatesFound')}</div>
       ) : (
         <div className='space-y-2'>
-          {templates.map((t) => (
+          {templates.map((tmpl) => (
             <div
-              key={t.key}
+              key={tmpl.key}
               className='flex items-center justify-between rounded-lg border p-4'
             >
               <div>
-                <p className='font-medium'>{t.label}</p>
-                <p className='text-muted-foreground text-sm'>{t.subject}</p>
+                <p className='font-medium'>{tmpl.label}</p>
+                <p className='text-muted-foreground text-sm'>{tmpl.subject}</p>
                 <p className='text-muted-foreground mt-1 text-xs'>
-                  Variables: {t.variables?.join(', ') || 'none'}
+                  {t('variables')}: {tmpl.variables?.join(', ') || 'none'}
                 </p>
               </div>
               <Button variant='outline' size='sm' asChild>
-                <Link to='/settings/email-templates/$templateKey' params={{ templateKey: t.key }}>
-                  Edit
+                <Link to='/settings/email-templates/$templateKey' params={{ templateKey: tmpl.key }}>
+                  {t('edit', { ns: 'common' })}
                 </Link>
               </Button>
             </div>

@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "deploy": "cd backend && pnpm run db:deploy",
-    "prepare": "husky"
+    "prepare": "husky",
+    "translation-report": "cd backend && pnpm run translation-report"
   },
   "devDependencies": {
     "husky": "^9.1.7",

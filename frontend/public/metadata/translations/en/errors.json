@@ -6,5 +6,9 @@
   "unauthorized": "Unauthorized",
   "forbidden": "Forbidden",
   "notFound": "Not Found",
-  "loadingFailed": "Failed to load"
+  "loadingFailed": "Failed to load",
+  "connectionLost": "Connection lost. Please wait and try again.",
+  "failedToFetch": "Failed to fetch {{object}}",
+  "failedToDelete": "Failed to delete",
+  "failedToFetchRelated": "Failed to fetch related {{object}}"
 }

@@ -370,8 +370,8 @@ export function GenericCreateDialog({
       const response = await api.post(endpoint, createData)
 
       // Show success toast
-      toast.success(`${objectDefinition.label || objectDefinition.name} created successfully!`, {
-        description: `New ${objectDefinition.label || objectDefinition.name} has been created.`,
+      toast.success(t('recordCreated', { label: objectDefinition.label || objectDefinition.name }), {
+        description: t('recordCreated', { label: objectDefinition.label || objectDefinition.name }),
         duration: 3000,
       })
 
@@ -540,7 +540,7 @@ export function GenericCreateDialog({
         >
           <DialogHeader className="flex-shrink-0 px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-4">
             <DialogTitle className="text-base font-semibold sm:text-lg">
-              New {objectDefinition.label || objectDefinition.name}
+              {t('newObject', { label: objectDefinition.label || objectDefinition.name })}
             </DialogTitle>
           </DialogHeader>
 

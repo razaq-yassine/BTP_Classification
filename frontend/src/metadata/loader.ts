@@ -108,9 +108,10 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
     resolvedStatistics = resolveStatistics(statisticsData)
   }
 
-  const detailSections = (detailViewData.sections as Array<{ title: string; columns?: number; defaultOpen?: boolean; fields: string[] }>) || []
+  const detailSections = (detailViewData.sections as Array<{ title: string; titleKey?: string; columns?: number; defaultOpen?: boolean; fields: string[] }>) || []
   const resolvedDetailSections = detailSections.map((section) => ({
     title: section.title,
+    titleKey: section.titleKey,
     columns: section.columns ?? 1,
     defaultOpen: section.defaultOpen ?? true,
     fields: (section.fields as string[]).map((key) => {

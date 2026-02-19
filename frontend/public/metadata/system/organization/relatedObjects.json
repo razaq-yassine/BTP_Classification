@@ -1,1 +1,79 @@
-[]
+[
+  {
+    "name": "tenants",
+    "label": "Tenant",
+    "labelPlural": "Tenants",
+    "objectDefinition": "tenant",
+    "relationshipType": "one-to-many",
+    "foreignKey": "organization.id",
+    "apiEndpoint": "/api/tenants/organization",
+    "fields": [
+      { "key": "name", "label": "Name", "type": "string", "sortable": true, "searchable": true },
+      { "key": "organization", "label": "Organization", "type": "reference", "sortable": true },
+      { "key": "createdAt", "label": "Created", "type": "datetime", "sortable": true, "format": "MMM dd, yyyy" }
+    ],
+    "defaultSort": "createdAt",
+    "defaultSortOrder": "desc",
+    "pageSize": 10,
+    "permissions": { "create": true, "read": true, "update": true, "delete": false }
+  },
+  {
+    "name": "customers",
+    "label": "Customer",
+    "labelPlural": "Customers",
+    "objectDefinition": "customer",
+    "relationshipType": "one-to-many",
+    "foreignKey": "organization.id",
+    "apiEndpoint": "/api/customers/organization",
+    "fields": [
+      { "key": "fullName", "label": "Name", "type": "string", "sortable": true, "searchable": true },
+      { "key": "email", "label": "Email", "type": "string", "sortable": true, "searchable": true },
+      { "key": "company", "label": "Company", "type": "string", "sortable": true },
+      { "key": "createdAt", "label": "Created", "type": "datetime", "sortable": true, "format": "MMM dd, yyyy" }
+    ],
+    "defaultSort": "createdAt",
+    "defaultSortOrder": "desc",
+    "pageSize": 10,
+    "permissions": { "create": true, "read": true, "update": true, "delete": false }
+  },
+  {
+    "name": "orders",
+    "label": "Order",
+    "labelPlural": "Orders",
+    "objectDefinition": "order",
+    "relationshipType": "one-to-many",
+    "foreignKey": "organization.id",
+    "apiEndpoint": "/api/orders/organization",
+    "fields": [
+      { "key": "name", "label": "Order Number", "type": "string", "sortable": true, "searchable": true },
+      { "key": "customer", "label": "Customer", "type": "reference", "sortable": true },
+      { "key": "status", "label": "Status", "type": "string", "sortable": true, "render": "statusBadge" },
+      { "key": "totalAmount", "label": "Total Amount", "type": "number", "sortable": true, "render": "currency" },
+      { "key": "orderDate", "label": "Order Date", "type": "date", "sortable": true, "format": "MMM dd, yyyy" }
+    ],
+    "defaultSort": "orderDate",
+    "defaultSortOrder": "desc",
+    "pageSize": 10,
+    "permissions": { "create": true, "read": true, "update": true, "delete": false }
+  },
+  {
+    "name": "orderitems",
+    "label": "Order Item",
+    "labelPlural": "Order Items",
+    "objectDefinition": "orderitem",
+    "relationshipType": "one-to-many",
+    "foreignKey": "organization.id",
+    "apiEndpoint": "/api/orderitems/organization",
+    "fields": [
+      { "key": "name", "label": "Item", "type": "string", "sortable": true, "searchable": true },
+      { "key": "order", "label": "Order", "type": "reference", "sortable": true },
+      { "key": "product", "label": "Product", "type": "reference", "sortable": true },
+      { "key": "quantity", "label": "Qty", "type": "number", "sortable": true },
+      { "key": "unitPrice", "label": "Unit Price", "type": "number", "sortable": true, "render": "currency" }
+    ],
+    "defaultSort": "name",
+    "defaultSortOrder": "asc",
+    "pageSize": 10,
+    "permissions": { "create": true, "read": true, "update": true, "delete": false }
+  }
+]

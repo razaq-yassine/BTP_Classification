@@ -756,6 +756,110 @@ metadataRoutes.post('/bump-version', (c) => {
   }
 })
 
+// Translation coverage (for dashboard)
+function flattenTranslationObject(obj: unknown, prefix = ''): Record<string, string> {
+  const result: Record<string, string> = {}
+  if (obj === null || obj === undefined) return result
+  if (typeof obj !== 'object') return result
+  for (const [key, value] of Object.entries(obj)) {
+    const fullKey = prefix ? `${prefix}.${key}` : key
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      Object.assign(result, flattenTranslationObject(value, fullKey))
+    } else {
+      result[fullKey] = typeof value === 'string' ? value : String(value ?? '')
+    }
+  }
+  return result
+}
+
+metadataRoutes.get('/translations/coverage', (c) => {
+  const REF = 'en'
+  try {
+    if (!fs.existsSync(TRANSLATIONS_PATH)) {
+      return c.json({ referenceLocale: REF, locales: [], byLocale: {} })
+    }
+    const locales = fs.readdirSync(TRANSLATIONS_PATH).filter((d) => {
+      const p = path.join(TRANSLATIONS_PATH, d)
+      return fs.statSync(p).isDirectory() && LOCALE_REGEX.test(d)
+    })
+    const otherLocales = locales.filter((l) => l !== REF).sort()
+    const byLocale: Record<string, {
+      total: number
+      translated: number
+      missing: number
+      empty: number
+      missingKeys: string[]
+      emptyKeys: string[]
+      byNamespace: Record<string, {
+        total: number
+        translated: number
+        missing: number
+        empty: number
+        missingKeys: string[]
+        emptyKeys: string[]
+      }>
+    }> = {}
+
+    for (const locale of otherLocales) {
+      byLocale[locale] = {
+        total: 0,
+        translated: 0,
+        missing: 0,
+        empty: 0,
+        missingKeys: [],
+        emptyKeys: [],
+        byNamespace: {},
+      }
+      for (const ns of TRANSLATION_NAMESPACES) {
+        const refPath = path.join(TRANSLATIONS_PATH, REF, `${ns}.json`)
+        const locPath = path.join(TRANSLATIONS_PATH, locale, `${ns}.json`)
+        let refKeys: Record<string, string> = {}
+        let locKeys: Record<string, string> = {}
+        if (fs.existsSync(refPath)) {
+          const refData = JSON.parse(fs.readFileSync(refPath, 'utf-8')) as Record<string, unknown>
+          refKeys = flattenTranslationObject(refData)
+        }
+        if (fs.existsSync(locPath)) {
+          const locData = JSON.parse(fs.readFileSync(locPath, 'utf-8')) as Record<string, unknown>
+          locKeys = flattenTranslationObject(locData)
+        }
+        const missingKeys: string[] = []
+        const emptyKeys: string[] = []
+        for (const key of Object.keys(refKeys)) {
+          const fullKey = `${ns}.${key}`
+          if (!(key in locKeys)) {
+            missingKeys.push(fullKey)
+          } else if ((locKeys[key] ?? '').trim() === '') {
+            emptyKeys.push(fullKey)
+          }
+        }
+        const missing = missingKeys.length
+        const empty = emptyKeys.length
+        const total = Object.keys(refKeys).length
+        const translated = total - missing - empty
+        byLocale[locale].total += total
+        byLocale[locale].translated += translated
+        byLocale[locale].missing += missing
+        byLocale[locale].empty += empty
+        byLocale[locale].missingKeys.push(...missingKeys)
+        byLocale[locale].emptyKeys.push(...emptyKeys)
+        byLocale[locale].byNamespace[ns] = {
+          total,
+          translated,
+          missing,
+          empty,
+          missingKeys: missingKeys.map((k) => k.replace(`${ns}.`, '')),
+          emptyKeys: emptyKeys.map((k) => k.replace(`${ns}.`, '')),
+        }
+      }
+    }
+    return c.json({ referenceLocale: REF, locales: otherLocales, byLocale })
+  } catch (err) {
+    console.error('Translation coverage error:', err)
+    return c.json({ message: 'Failed to compute coverage' }, 500)
+  }
+})
+
 // Translation metadata routes
 metadataRoutes.get('/translations', (c) => {
   try {

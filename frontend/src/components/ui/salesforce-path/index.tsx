@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { PathStage, type StageStatus } from './PathStage'
 import { Button } from '@/components/ui/button'
@@ -53,6 +54,7 @@ export function SalesforcePath({
   currentOutlineColorHover = '#d1fae5',
   currentOutlineBorderColor = '#0a1612',
 }: SalesforcePathProps) {
+  const { t } = useTranslation('common')
   const [hoveredStage, setHoveredStage] = useState<string | null>(null)
   const [selectedStage, setSelectedStage] = useState<string | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
@@ -226,7 +228,7 @@ export function SalesforcePath({
                 className="h-8 whitespace-nowrap w-full md:w-auto flex-shrink-0"
                 size="sm"
               >
-                {isUpdating ? 'Updating...' : 'Mark as current'}
+                {isUpdating ? t('updating') : t('markAsCurrent')}
               </Button>
             ) : (
               <Button
@@ -235,7 +237,7 @@ export function SalesforcePath({
                 className="h-8 whitespace-nowrap w-full md:w-auto flex-shrink-0"
                 size="sm"
               >
-                {isUpdating ? 'Updating...' : 'Mark stage as complete'}
+                {isUpdating ? t('updating') : t('markStageComplete')}
               </Button>
             )}
           </>

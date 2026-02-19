@@ -892,11 +892,22 @@ New users inherit the tenant or org default until they set a personal preference
 - Select locale and namespace, edit key-value pairs, save
 - API: `GET/PUT /api/admin/metadata/translations/:locale/:namespace`
 
+### Translation Coverage Report
+
+Use the translation report to find untranslated elements until all locales are fully translated:
+
+- **CLI**: Run `pnpm run translation-report` (or `cd backend && pnpm run translation-report`) to print a coverage report to the console. Use `--verify order` to inspect a specific object's keys, or `--output report.md` to write to a file.
+- **Admin dashboard**: In **Settings** → **Translations**, the coverage panel shows donut charts per locale. Click **Generate report** to load it, then use the eye icon next to "Missing" or "Empty" to view the list of untranslated keys in a modal.
+
+Compare each locale against the reference (`en`). Add missing keys and fill empty values until the report shows 100% for all locales.
+
 ### Adding a New Locale
 
-1. Create `metadata/translations/{locale}/` (e.g. `es`, `fr`).
+1. Create `metadata/translations/{locale}/` (e.g. `es`, `fr`, `ar`).
 2. Copy all namespace files from `en/` and translate values.
-3. Ensure `defaultPreferredLanguage` is available in org/tenant/app config for users to select it.
+3. Add the locale to `LANGUAGE_OPTIONS` in `display-form.tsx` if it should appear in the language selector.
+4. For **RTL languages** (e.g. Arabic `ar`): ensure `useEffectiveLanguage` sets `document.documentElement.dir = 'rtl'` when the locale is RTL (already implemented for `ar`).
+5. Ensure `defaultPreferredLanguage` is available in org/tenant/app config for users to select it.
 
 ### Adding Translations for New Metadata
 

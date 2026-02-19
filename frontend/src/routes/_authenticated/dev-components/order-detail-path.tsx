@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { useObjectDefinition } from '@/hooks/useObjectDefinition'
 import { SalesforcePath } from '@/components/ui/salesforce-path'
+import { translateSelectOptionLabel } from '@/utils/translateMetadata'
 import type { ObjectDefinition } from '@/types/object-definition'
 
 export const Route = createFileRoute('/_authenticated/dev-components/order-detail-path')({
@@ -95,7 +96,7 @@ function OrderDetailDemo({ definition }: { definition: ObjectDefinition }) {
     path?.enabled && path?.steps
       ? path.steps.map((s) => ({
           value: s.value,
-          label: s.label,
+          label: translateSelectOptionLabel(definition.name, path.field, s.value, s.label),
           color: s.color,
           colorHover: s.colorHover,
         }))

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
@@ -6,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CalendarIcon, Clock, X } from 'lucide-react'
 import { format, isValid } from 'date-fns'
+import { formatDateTimeLocale } from '@/utils/formatDateLocale'
 import { cn } from '@/lib/utils'
 
 interface DateTimePickerProps {
@@ -21,9 +23,11 @@ export function DateTimePicker({
   onChange,
   disabled = false,
   className,
-  placeholder = "Pick a date and time"
+  placeholder
 }: DateTimePickerProps) {
+  const { t } = useTranslation('common')
   const [open, setOpen] = useState(false)
+  const displayPlaceholder = placeholder ?? t('pickDateAndTime')
   
   // Parse the datetime value
   const dateTimeValue = value ? new Date(value) : undefined
@@ -65,8 +69,8 @@ export function DateTimePicker({
   }
 
   const formatDisplayValue = () => {
-    if (!isValidDateTime) return placeholder
-    return format(dateTimeValue!, 'PPP p') // e.g., "Jan 1, 2024 at 2:30 PM"
+    if (!isValidDateTime) return displayPlaceholder
+    return formatDateTimeLocale(dateTimeValue!, 'PPp')
   }
 
   return (
@@ -97,7 +101,7 @@ export function DateTimePicker({
             <div className="space-y-2">
               <Label htmlFor="time-input" className="text-sm font-medium">
                 <Clock className="inline h-4 w-4 mr-1" />
-                Time
+                {t('time')}
               </Label>
               <Input
                 id="time-input"
@@ -113,7 +117,7 @@ export function DateTimePicker({
                 size="sm"
                 onClick={() => setOpen(false)}
               >
-                Done
+                {t('done')}
               </Button>
             </div>
           </div>

@@ -1,0 +1,14 @@
+{
+  "sessionExpired": "Session expirée !",
+  "internalServerError": "Erreur interne du serveur !",
+  "contentNotModified": "Contenu non modifié !",
+  "invalidCredentials": "Identifiants invalides",
+  "unauthorized": "Non autorisé",
+  "forbidden": "Interdit",
+  "notFound": "Non trouvé",
+  "loadingFailed": "Échec du chargement",
+  "connectionLost": "Connexion perdue. Veuillez patienter et réessayer.",
+  "failedToFetch": "Échec de la récupération de {{object}}",
+  "failedToDelete": "Échec de la suppression",
+  "failedToFetchRelated": "Échec de la récupération des {{object}} associés"
+}

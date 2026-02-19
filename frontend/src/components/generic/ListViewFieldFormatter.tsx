@@ -1,6 +1,9 @@
 import React from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
-import { format, isValid } from 'date-fns'
+import { translateSelectOptionLabel } from '@/utils/translateMetadata'
+import { isValid } from 'date-fns'
+import i18n from 'i18next'
+import { formatDateShort, formatDateTimeShort } from '@/utils/formatDateLocale'
 import { formatCurrency } from '@/stores/appConfigStore'
 
 export interface SelectOption {
@@ -18,10 +21,12 @@ export interface FieldFormatterProps {
   render?: string // e.g. 'statusBadge', 'currency'
   record?: Record<string, unknown>
   objectName?: string // For reference fields - target object to navigate to
+  fieldKey?: string // For select/multiselect - field key for option translation
+  sourceObjectName?: string // For select/multiselect - object name (e.g. 'order') for option translation
   onReferenceClick?: (objectName: string, id: string | number) => void
 }
 
-export function ListViewFieldFormatter({ type, value, format: dateFormat, options, render: renderType, objectName, onReferenceClick }: FieldFormatterProps) {
+export function ListViewFieldFormatter({ type, value, format: dateFormat, options, render: renderType, objectName, fieldKey, sourceObjectName, onReferenceClick }: FieldFormatterProps) {
   const isEmpty = value === null || value === undefined || value === ''
   if (isEmpty && type !== 'boolean') return null
 
@@ -40,7 +45,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
       try {
         const date = new Date(value)
         if (!isValid(date)) return null
-        const formattedDate = dateFormat ? format(date, dateFormat) : format(date, 'MMM d, yyyy')
+        const formattedDate = dateFormat ? formatDateShort(date, dateFormat) : formatDateShort(date)
         return <span className="text-sm tabular-nums whitespace-nowrap">{formattedDate}</span>
       } catch {
         return null
@@ -152,7 +157,12 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
 
     case 'select':
       return (
-        <SelectColoredDiv value={value} options={options ?? []} />
+        <SelectColoredDiv
+          value={value}
+          options={options ?? []}
+          sourceObjectName={sourceObjectName}
+          fieldKey={fieldKey}
+        />
       )
 
     case 'multiselect': {
@@ -171,7 +181,9 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
           {arr.slice(0, 3).map((val, index) => {
             const opt = options?.find((o) => o.value === val)
             const color = opt?.color
-            const label = opt?.label || val
+            const label = (sourceObjectName && fieldKey)
+              ? translateSelectOptionLabel(sourceObjectName, fieldKey, val, opt?.label || val)
+              : (opt?.label || val)
             return (
               <span
                 key={index}
@@ -193,9 +205,10 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
       try {
         const date = new Date(value)
         if (!isValid(date)) return null
-        const formatted = dateFormat ? format(date, dateFormat) : format(date, 'MMM d, yyyy h:mm a')
+        const formatted = dateFormat ? formatDateTimeShort(date, dateFormat) : formatDateTimeShort(date)
+        const lang = i18n.language ?? 'en'
         return (
-          <span className="text-sm tabular-nums whitespace-nowrap" title={date.toLocaleString()}>
+          <span className="text-sm tabular-nums whitespace-nowrap" title={date.toLocaleString(lang)}>
             {formatted}
           </span>
         )
@@ -215,7 +228,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
         return (
           <button
             type="button"
-            className="text-sm text-blue-600 dark:text-primary hover:underline text-left"
+            className="text-sm text-blue-600 dark:text-primary hover:underline text-start"
             onClick={(e) => {
               e.stopPropagation()
               onReferenceClick(objectName, refId)
@@ -255,9 +268,11 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
   }
 }
 
-function SelectColoredDiv({ value, options }: { value: string; options: SelectOption[] }) {
+function SelectColoredDiv({ value, options, sourceObjectName, fieldKey }: { value: string; options: SelectOption[]; sourceObjectName?: string; fieldKey?: string }) {
   const option = options.find((o) => o.value === value)
-  const label = option?.label ?? value
+  const label = (sourceObjectName && fieldKey)
+    ? translateSelectOptionLabel(sourceObjectName, fieldKey, value, option?.label ?? value)
+    : (option?.label ?? value)
   const color = option?.color
 
   return (

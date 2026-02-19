@@ -1,8 +1,10 @@
 import { GenericRecord, StatisticsCardDefinition } from '@/types/object-definition'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatCurrency } from '@/stores/appConfigStore'
+import { translateStatisticLabel } from '@/utils/translateMetadata'
 
 interface StatisticsCardsProps {
+  objectName?: string
   statistics: StatisticsCardDefinition[]
   records: GenericRecord[]
 }
@@ -22,7 +24,7 @@ function formatValue(value: string | number, format?: 'currency' | 'percentage' 
   return value?.toString() || '0'
 }
 
-export function StatisticsCards({ statistics, records }: StatisticsCardsProps) {
+export function StatisticsCards({ objectName = '', statistics, records }: StatisticsCardsProps) {
   if (!statistics || statistics.length === 0) {
     return null
   }
@@ -37,7 +39,7 @@ export function StatisticsCards({ statistics, records }: StatisticsCardsProps) {
         return (
           <Card key={stat.key} className="flex-1 min-w-0 py-2 gap-1 rounded-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-2 pb-0">
-              <CardTitle className="text-[10px] sm:text-xs font-medium truncate leading-tight">{stat.label}</CardTitle>
+              <CardTitle className="text-[10px] sm:text-xs font-medium truncate leading-tight">{translateStatisticLabel(objectName, stat.key, stat.label)}</CardTitle>
               {StatIcon && (
                 <StatIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground shrink-0" />
               )}

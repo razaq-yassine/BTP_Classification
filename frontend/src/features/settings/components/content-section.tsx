@@ -4,12 +4,14 @@ interface ContentSectionProps {
   title: string
   desc: string
   children: React.ReactNode
+  contentClassName?: string
 }
 
 export default function ContentSection({
   title,
   desc,
   children,
+  contentClassName,
 }: ContentSectionProps) {
   return (
     <div className='flex flex-1 flex-col'>
@@ -19,7 +21,15 @@ export default function ContentSection({
       </div>
       <Separator className='my-4 flex-none' />
       <div className='faded-bottom h-full w-full overflow-y-auto scroll-smooth pr-4 pb-12'>
-        <div className='-mx-1 px-1.5 lg:max-w-xl'>{children}</div>
+        <div
+          className={
+            contentClassName
+              ? `-mx-1 px-1.5 ${contentClassName}`
+              : '-mx-1 px-1.5 lg:max-w-xl'
+          }
+        >
+          {children}
+        </div>
       </div>
     </div>
   )

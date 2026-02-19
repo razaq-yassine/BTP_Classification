@@ -26,6 +26,8 @@ export function useEffectiveLanguage(): string {
     if (i18n.language !== locale) {
       void i18n.changeLanguage(locale)
     }
+    document.documentElement.lang = locale
+    document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr'
   }, [effective, i18n])
 
   return effective || DEFAULT_LANGUAGE

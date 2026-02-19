@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import ContentSection from '../components/content-section'
+import { TranslationCoverageDashboard } from './translation-coverage-dashboard'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -54,6 +57,8 @@ function unflattenObject(flat: Record<string, string>): Record<string, unknown> 
 }
 
 export default function SettingsTranslations() {
+  const { t } = useTranslation('settings')
+  const queryClient = useQueryClient()
   const [locales, setLocales] = useState<string[]>([])
   const [selectedLocale, setSelectedLocale] = useState<string>('')
   const [selectedNamespace, setSelectedNamespace] = useState<Namespace>('common')
@@ -83,9 +88,10 @@ export default function SettingsTranslations() {
     try {
       const data = unflattenObject(entries)
       await saveTranslationNamespace(selectedLocale, selectedNamespace, data)
-      toast.success('Translations saved')
+      void queryClient.invalidateQueries({ queryKey: ['translation-coverage'] })
+      toast.success(t('translationsSaved'))
     } catch {
-      toast.error('Failed to save translations')
+      toast.error(t('translationsSaveFailed'))
     } finally {
       setSaving(false)
     }
@@ -114,21 +120,23 @@ export default function SettingsTranslations() {
 
   return (
     <ContentSection
-      title='Translations'
-      desc='Edit translation strings for each locale and namespace. Add keys for new UI strings.'
+      title={t('translationsTitle')}
+      desc={t('translationsDesc')}
+      contentClassName='lg:max-w-5xl'
     >
-      {loading && locales.length === 0 ? (
-        <div className='text-muted-foreground text-sm'>Loading locales...</div>
-      ) : locales.length === 0 ? (
-        <div className='text-muted-foreground text-sm'>
-          No translation locales found. Create metadata/translations/en/ with
-          namespace files (common.json, navigation.json, etc.).
-        </div>
-      ) : (
-        <div className='space-y-4'>
-          <div className='flex flex-wrap gap-4'>
-            <div className='space-y-2'>
-              <Label>Locale</Label>
+      <div className='grid grid-cols-1 xl:grid-cols-2 gap-6'>
+        <div className='min-w-0'>
+          {loading && locales.length === 0 ? (
+            <div className='text-muted-foreground text-sm'>{t('loadingLocales')}</div>
+          ) : locales.length === 0 ? (
+            <div className='text-muted-foreground text-sm'>
+              {t('noTranslationsLocalesFound')}
+            </div>
+          ) : (
+            <div className='space-y-4'>
+              <div className='flex flex-wrap gap-4'>
+                <div className='space-y-2'>
+                  <Label>{t('locale')}</Label>
               <Select
                 value={selectedLocale}
                 onValueChange={(v) => {
@@ -137,7 +145,7 @@ export default function SettingsTranslations() {
                 }}
               >
                 <SelectTrigger className='w-[140px]'>
-                  <SelectValue placeholder='Select locale' />
+                  <SelectValue placeholder={t('selectLocale')} />
                 </SelectTrigger>
                 <SelectContent>
                   {locales.map((l) => (
@@ -149,7 +157,7 @@ export default function SettingsTranslations() {
               </Select>
             </div>
             <div className='space-y-2'>
-              <Label>Namespace</Label>
+              <Label>{t('namespace')}</Label>
               <Select
                 value={selectedNamespace}
                 onValueChange={(v) => setSelectedNamespace(v as Namespace)}
@@ -172,20 +180,20 @@ export default function SettingsTranslations() {
             <>
               <div className='flex items-center justify-between'>
                 <Button variant='outline' size='sm' onClick={handleAddKey}>
-                  Add key
+                  {t('addKey')}
                 </Button>
                 <Button size='sm' onClick={handleSave} disabled={saving}>
-                  {saving ? 'Saving...' : 'Save'}
+                  {saving ? t('saving') : t('save', { ns: 'common' })}
                 </Button>
               </div>
 
               {loading ? (
                 <div className='text-muted-foreground text-sm'>
-                  Loading translations...
+                  {t('loadingTranslations')}
                 </div>
               ) : entryKeys.length === 0 ? (
                 <div className='text-muted-foreground text-sm'>
-                  No keys in this namespace. Click &quot;Add key&quot; to add one.
+                  {t('noKeysInNamespace')}
                 </div>
               ) : (
                 <div className='space-y-3'>
@@ -203,7 +211,7 @@ export default function SettingsTranslations() {
                           onChange={(e) =>
                             handleUpdateValue(key, e.target.value)
                           }
-                          placeholder='Translation value'
+                          placeholder={t('translationValue')}
                           className='font-mono text-sm'
                         />
                       </div>
@@ -213,7 +221,7 @@ export default function SettingsTranslations() {
                         className='shrink-0 text-destructive hover:text-destructive'
                         onClick={() => handleRemoveKey(key)}
                       >
-                        Remove
+                        {t('remove', { ns: 'common' })}
                       </Button>
                     </div>
                   ))}
@@ -221,8 +229,13 @@ export default function SettingsTranslations() {
               )}
             </>
           )}
+            </div>
+          )}
         </div>
-      )}
+        <div className='min-w-0'>
+          <TranslationCoverageDashboard />
+        </div>
+      </div>
     </ContentSection>
   )
 }

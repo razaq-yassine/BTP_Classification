@@ -9,6 +9,7 @@ import { NavGroup } from '@/components/layout/nav-group'
 import { TeamSwitcher } from '@/components/layout/team-switcher'
 import { useSidebarData } from '@/hooks/useSidebarData'
 import { useTheme } from '@/context/theme-context'
+import { useEffectiveLanguage } from '@/hooks/useEffectiveLanguage'
 
 function hexToRgba(hex: string, alpha: number): string {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -32,6 +33,7 @@ function isColorDark(hex: string): boolean {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const sidebarData = useSidebarData()
   const { theme } = useTheme()
+  const effectiveLanguage = useEffectiveLanguage()
   const [effectiveTheme, setEffectiveTheme] = React.useState<'light' | 'dark'>(() => {
     if (typeof window === 'undefined') return 'light'
     if (theme !== 'system') return theme
@@ -66,8 +68,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     } as React.CSSProperties
   }, [sidebarTheme, effectiveTheme])
 
+  const isRtl = effectiveLanguage === 'ar'
+
   return (
-    <Sidebar collapsible='icon' variant='floating' style={sidebarStyle} {...props}>
+    <Sidebar
+      collapsible='icon'
+      variant='floating'
+      side={isRtl ? 'right' : 'left'}
+      style={sidebarStyle}
+      {...props}
+    >
       <SidebarHeader>
         <TeamSwitcher tenantContext={sidebarData.tenantContext} />
       </SidebarHeader>

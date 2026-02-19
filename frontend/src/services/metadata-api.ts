@@ -120,4 +120,36 @@ export async function saveTranslationNamespace(
   await api.put(`${METADATA_BASE}/translations/${locale}/${namespace}`, data)
 }
 
+export interface TranslationCoverageNamespace {
+  total: number
+  translated: number
+  missing: number
+  empty: number
+  missingKeys: string[]
+  emptyKeys: string[]
+}
+
+export interface TranslationCoverageLocale {
+  total: number
+  translated: number
+  missing: number
+  empty: number
+  missingKeys: string[]
+  emptyKeys: string[]
+  byNamespace: Record<string, TranslationCoverageNamespace>
+}
+
+export interface TranslationCoverageResponse {
+  referenceLocale: string
+  locales: string[]
+  byLocale: Record<string, TranslationCoverageLocale>
+}
+
+export async function getTranslationCoverage(): Promise<TranslationCoverageResponse> {
+  const res = await api.get<TranslationCoverageResponse>(
+    `${METADATA_BASE}/translations/coverage`
+  )
+  return res.data
+}
+
 export { TRANSLATION_NAMESPACES }

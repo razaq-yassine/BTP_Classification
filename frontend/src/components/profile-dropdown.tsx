@@ -1,5 +1,6 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   BadgeCheck,
   Bell,
@@ -43,6 +44,7 @@ function getInitials(user: { firstName?: string; lastName?: string; username?: s
 }
 
 export function ProfileDropdown() {
+  const { t } = useTranslation('navigation')
   const navigate = useNavigate()
   const user = useAuthStore(selectUser)
   const logout = useAuthStore(selectLogout)
@@ -80,39 +82,39 @@ export function ProfileDropdown() {
           <DropdownMenuItem asChild>
             <Link to='/profile' target='_blank' rel='noopener noreferrer'>
               <User className='mr-2 h-4 w-4' />
-              Profile
+              {t('profile')}
               <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to='/settings/account' target='_blank' rel='noopener noreferrer'>
               <BadgeCheck className='mr-2 h-4 w-4' />
-              Account
+              {t('account')}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to='/settings/appearance' target='_blank' rel='noopener noreferrer'>
               <Palette className='mr-2 h-4 w-4' />
-              Appearance
+              {t('appearance')}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to='/settings/notifications' target='_blank' rel='noopener noreferrer'>
               <Bell className='mr-2 h-4 w-4' />
-              Notifications
+              {t('notifications')}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link to='/billing' target='_blank' rel='noopener noreferrer'>
               <CreditCard className='mr-2 h-4 w-4' />
-              Billing
+              {t('billing')}
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
           <LogOut className='mr-2 h-4 w-4' />
-          Log out
+          {t('logOut')}
           <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
         </DropdownMenuItem>
       </DropdownMenuContent>

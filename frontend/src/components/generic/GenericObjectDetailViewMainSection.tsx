@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ObjectDefinition, GenericRecord, FieldDefinition } from '@/types/object-definition'
+import { translateFieldLabel, translateObjectLabel, translateSectionTitle } from '@/utils/translateMetadata'
 import { formatDetailValue } from '@/utils/formatDetailValue'
 import { ReferenceFieldValue } from './ReferenceFieldValue'
 import { evaluateFormula } from '@/utils/evaluateFormula'
@@ -69,6 +71,7 @@ function FieldDisplay({
   canEditField: (fieldKey: string) => boolean
   profileName?: string
 }) {
+  const { t } = useTranslation('common')
   // Formula fields: evaluate expression (read-only, not editable)
   let value = record[field.key]
   if (field.type === 'formula' && field.formulaExpression) {
@@ -91,14 +94,14 @@ function FieldDisplay({
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-1">
-          <span className="text-sm font-bold text-foreground">{field.label}</span>
+          <span className="text-sm font-bold text-foreground">{translateFieldLabel(objectName, field.key, field.label)}</span>
           {isFieldRequired && <span className="text-red-500 text-sm">*</span>}
-          {field.isImportant && <span className="text-orange-500 text-sm" title="Important field">!</span>}
+          {field.isImportant && <span className="text-orange-500 text-sm" title={t('common:importantField')}>!</span>}
           {hasChanged && onRevertField && (
             <button
               onClick={() => onRevertField(field.key)}
               className="ml-auto p-1 text-muted-foreground hover:text-orange-600 transition-colors"
-              title="Revert this field to original value"
+              title={t('revertFieldTitle')}
             >
               <Undo2 className="h-3 w-3" />
             </button>
@@ -135,11 +138,11 @@ function FieldDisplay({
       onClick={canEdit && onStartEdit ? onStartEdit : undefined}
     >
       <div className="flex items-center gap-1">
-        <span className="text-sm font-bold text-foreground">{field.label}</span>
+        <span className="text-sm font-bold text-foreground">{translateFieldLabel(objectName, field.key, field.label)}</span>
         {(field.required || field.type === 'masterDetail' || field.relationshipType === 'masterDetail') && (
           <span className="text-red-500 text-sm">*</span>
         )}
-        {field.isImportant && <span className="text-orange-500 text-sm" title="Important field">!</span>}
+        {field.isImportant && <span className="text-orange-500 text-sm" title={t('importantField')}>!</span>}
         {canEdit && onStartEdit && (
           <Edit2 className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity ml-auto" />
         )}
@@ -152,7 +155,7 @@ function FieldDisplay({
         {(field.type === 'reference' || field.type === 'masterDetail') && !isEmpty ? (
           <ReferenceFieldValue field={field} value={value} record={record} />
         ) : (
-          formatDetailValue(field, value, record)
+          formatDetailValue(field, value, record, objectName)
         )}
       </div>
     </div>
@@ -171,6 +174,7 @@ function DetailsTabContent({
   onRecordUpdate: (updatedRecord: GenericRecord) => void
   isLoading?: boolean
 }) {
+  const { t } = useTranslation(['common', 'objects'])
   const { canUpdate, isFieldVisible, canEditField, profile } = usePermissions()
   const tabKey = `details_${objectDefinition.name}_${record?.id}`
   const [error, setError] = useState('')
@@ -223,7 +227,7 @@ function DetailsTabContent({
       if (value === null || value === undefined || value === '') {
         return {
           isValid: false,
-          errorMessage: `${fieldDefinition.label || fieldDefinition.key} is required`
+          errorMessage: t('fieldRequired', { label: fieldDefinition.label || fieldDefinition.key })
         }
       }
     }
@@ -390,11 +394,11 @@ function DetailsTabContent({
       onRecordUpdate(response.data)
 
       // Show success toast with undo button
-      toast.success('Changes saved successfully!', {
-        description: `${objectDefinition.label || objectDefinition.name} has been updated.`,
+      toast.success(t('changesSaved'), {
+        description: t('recordUpdated', { label: objectDefinition.label || objectDefinition.name }),
         duration: 5000,
         action: {
-          label: 'Undo',
+          label: t('undo'),
           onClick: () => handleUndo()
         }
       })
@@ -441,7 +445,7 @@ function DetailsTabContent({
           const value = tabState.formData[fieldKey]
           const validation = validateField(fieldDefinition, value)
           if (!validation.isValid) {
-            newErrors[fieldKey] = validation.errorMessage || 'Invalid value'
+            newErrors[fieldKey] = validation.errorMessage || t('invalidValue')
           }
         }
       })
@@ -461,7 +465,7 @@ function DetailsTabContent({
 
       // First, validate all fields
       if (!validateAllFields()) {
-        setError('Please fix all field errors before saving')
+        setError(t('fixFieldErrors'))
         setSaving(false)
         return
       }
@@ -557,16 +561,16 @@ function DetailsTabContent({
       onRecordUpdate(response.data)
 
       // Show undo success toast
-      toast.success('Changes undone successfully!', {
-        description: `${objectDefinition.label || objectDefinition.name} has been reverted.`,
+      toast.success(t('changesUndone'), {
+        description: t('recordUpdated', { label: objectDefinition.label || objectDefinition.name }),
         duration: 3000,
       })
 
       // Clear previous state after successful undo
       setPreviousRecordState(null)
     } catch {
-      toast.error('Failed to undo changes', {
-        description: 'Please try refreshing the page.',
+      toast.error(t('undoFailed'), {
+        description: t('retry'),
         duration: 3000,
       })
     } finally {
@@ -680,14 +684,14 @@ function DetailsTabContent({
     <div className="flex items-center gap-2 p-3 bg-muted border border-border rounded-lg shadow-sm">
       {showUnsavedMessage && (
         <div className="flex-1">
-          <p className="text-sm font-medium text-foreground">You have unsaved changes</p>
-          <p className="text-xs text-muted-foreground">Save your changes or cancel to discard them</p>
+          <p className="text-sm font-medium text-foreground">{t('unsavedChanges')}</p>
+          <p className="text-xs text-muted-foreground">{t('unsavedChangesDesc')}</p>
         </div>
       )}
       {!showUnsavedMessage && (
         <div className="flex-1">
-          <p className="text-sm font-medium text-foreground">Edit mode</p>
-          <p className="text-xs text-muted-foreground">Make changes to the fields below</p>
+          <p className="text-sm font-medium text-foreground">{t('editMode')}</p>
+          <p className="text-xs text-muted-foreground">{t('editModeDesc')}</p>
         </div>
       )}
       <div className="flex gap-2">
@@ -699,7 +703,7 @@ function DetailsTabContent({
           className="flex items-center gap-1"
         >
           <Undo2 className="h-4 w-4" />
-          Cancel
+          {t('cancel')}
         </Button>
         <Button
           size="sm"
@@ -708,7 +712,7 @@ function DetailsTabContent({
           className={cn("flex items-center gap-2", buttonClasses)}
         >
           <Save className="h-4 w-4" />
-          {saving ? 'Saving...' : 'Save All'}
+          {saving ? t('saving') : t('saveAll')}
         </Button>
       </div>
     </div>
@@ -743,7 +747,7 @@ function DetailsTabContent({
           >
             <div className="border border-border rounded-lg overflow-hidden shadow-sm">
               <CollapsibleTrigger className={cn("flex items-center justify-between w-full p-2.5 text-left bg-muted hover:bg-muted/80 transition-colors", getObjectBorderAccentClasses(objectDefinition.color))}>
-                <h3 className="text-base font-semibold text-foreground">{section.title}</h3>
+                <h3 className="text-base font-semibold text-foreground">{translateSectionTitle(objectDefinition.name, section.title, section.title, section.titleKey)}</h3>
                 {isOpen ? (
                   <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
                 ) : (
@@ -829,27 +833,58 @@ function DetailsTabContent({
   )
 }
 
+const RELATED_TABS_THRESHOLD = 3
+
 // Component for the Related Object tab content
 function RelatedObjectTabContent({
   parentRecord,
-  relatedObjectDefinition
+  relatedObjectDefinition,
+  collapsible = false,
+  showSearch
 }: {
   parentRecord: GenericRecord
   relatedObjectDefinition: any
+  collapsible?: boolean
+  showSearch?: boolean
 }) {
-  // Use the GenericRelatedListView with the new relationship structure
   return (
     <GenericRelatedListView
       parentRecord={parentRecord}
       relatedObjectDefinition={relatedObjectDefinition}
-      showSearch={relatedObjectDefinition.showSearch !== false}
+      showSearch={showSearch ?? relatedObjectDefinition.showSearch !== false}
       showAddButton={relatedObjectDefinition.showAddButton !== false}
       maxHeight={relatedObjectDefinition.maxHeight || '400px'}
+      collapsible={collapsible}
     />
   )
 }
 
+// Stacked view: all related lists in one tab, collapsible sections without search
+function RelatedObjectsStackedContent({
+  parentRecord,
+  relatedObjects
+}: {
+  parentRecord: GenericRecord
+  relatedObjects: any[]
+}) {
+  return (
+    <div className="flex flex-col gap-3 w-full">
+      {relatedObjects.map((relObj) => (
+        <div key={relObj.name} className="w-full detail-view-related-tabs">
+          <RelatedObjectTabContent
+            parentRecord={parentRecord}
+            relatedObjectDefinition={relObj}
+            collapsible={true}
+            showSearch={false}
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function GenericObjectDetailViewMainSection({ objectDefinition, record, onRecordUpdate, isLoading = false }: GenericObjectDetailViewMainSectionProps) {
+  const { t } = useTranslation('common')
   const [activeTab, setActiveTab] = useState('details');
   const { canRead } = usePermissions();
 
@@ -857,6 +892,9 @@ export function GenericObjectDetailViewMainSection({ objectDefinition, record, o
   const relatedObjects = (objectDefinition.relatedObjects || []).filter((relObj) =>
     canRead(relObj.objectDefinition)
   );
+
+  const useGroupedRelatedTab = relatedObjects.length > RELATED_TABS_THRESHOLD
+  const relatedTabValue = 'related-objects'
 
   if (!record) {
     return null;
@@ -867,13 +905,19 @@ export function GenericObjectDetailViewMainSection({ objectDefinition, record, o
       <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full justify-start mb-0">
           <TabsTrigger value="details">
-            Details
+            {t('details')}
           </TabsTrigger>
-          {relatedObjects.map((relObj) => (
-            <TabsTrigger key={relObj.name} value={relObj.name}>
-              {relObj.label}
+          {useGroupedRelatedTab ? (
+            <TabsTrigger value={relatedTabValue}>
+              {t('relatedObjects')}
             </TabsTrigger>
-          ))}
+          ) : (
+            relatedObjects.map((relObj) => (
+              <TabsTrigger key={relObj.name} value={relObj.name}>
+                {translateObjectLabel(relObj.objectDefinition, relObj.labelPlural, true)}
+              </TabsTrigger>
+            ))
+          )}
         </TabsList>
 
         <TabsContent value="details" className="w-full mt-0">
@@ -885,14 +929,25 @@ export function GenericObjectDetailViewMainSection({ objectDefinition, record, o
           />
         </TabsContent>
 
-        {relatedObjects.map((relObj) => (
-          <TabsContent key={relObj.name} value={relObj.name} className="w-full mt-0 detail-view-related-tabs">
-            <RelatedObjectTabContent
+        {useGroupedRelatedTab ? (
+          <TabsContent value={relatedTabValue} className="w-full mt-0 p-0">
+            <RelatedObjectsStackedContent
               parentRecord={record}
-              relatedObjectDefinition={relObj}
+              relatedObjects={relatedObjects}
             />
           </TabsContent>
-        ))}
+        ) : (
+          relatedObjects.map((relObj) => (
+            <TabsContent key={relObj.name} value={relObj.name} className="w-full mt-0 p-0 detail-view-related-tabs">
+              <RelatedObjectTabContent
+                parentRecord={record}
+                relatedObjectDefinition={relObj}
+                collapsible={true}
+                showSearch={false}
+              />
+            </TabsContent>
+          ))
+        )}
       </Tabs>
     </div>
   );

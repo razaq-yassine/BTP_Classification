@@ -1,4 +1,5 @@
 // import { Cross2Icon } from '@radix-ui/react-icons' // Temporarily disabled
+import { useTranslation } from 'react-i18next'
 import { Table } from '@tanstack/react-table'
 
 // import { Button } from '@/components/ui/button' // Temporarily disabled
@@ -16,13 +17,14 @@ export function GenericDataTableToolbar<TData>({
   table,
   objectDefinition,
 }: GenericDataTableToolbarProps<TData>) {
+  const { t } = useTranslation('common')
   // const isFiltered = table.getState().columnFilters.length > 0 // Temporarily disabled
 
   return (
     <div className='flex items-center justify-between'>
       <div className='flex flex-1 items-center space-x-2'>
         <Input
-          placeholder={`Filter ${objectDefinition.name.toLowerCase()}s...`}
+          placeholder={t('filterPlaceholder', { objectName: (objectDefinition.labelPlural ?? objectDefinition.name + 's').toLowerCase() })}
           value={(table.getState().globalFilter as string) ?? ''}
           onChange={(event) => table.setGlobalFilter(event.target.value)}
           className='h-8 w-[150px] lg:w-[250px]'

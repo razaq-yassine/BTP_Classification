@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -22,11 +23,12 @@ export function ImportantFieldsDialog({
   onContinue,
   onCancel
 }: ImportantFieldsDialogProps) {
+  const { t } = useTranslation('common')
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Important fields are empty</DialogTitle>
+          <DialogTitle>{t('importantFieldsEmpty')}</DialogTitle>
         </DialogHeader>
         
         <div className="py-2">
@@ -39,10 +41,10 @@ export function ImportantFieldsDialog({
 
         <DialogFooter className="flex gap-2">
           <Button variant="outline" onClick={onCancel}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button onClick={onContinue}>
-            Continue anyway
+            {t('continueAnyway')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-
+import { useTranslation } from "react-i18next"
+import { translateFieldLabel } from "@/utils/translateMetadata"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Table,
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ListViewFieldFormatter } from "@/components/generic/ListViewFieldFormatter"
+import { cn } from "@/lib/utils"
 import { evaluateFormula } from "@/utils/evaluateFormula"
 
 // Generic interfaces
@@ -29,6 +31,8 @@ interface GenericDataTableProps<TData extends GenericRecord> {
   onSelectionChange?: (selectedIds: string[]) => void
   onReferenceClick?: (objectName: string, id: string | number) => void
   searchTerm?: string
+  /** When true, hides the footer with record count */
+  hideFooter?: boolean
 }
 
 function filterData<T>(data: T[], searchTerm: string, fields: { key: string }[]): T[] {
@@ -45,15 +49,15 @@ function filterData<T>(data: T[], searchTerm: string, fields: { key: string }[])
 // Simple sorting and filtering logic
 function sortData<T>(data: T[], sortField: string | null, sortDirection: 'asc' | 'desc' | null): T[] {
   if (!sortField || !sortDirection) return data
-  
+
   return [...data].sort((a, b) => {
     const aVal = (a as any)[sortField]
     const bVal = (b as any)[sortField]
-    
+
     if (aVal === bVal) return 0
     if (aVal == null) return 1
     if (bVal == null) return -1
-    
+
     const comparison = aVal < bVal ? -1 : 1
     return sortDirection === 'asc' ? comparison : -comparison
   })
@@ -67,7 +71,9 @@ export function GenericDataTable<TData extends GenericRecord>({
   onSelectionChange,
   onReferenceClick,
   searchTerm = '',
+  hideFooter = false,
 }: GenericDataTableProps<TData>) {
+  const { t, i18n } = useTranslation()
   // Simple state management
   const [selectedRows, setSelectedRows] = React.useState<Set<string>>(new Set())
   const [sortField, setSortField] = React.useState<string | null>(null)
@@ -76,20 +82,27 @@ export function GenericDataTable<TData extends GenericRecord>({
   const [displayedCount, setDisplayedCount] = React.useState(pageSize)
   const loadMoreRef = React.useRef<HTMLDivElement>(null)
 
+  const objectName = objectDefinition.name
+  const isRtl = i18n.language?.startsWith('ar') ?? false
+
   // Get fields from object configuration (include options, format, render for formatter)
   const fields = React.useMemo(() => {
     const listViewFields = objectDefinition.listView?.fields || []
-    return listViewFields.map((field: any) => ({
-      key: typeof field === 'string' ? field : field.key,
-      label: typeof field === 'string' ? field : field.label || field.key,
-      type: typeof field === 'string' ? 'text' : field.type || 'text',
-      sortable: typeof field === 'string' ? true : field.sortable !== false,
-      options: typeof field === 'object' ? field.options : undefined,
-      format: typeof field === 'object' ? field.format : undefined,
-      render: typeof field === 'object' ? (field.renderType ?? (typeof field.render === 'string' ? field.render : undefined)) : undefined,
-      objectName: typeof field === 'object' ? field.objectName : undefined,
-    }))
-  }, [objectDefinition.listView?.fields])
+    return listViewFields.map((field: any) => {
+      const key = typeof field === 'string' ? field : field.key
+      const fallbackLabel = typeof field === 'string' ? key : field.label || field.key
+      return {
+        key,
+        label: translateFieldLabel(objectName, key, fallbackLabel),
+        type: typeof field === 'string' ? 'text' : field.type || 'text',
+        sortable: typeof field === 'string' ? true : field.sortable !== false,
+        options: typeof field === 'object' ? field.options : undefined,
+        format: typeof field === 'object' ? field.format : undefined,
+        render: typeof field === 'object' ? (field.renderType ?? (typeof field.render === 'string' ? field.render : undefined)) : undefined,
+        objectName: typeof field === 'object' ? field.objectName : undefined,
+      }
+    })
+  }, [objectDefinition.listView?.fields, objectName, i18n.language])
 
   // Process data: client-side filter (fallback when server search fails) + sort
   const processedData = React.useMemo(() => {
@@ -147,7 +160,7 @@ export function GenericDataTable<TData extends GenericRecord>({
 
   // Notify parent of selection changes (stable callback)
   const selectedRowsArray = React.useMemo(() => Array.from(selectedRows), [selectedRows])
-  
+
   React.useEffect(() => {
     if (onSelectionChange) {
       onSelectionChange(selectedRowsArray)
@@ -177,18 +190,20 @@ export function GenericDataTable<TData extends GenericRecord>({
   return (
     <div className="w-full">
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border" dir={isRtl ? 'rtl' : 'ltr'}>
         <Table>
           <TableHeader>
             <TableRow>
-              {/* Selection column */}
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={isAllSelected || (isSomeSelected && "indeterminate")}
-                  onCheckedChange={handleSelectAll}
-                  aria-label="Select all"
-                />
-              </TableHead>
+              {/* In LTR, checkbox first (left). In RTL, checkbox first (right = row start) */}
+              {isRtl && (
+                <TableHead className={cn("w-12", isRtl ? "ps-2 !pr-2" : "pe-2")}>
+                  <Checkbox
+                    checked={isAllSelected || (isSomeSelected && "indeterminate")}
+                    onCheckedChange={handleSelectAll}
+                    aria-label={t('common:selectAll')}
+                  />
+                </TableHead>
+              )}
               {/* Data columns */}
               {fields.map((field: any) => (
                 <TableHead
@@ -202,13 +217,12 @@ export function GenericDataTable<TData extends GenericRecord>({
                   }
                 >
                   <button
-                    className={`flex items-center cursor-pointer hover:bg-muted/50 p-1 rounded ${
-                      field.type === 'number' && (field.render === 'currency' || field.render === 'percent')
+                    className={`flex items-center cursor-pointer hover:bg-muted/50 p-1 rounded ${field.type === 'number' && (field.render === 'currency' || field.render === 'percent')
                         ? 'justify-center w-full'
                         : field.type === 'boolean'
                           ? 'justify-center w-full'
                           : 'space-x-2'
-                    }`}
+                      }`}
                     onClick={() => handleSort(field.key)}
                   >
                     <span>{field.label}</span>
@@ -220,35 +234,46 @@ export function GenericDataTable<TData extends GenericRecord>({
                   </button>
                 </TableHead>
               ))}
+              {!isRtl && (
+                <TableHead className={cn("w-12", isRtl ? "ps-2 !pr-2" : "pe-2")}>
+                  <Checkbox
+                    checked={isAllSelected || (isSomeSelected && "indeterminate")}
+                    onCheckedChange={handleSelectAll}
+                    aria-label={t('common:selectAll')}
+                  />
+                </TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, index) => (
                 <TableRow key={index}>
-                  <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                  {isRtl && <TableCell className={cn(isRtl ? "ps-2 !pr-2" : "pe-2")}><Skeleton className="h-4 w-4" /></TableCell>}
                   {fields.map((field: any) => (
                     <TableCell key={field.key}>
                       <Skeleton className="h-4 w-full" />
                     </TableCell>
                   ))}
+                  {!isRtl && <TableCell className={cn(isRtl ? "ps-2 !pr-2" : "pe-2")}><Skeleton className="h-4 w-4" /></TableCell>}
                 </TableRow>
               ))
             ) : paginatedData.length > 0 ? (
               paginatedData.map((row, rowIndex) => {
                 const rowId = String(row.id || rowIndex)
                 const isSelected = selectedRows.has(rowId)
-                
+
                 return (
                   <TableRow key={rowId} data-state={isSelected ? "selected" : undefined}>
-                    {/* Selection cell */}
-                    <TableCell>
-                      <Checkbox
-                        checked={isSelected}
-                        onCheckedChange={(checked) => handleSelectRow(rowId, !!checked)}
-                        aria-label="Select row"
-                      />
-                    </TableCell>
+                    {isRtl && (
+                      <TableCell className={cn(isRtl ? "ps-2 !pr-2" : "pe-2")}>
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) => handleSelectRow(rowId, !!checked)}
+                          aria-label={t('common:selectRow')}
+                        />
+                      </TableCell>
+                    )}
                     {/* Data cells */}
                     {fields.map((field: any, fieldIndex: number) => {
                       // Evaluate formula fields on the fly
@@ -264,6 +289,8 @@ export function GenericDataTable<TData extends GenericRecord>({
                           options={field.options}
                           render={field.render}
                           objectName={field.objectName}
+                          sourceObjectName={objectName}
+                          fieldKey={field.key}
                           onReferenceClick={onReferenceClick}
                         />
                       )
@@ -271,7 +298,7 @@ export function GenericDataTable<TData extends GenericRecord>({
                       const wrapped =
                         isFirstColumn && onRowClick && row ? (
                           <button
-                            className="text-left w-full cursor-pointer hover:underline font-medium"
+                            className="text-start w-full cursor-pointer hover:underline font-medium"
                             onClick={() => onRowClick(row)}
                           >
                             {cellContent}
@@ -294,13 +321,22 @@ export function GenericDataTable<TData extends GenericRecord>({
                         </TableCell>
                       )
                     })}
+                    {!isRtl && (
+                      <TableCell className={cn(isRtl ? "ps-2 !pr-2" : "pe-2")}>
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) => handleSelectRow(rowId, !!checked)}
+                          aria-label={t('common:selectRow')}
+                        />
+                      </TableCell>
+                    )}
                   </TableRow>
                 )
               })
             ) : (
               <TableRow>
                 <TableCell colSpan={fields.length + 1} className="h-24 text-center">
-                  No results found.
+                  {t('common:noResultsFound')}
                 </TableCell>
               </TableRow>
             )}
@@ -310,19 +346,21 @@ export function GenericDataTable<TData extends GenericRecord>({
 
       {/* Load-more sentinel for infinite scroll */}
       {hasMore && paginatedData.length > 0 && (
-        <div ref={loadMoreRef} className="h-4 flex items-center justify-center py-4">
-          <span className="text-sm text-muted-foreground">Scroll for more...</span>
+        <div ref={loadMoreRef} className={cn("h-4 flex items-center justify-center", hideFooter ? "py-2" : "py-4")}>
+          <span className="text-sm text-muted-foreground">{t('common:scrollForMore')}</span>
         </div>
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between px-2 py-4">
-        <div className="text-sm text-muted-foreground">
-          {selectedRows.size > 0
-            ? `${selectedRows.size} of ${processedData.length} selected`
-            : `Showing ${paginatedData.length} of ${processedData.length}`}
+      {!hideFooter && (
+        <div className="flex items-center justify-between px-2 py-4">
+          <div className="text-sm text-muted-foreground">
+            {selectedRows.size > 0
+              ? t('common:selectedOf', { selected: selectedRows.size, total: processedData.length })
+              : t('common:showingOf', { count: paginatedData.length, total: processedData.length })}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

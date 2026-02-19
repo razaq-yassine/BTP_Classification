@@ -406,3 +406,81 @@
     transform: scale(1) rotate(0deg);
   }
 }
+
+/* RTL: stages and arrows flow right-to-left.
+   - Use row (not row-reverse): with direction:rtl, first item goes right, flow goes left.
+   - Mirror each stage so LTR arrows (→) become RTL arrows (←); unflip inner content for text. */
+[dir='rtl'] .path-stages {
+  flex-direction: row; /* Inherited direction:rtl puts first stage on right, flow left */
+}
+
+[dir='rtl'] .path-wrapper {
+  flex-direction: row; /* Same: scroll buttons + path flow right-to-left */
+}
+
+[dir='rtl'] .stage {
+  transform: scaleX(-1); /* Flips arrows from → to ← */
+  /* Use LTR shape for middle stages so after scaleX both edges point left (swapped) */
+  clip-path: polygon(92% 0, 100% 50%, 92% 100%, 0% 100%, 8% 50%, 0% 0);
+  margin: 0 -6px;
+}
+
+[dir='rtl'] .stage-inner {
+  transform: scaleX(-1); /* Unflip text */
+}
+
+/* RTL: stage--first is rightmost (start), stage--last is leftmost (end).
+   scaleX(-1) mirrors clip-paths, so we use swapped shapes: first gets last's path, last gets first's path. */
+[dir='rtl'] .stage--first {
+  clip-path: polygon(92% 0, 100% 50%, 92% 100%, 0% 100%, 0% 50%, 0% 0);
+  margin-left: -6px;
+  margin-right: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+[dir='rtl'] .stage--first .stage-inner {
+  margin-left: 0.25rem;
+  margin-right: 0.25rem;
+}
+
+[dir='rtl'] .stage--first.stage--last {
+  clip-path: none;
+  border-radius: 12px;
+  margin: 0;
+}
+
+[dir='rtl'] .stage--last {
+  clip-path: polygon(100% 0, 100% 50%, 100% 100%, 0% 100%, 8% 50%, 0% 0);
+  margin-right: -6px;
+  margin-left: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+[dir='rtl'] .stage--last .stage-inner {
+  margin-right: 0.25rem;
+  margin-left: 0.25rem;
+}
+
+[dir='rtl'] .stage--home,
+[dir='rtl'] .stage--first:not(.stage--selected):not(.stage--completed):not(.stage--current-outline) {
+  border-left: none;
+  border-right: 1px solid hsl(var(--primary));
+  border-top: 1px solid hsl(var(--primary));
+  border-bottom: 1px solid hsl(var(--primary));
+}
+
+/* RTL: hide arrow pseudo-elements on outer edges - first stage (right) and last stage (left)
+   should have flat/rounded ends, not arrow shapes. scaleX(-1) puts ::before on right and ::after on left. */
+[dir='rtl'] .stage--first::before {
+  display: none;
+}
+
+[dir='rtl'] .stage--last::after {
+  display: none;
+}

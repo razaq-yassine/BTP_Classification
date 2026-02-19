@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import ContentSection from '../components/content-section'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -27,6 +28,7 @@ interface EmailTemplate {
 }
 
 export default function SettingsNotificationSettings() {
+  const { t } = useTranslation('settings')
   const [settings, setSettings] = useState<NotificationSetting[]>([])
   const [templates, setTemplates] = useState<EmailTemplate[]>([])
   const [loading, setLoading] = useState(true)
@@ -70,17 +72,17 @@ export default function SettingsNotificationSettings() {
           templateKey: s.templateKey,
         }))
       )
-      .then(() => toast.success('Notification settings saved'))
-      .catch(() => toast.error('Failed to save'))
+      .then(() => toast.success(t('notificationSettingsSaved')))
+      .catch(() => toast.error(t('saveFailed')))
       .finally(() => setSaving(false))
   }
 
-  if (loading) return <div className='text-muted-foreground text-sm'>Loading...</div>
+  if (loading) return <div className='text-muted-foreground text-sm'>{t('loading')}</div>
 
   return (
     <ContentSection
-      title='Notification Settings'
-      desc='Enable or disable email notifications for each event. Choose which template to use.'
+      title={t('notificationSettingsTitle')}
+      desc={t('notificationSettingsDesc')}
     >
       <div className='space-y-6'>
         {settings.map((s) => (
@@ -98,7 +100,7 @@ export default function SettingsNotificationSettings() {
                 onValueChange={(v) => handleTemplateChange(s.eventKey, v)}
               >
                 <SelectTrigger className='w-[180px]'>
-                  <SelectValue placeholder='Template' />
+                  <SelectValue placeholder={t('template')} />
                 </SelectTrigger>
                 <SelectContent>
                   {templates.map((t) => (
@@ -109,7 +111,7 @@ export default function SettingsNotificationSettings() {
                 </SelectContent>
               </Select>
               <div className='flex items-center gap-2'>
-                <span className='text-muted-foreground text-sm'>Enabled</span>
+                <span className='text-muted-foreground text-sm'>{t('enabled')}</span>
                 <Switch
                   checked={s.enabled}
                   onCheckedChange={(v) => handleToggle(s.eventKey, v)}
@@ -119,11 +121,11 @@ export default function SettingsNotificationSettings() {
           </div>
         ))}
         {settings.length === 0 && (
-          <div className='text-muted-foreground text-sm'>No notification events configured.</div>
+          <div className='text-muted-foreground text-sm'>{t('noNotificationEventsConfigured')}</div>
         )}
         {settings.length > 0 && (
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? t('saving') : t('save', { ns: 'common' })}
           </Button>
         )}
       </div>

@@ -1,7 +1,9 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
 import { Badge } from '@/components/ui/badge'
 import { RichTextView } from '@/components/rich-text-view'
-import { format } from 'date-fns'
+import { formatDateLocale, formatDateTimeLocale } from '@/utils/formatDateLocale'
 import { ProtectedFileLink } from '@/components/generic/ProtectedFileLink'
 
 export interface DetailFieldFormatterProps {
@@ -13,22 +15,23 @@ export interface DetailFieldFormatterProps {
 
 export function DetailViewFieldFormatter({ type, value, format: dateFormat, options }: DetailFieldFormatterProps) {
   // Handle null/undefined values
+  const { t } = useTranslation('common')
   if (value === null || value === undefined || value === '') {
-    return <span className="text-muted-foreground">Not provided</span>
+    return <span className="text-muted-foreground">{t('notProvided')}</span>
   }
 
   switch (type) {
     case 'boolean':
       return (
         <Badge variant={value ? 'default' : 'secondary'}>
-          {value ? 'Yes' : 'No'}
+          {value ? t('yes') : t('no')}
         </Badge>
       )
 
     case 'date':
       try {
         const date = new Date(value)
-        const formattedDate = dateFormat ? format(date, dateFormat) : format(date, 'MMM dd, yyyy HH:mm')
+        const formattedDate = dateFormat ? formatDateLocale(date, dateFormat) : formatDateTimeLocale(date, 'PPP p')
         return <span>{formattedDate}</span>
       } catch {
         return <span className="text-muted-foreground">{value}</span>
@@ -83,9 +86,9 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
       try {
         loc = typeof value === 'string' ? JSON.parse(value) : value
       } catch {
-        return <span className="text-muted-foreground">Not provided</span>
+        return <span className="text-muted-foreground">{t('notProvided')}</span>
       }
-      if (loc?.latitude == null && loc?.longitude == null) return <span className="text-muted-foreground">Not provided</span>
+      if (loc?.latitude == null && loc?.longitude == null) return <span className="text-muted-foreground">{t('notProvided')}</span>
       return <span>{[loc.latitude, loc.longitude].filter((x) => x != null).join(', ')}</span>
     }
 
@@ -94,9 +97,9 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
       try {
         addr = typeof value === 'string' ? JSON.parse(value) : value
       } catch {
-        return <span className="text-muted-foreground">Not provided</span>
+        return <span className="text-muted-foreground">{t('notProvided')}</span>
       }
-      if (!addr || typeof addr !== 'object') return <span className="text-muted-foreground">Not provided</span>
+      if (!addr || typeof addr !== 'object') return <span className="text-muted-foreground">{t('notProvided')}</span>
       const parts = [addr.street, addr.city, addr.state, addr.zip, addr.country].filter(Boolean)
       return <span>{parts.join(', ')}</span>
     }
@@ -110,7 +113,7 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
       const path = typeof value === 'string' ? value : String(value ?? '')
       const filename = path.split('/').pop() || path
       const normalizedPath = path.startsWith('/') ? path : `/${path}`
-      if (!path) return <span className="text-muted-foreground">Not provided</span>
+      if (!path) return <span className="text-muted-foreground">{t('notProvided')}</span>
       if (normalizedPath.startsWith('/uploads/')) {
         return (
           <ProtectedFileLink
@@ -142,7 +145,8 @@ export function DetailViewFieldFormatter({ type, value, format: dateFormat, opti
       if (isNaN(numValue)) {
         return <span className="text-muted-foreground">{value}</span>
       }
-      return <span className="font-mono">{numValue.toLocaleString()}</span>
+      const lang = i18n.language ?? 'en'
+      return <span className="font-mono">{numValue.toLocaleString(lang)}</span>
 
     case 'string':
     default:

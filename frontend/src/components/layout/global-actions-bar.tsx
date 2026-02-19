@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { IconPlus, IconStar } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -33,6 +34,7 @@ interface GlobalActionsBarProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function GlobalActionsBar({ className, actions, children, ...props }: GlobalActionsBarProps) {
+  const { t } = useTranslation('common')
   const isMobile = useIsMobile()
   const useDropdownForCount = actions.length > MAX_INLINE_ACTIONS
   const showStarDropdown = isMobile || useDropdownForCount
@@ -40,9 +42,9 @@ export function GlobalActionsBar({ className, actions, children, ...props }: Glo
   const dropdownContent = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5" aria-label="Global actions">
+        <Button variant="outline" size="sm" className="gap-1.5" aria-label={t('globalActions')}>
           <IconStar className="h-4 w-4" />
-          <span className="hidden sm:inline">Actions</span>
+          <span className="hidden sm:inline">{t('actions')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-[10rem]">

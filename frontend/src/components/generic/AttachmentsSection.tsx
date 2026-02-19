@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Paperclip, Upload, Trash2, ExternalLink, FileText, Download, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -36,6 +37,7 @@ function formatFileSize(bytes: number): string {
 }
 
 export function AttachmentsSection({ objectName, recordId, canUpdate = true }: AttachmentsSectionProps) {
+  const { t } = useTranslation('common')
   const [files, setFiles] = useState<FileRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
@@ -78,10 +80,10 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
       await api.post(`/api/upload/${objectName}/${recordId}/attachments`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      toast.success('File uploaded')
+      toast.success(t('fileUploaded'))
       fetchFiles()
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Upload failed'
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? t('uploadFailed')
       toast.error(msg)
     } finally {
       setUploading(false)
@@ -93,11 +95,11 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
     if (!canUpdate) return
     try {
       await api.delete(`/api/files/${fileId}`)
-      toast.success('File deleted')
+      toast.success(t('fileDeleted'))
       setFiles((prev) => prev.filter((f) => f.id !== fileId))
       if (previewFile?.id === fileId) setPreviewFile(null)
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Delete failed'
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? t('deleteFailed')
       toast.error(msg)
     }
   }
@@ -110,9 +112,9 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
       setFiles((prev) =>
         prev.map((f) => (f.id === file.id ? { ...f, isPublic: !f.isPublic } : f))
       )
-      toast.success(file.isPublic ? 'File is now private' : 'File is now public')
+      toast.success(file.isPublic ? t('fileNowPrivate') : t('fileNowPublic'))
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to update'
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? t('updateFailed')
       toast.error(msg)
     } finally {
       setTogglingPublic(null)
@@ -148,7 +150,7 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
       <div className="space-y-2">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Paperclip className="h-4 w-4" />
-          <span>Loading attachments...</span>
+          <span>{t('loadingAttachments')}</span>
         </div>
       </div>
     )
@@ -159,7 +161,7 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-medium">
           <Paperclip className="h-4 w-4" />
-          <span>Attachments</span>
+          <span>{t('attachments')}</span>
         </div>
         {canUpdate && (
           <div className="flex items-center gap-2">
@@ -170,7 +172,7 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
                 onCheckedChange={(v) => setMakePublicDefault(!!v)}
               />
               <label htmlFor="makePublicDefault" className="text-xs text-muted-foreground cursor-pointer">
-                Make new uploads public
+                {t('makeNewUploadsPublic')}
               </label>
             </div>
             <label className="cursor-pointer">
@@ -184,7 +186,7 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
               <Button variant="outline" size="sm" asChild disabled={uploading}>
                 <span>
                   <Upload className="h-4 w-4 mr-1" />
-                  {uploading ? 'Uploading...' : 'Upload'}
+                  {uploading ? t('uploading') : t('upload')}
                 </span>
               </Button>
             </label>
@@ -193,7 +195,7 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
       </div>
 
       {files.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No attachments yet.</p>
+        <p className="text-sm text-muted-foreground">{t('noAttachments')}</p>
       ) : (
         <div className="space-y-2">
           {displayedFiles.map((file) => (
@@ -217,12 +219,12 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
                             htmlFor={`public-${file.id}`}
                             className="text-xs text-muted-foreground cursor-pointer"
                           >
-                            Public
+                            {t('public')}
                           </label>
                         </div>
                       )}
                       {!canUpdate && file.isPublic && (
-                        <span className="text-xs rounded bg-muted px-1">Public</span>
+                        <span className="text-xs rounded bg-muted px-1">{t('public')}</span>
                       )}
                     </div>
                   </div>
@@ -233,7 +235,7 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
                     size="icon"
                     className="h-8 w-8"
                     onClick={() => setPreviewFile((f) => (f?.id === file.id ? null : file))}
-                    title="Preview"
+                    title={t('preview')}
                   >
                     <ExternalLink className="h-4 w-4" />
                   </Button>
@@ -242,10 +244,10 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
                     size="sm"
                     className="h-8 px-2 text-primary"
                     onClick={() => handleDownload(file)}
-                    title="Download"
+                    title={t('download')}
                   >
                     <Download className="h-4 w-4 mr-1" />
-                    Download
+                    {t('download')}
                   </Button>
                   {canUpdate && (
                     <Button
@@ -253,7 +255,7 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
                       size="icon"
                       className="h-8 w-8 text-destructive hover:text-destructive"
                       onClick={() => handleDelete(file.id)}
-                      title="Delete"
+                      title={t('delete')}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -272,12 +274,12 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
               {showAll ? (
                 <>
                   <ChevronUp className="h-4 w-4 mr-1" />
-                  Show less
+                  {t('showLess')}
                 </>
               ) : (
                 <>
                   <ChevronDown className="h-4 w-4 mr-1" />
-                  Show more ({files.length - displayLimit} more)
+                  {t('showMoreCount', { count: files.length - displayLimit })}
                 </>
               )}
             </Button>

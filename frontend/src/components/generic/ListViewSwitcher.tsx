@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ListViewDefinition } from '@/types/object-definition'
+import { translateListViewLabel } from '@/utils/translateMetadata'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { getObjectAvatarClasses } from '@/utils/object-color'
 
 interface ListViewSwitcherProps {
+  objectName?: string
   objectIcon?: React.ComponentType<{ className?: string }>
   objectColor?: string
   views: ListViewDefinition[]
@@ -27,6 +30,7 @@ interface ListViewSwitcherProps {
 }
 
 export function ListViewSwitcher({
+  objectName = '',
   objectIcon: ObjectIcon,
   objectColor,
   views,
@@ -36,6 +40,7 @@ export function ListViewSwitcher({
   pinnedViewKey,
   onPinChange,
 }: ListViewSwitcherProps) {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [open, setOpen] = useState(false)
 
@@ -63,7 +68,9 @@ export function ListViewSwitcher({
     onPinChange(isPinned ? null : activeViewKey)
   }
 
-  const itemCountLabel = recordCount === 1 ? '1 item' : `${recordCount} items`
+  const itemCountLabel = recordCount === 1
+    ? t('common:itemsCount', { count: recordCount })
+    : t('common:itemsCountPlural', { count: recordCount })
 
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
@@ -87,7 +94,9 @@ export function ListViewSwitcher({
                 className="flex items-center gap-1 sm:gap-1.5 rounded-md hover:bg-muted/50 px-1 py-0.5 -ml-1 transition-colors group data-[state=open]:bg-muted/50 border-b-2 border-transparent hover:border-muted-foreground/20 data-[state=open]:border-muted-foreground/30 min-w-0"
               >
                 <span className="text-lg sm:text-2xl font-bold tracking-tight truncate">
-                  {activeView?.label ?? 'All'}
+                  {activeView
+                    ? translateListViewLabel(objectName, activeView.key, activeView.label)
+                    : t('common:all')}
                 </span>
                 <span className="text-xs sm:text-sm text-muted-foreground shrink-0">
                   {itemCountLabel}
@@ -100,7 +109,7 @@ export function ListViewSwitcher({
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search lists..."
+                    placeholder={t('common:searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-8 h-8"
@@ -110,7 +119,7 @@ export function ListViewSwitcher({
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuLabel className="text-muted-foreground text-xs font-normal">
-                  {searchQuery.trim() ? 'Matching lists' : 'List views'}
+                  {searchQuery.trim() ? t('common:matchingLists') : t('common:listViews')}
                 </DropdownMenuLabel>
                 {filteredViews.map((view) => (
                   <DropdownMenuItem
@@ -125,7 +134,7 @@ export function ListViewSwitcher({
                       {activeViewKey === view.key && <Check className="h-4 w-4 text-primary" />}
                     </span>
                     <span className="truncate flex-1">
-                      {view.label}
+                      {translateListViewLabel(objectName, view.key, view.label)}
                       {pinnedViewKey === view.key && (
                         <span className="text-muted-foreground ml-1">(Pinned list)</span>
                       )}

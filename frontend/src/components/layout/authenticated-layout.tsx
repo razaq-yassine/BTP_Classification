@@ -11,6 +11,7 @@ import { GlobalActions } from '@/components/layout/global-actions'
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
+import { LanguageSwitcher } from '@/components/language-switcher'
 import SkipToMain from '@/components/skip-to-main'
 import { useMetadataVersionPolling } from '@/hooks/useMetadataVersionPolling'
 import { useEffectiveLanguage } from '@/hooks/useEffectiveLanguage'
@@ -41,7 +42,7 @@ export function AuthenticatedLayout({ children }: Props) {
         <div
           id='content'
           className={cn(
-            'ml-auto w-full max-w-full',
+            'ms-auto w-full max-w-full',
             'peer-data-[layout=collapsed]:w-[calc(100%-var(--sidebar-width-icon)-1rem)]',
             'peer-data-[layout=expanded]:w-[calc(100%-var(--sidebar-width))]',
             'sm:transition-[width] sm:duration-200 sm:ease-linear',
@@ -58,6 +59,7 @@ export function AuthenticatedLayout({ children }: Props) {
             </div>
             <div className='flex shrink-0 items-center gap-4'>
               <ThemeSwitch />
+              <LanguageSwitcher />
               <ProfileDropdown />
             </div>
           </Header>

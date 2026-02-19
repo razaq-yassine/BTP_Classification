@@ -828,6 +828,28 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
     }
   }
 
+  // Also load related objects from system objects (organization, tenant) for relatedListPaths
+  const hasTenants =
+    tenantMode === "single_tenant" || tenantMode === "org_and_tenant";
+  const systemObjectsForRelated = hasOrgs ? ["organization"] : [];
+  if (hasTenants) systemObjectsForRelated.push("tenant");
+  for (const objectName of systemObjectsForRelated) {
+    const related = loadRelatedObjects(objectName, SYSTEM_OBJECTS_PATH);
+    for (const rel of related) {
+      const apiEndpoint = rel.apiEndpoint.replace(/^\/api\//, "");
+      const parts = apiEndpoint.split("/");
+      if (parts.length >= 2) {
+        const entityPath = parts[0];
+        const subPath = parts[1];
+        const fkMatch = rel.foreignKey.match(/^(\w+)\.id$/);
+        const filterColumn = fkMatch ? `${fkMatch[1]}Id` : "id";
+        const existing = relatedListPathsByEntity.get(entityPath) || {};
+        existing[subPath] = { filterColumn };
+        relatedListPathsByEntity.set(entityPath, existing);
+      }
+    }
+  }
+
   const entityConfigs: string[] = [];
   const imports = new Set<string>();
   const tenantConfig = loadTenantConfig();
@@ -1131,6 +1153,12 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
         ? `dateFields: [${dateFields.map((s) => `'${s}'`).join(", ")}]`
         : "";
 
+    const relatedPaths = relatedListPathsByEntity.get(tableName);
+    const relatedPathsStr =
+      relatedPaths && Object.keys(relatedPaths).length > 0
+        ? JSON.stringify(relatedPaths)
+        : "undefined";
+
     const configParts = [
       `table: ${tableName}`,
       `objectName: '${objectName}'`,
@@ -1147,7 +1175,7 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
       dateFieldsConfig,
       joinConfig,
       `computedFields: undefined`,
-      `relatedListPaths: undefined`
+      `relatedListPaths: ${relatedPathsStr}`
     ].filter(Boolean);
 
     entityConfigs.push(`  '${tableName}': { ${configParts.join(", ")} },`);

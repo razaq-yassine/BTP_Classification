@@ -18,5 +18,8 @@
   "display": "Display",
   "translations": "Translations",
   "sales": "Sales",
-  "data": "Data"
+  "data": "Data",
+  "notifications": "Notifications",
+  "billing": "Billing",
+  "logOut": "Log out"
 }

@@ -1,0 +1,14 @@
+{
+  "sessionExpired": "انتهت الجلسة!",
+  "internalServerError": "خطأ داخلي في الخادم!",
+  "contentNotModified": "لم يتم تعديل المحتوى!",
+  "invalidCredentials": "بيانات الاعتماد غير صالحة",
+  "unauthorized": "غير مصرح",
+  "forbidden": "ممنوع",
+  "notFound": "غير موجود",
+  "loadingFailed": "فشل التحميل",
+  "connectionLost": "انقطع الاتصال. يرجى الانتظار والمحاولة مرة أخرى.",
+  "failedToFetch": "فشل جلب {{object}}",
+  "failedToDelete": "فشل الحذف",
+  "failedToFetchRelated": "فشل جلب {{object}} المرتبطة"
+}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { ObjectDefinition, GenericRecord } from '@/types/object-definition'
 import { pluralize } from '@/metadata/utils'
 import { getObjectDefinition } from '@/metadata/loader'
@@ -23,6 +24,7 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { getObjectAvatarClasses, getObjectButtonClasses } from '@/utils/object-color'
 import { cn } from '@/lib/utils'
 import { filterViewsByProfile } from '@/utils/list-view-utils'
+import { translateObjectLabel, translateListViewLabel } from '@/utils/translateMetadata'
 
 interface GenericListViewProps {
   objectDefinition: ObjectDefinition
@@ -70,6 +72,7 @@ function setPinnedViewKey(objectName: string, viewKey: string | null): void {
 }
 
 export function GenericListView({ objectDefinition, basePath, initialViewKey }: GenericListViewProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const user = useAuthStore(selectUser)
   const { canCreate, canDelete, isFieldVisible } = usePermissions()
@@ -78,6 +81,7 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
   const [records, setRecords] = useState<GenericRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isConnectionError, setIsConnectionError] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -233,6 +237,8 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
         })
         
         setRecords(fetchedRecords)
+        setError(null)
+        setIsConnectionError(false)
         setLoading(false)
         initialLoadDone.current = true
         return
@@ -296,10 +302,14 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
       }
       
       setRecords(records)
+      setError(null)
+      setIsConnectionError(false)
     } catch (err: any) {
-      const msg = isNetworkError(err)
-        ? 'Connection lost. Please wait and try again.'
-        : err.response?.data?.message || err.response?.data?.error || `Failed to fetch ${objectDefinition.labelPlural.toLowerCase()}`
+      const networkErr = isNetworkError(err)
+      setIsConnectionError(networkErr)
+      const msg = networkErr
+        ? t('errors:connectionLost')
+        : err.response?.data?.message || err.response?.data?.error || t('errors:failedToFetch', { object: objectDefinition.labelPlural.toLowerCase() })
       setError(msg)
     } finally {
       setLoading(false)
@@ -406,7 +416,7 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
       setDeleteCounter((c) => c + 1)
       fetchRecords()
     } catch (err: any) {
-      const msg = err.response?.data?.message || err.response?.data?.error || 'Failed to delete'
+      const msg = err.response?.data?.message || err.response?.data?.error || t('errors:failedToDelete')
       setError(msg)
     } finally {
       setDeleting(false)
@@ -425,6 +435,7 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
           <div className="flex items-center justify-between sm:justify-start gap-2 sm:flex-1 sm:min-w-0">
             {hasMultipleViews ? (
               <ListViewSwitcher
+                objectName={objectDefinition.name}
                 objectIcon={objectDefinition.icon}
                 objectColor={objectDefinition.color}
                 views={visibleViews}
@@ -449,10 +460,14 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
                   </div>
                   <div className="min-w-0">
                     <h1 className="text-lg sm:text-2xl font-bold tracking-tight truncate">
-                      {visibleViews[0]?.label ?? objectDefinition.labelPlural}
+                      {visibleViews[0]
+                        ? translateListViewLabel(objectDefinition.name, visibleViews[0].key, visibleViews[0].label)
+                        : translateObjectLabel(objectDefinition.name, objectDefinition.labelPlural, true)}
                     </h1>
                     <p className="text-xs sm:text-sm text-muted-foreground">
-                      {records.length === 1 ? '1 item' : `${records.length} items`}
+                      {records.length === 1
+                        ? t('common:itemsCount', { count: records.length })
+                        : t('common:itemsCountPlural', { count: records.length })}
                     </p>
                   </div>
                 </div>
@@ -478,7 +493,7 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto sm:flex-1 sm:max-w-sm">
             <Input
-              placeholder={`Search...`}
+              placeholder={t('common:searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="h-9 sm:h-10 min-w-0 flex-1"
@@ -491,13 +506,15 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
                   onClick={() => setShowDeleteDialog(true)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete {selectedIds.length} item{selectedIds.length > 1 ? 's' : ''}
+                  {selectedIds.length === 1
+                    ? t('common:deleteSelected', { count: selectedIds.length })
+                    : t('common:deleteSelectedPlural', { count: selectedIds.length })}
                 </Button>
               )}
               {canCreate(objectDefinition.name) && (
                 <Button size="sm" className={getObjectButtonClasses(objectDefinition.color)} onClick={handleAddRecord}>
                   <Plus className="mr-2 h-4 w-4" />
-                  Add {objectDefinition.label}
+                  {t('common:addObject', { label: translateObjectLabel(objectDefinition.name, objectDefinition.label, false) })}
                 </Button>
               )}
             </div>
@@ -507,6 +524,7 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
         {/* Statistics Cards */}
         {(currentListView.statistics || objectDefinition.listView?.statistics) && (
           <StatisticsCards
+            objectName={objectDefinition.name}
             statistics={currentListView.statistics || objectDefinition.listView?.statistics || []}
             records={records}
           />
@@ -517,9 +535,9 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
             <Alert variant="destructive">
               <AlertDescription className="flex items-center justify-between gap-4">
                 {error}
-                {error.includes('Connection lost') && (
+                {isConnectionError && (
                   <Button variant="outline" size="sm" onClick={() => fetchRecords()}>
-                    Retry
+                    {t('common:retry')}
                   </Button>
                 )}
               </AlertDescription>
@@ -560,9 +578,11 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
       <ConfirmDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        title="Delete selected items?"
-        desc={`Are you sure you want to delete ${selectedIds.length} item${selectedIds.length > 1 ? 's' : ''}? This cannot be undone.`}
-        confirmText="Delete"
+        title={t('common:deleteSelectedTitle')}
+        desc={selectedIds.length === 1
+          ? t('common:deleteSelectedConfirm', { count: selectedIds.length })
+          : t('common:deleteSelectedConfirmPlural', { count: selectedIds.length })}
+        confirmText={t('common:delete')}
         destructive
         isLoading={deleting}
         handleConfirm={handleDeleteSelected}

@@ -24,67 +24,41 @@ import { useTranslation } from 'react-i18next'
 import api from '@/services/api'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
+import { useEffectiveLanguage } from '@/hooks/useEffectiveLanguage'
+import { DEFAULT_LANGUAGE } from '@/i18n'
+import { LANGUAGE_OPTIONS } from '@/constants/languages'
 
-const DEFAULT_LANG_VALUE = '__default__'
-const LANGUAGE_OPTIONS = [
-  { value: DEFAULT_LANG_VALUE, label: 'Default (from tenant or app)' },
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
-  { value: 'it', label: 'Italian' },
-  { value: 'pt', label: 'Portuguese' },
-  { value: 'ja', label: 'Japanese' },
-  { value: 'zh', label: 'Chinese' },
-]
-
-const items = [
-  {
-    id: 'recents',
-    label: 'Recents',
-  },
-  {
-    id: 'home',
-    label: 'Home',
-  },
-  {
-    id: 'applications',
-    label: 'Applications',
-  },
-  {
-    id: 'desktop',
-    label: 'Desktop',
-  },
-  {
-    id: 'downloads',
-    label: 'Downloads',
-  },
-  {
-    id: 'documents',
-    label: 'Documents',
-  },
+const SIDEBAR_ITEMS = [
+  { id: 'recents' as const, labelKey: 'sidebarRecents' as const },
+  { id: 'home' as const, labelKey: 'sidebarHome' as const },
+  { id: 'applications' as const, labelKey: 'sidebarApplications' as const },
+  { id: 'desktop' as const, labelKey: 'sidebarDesktop' as const },
+  { id: 'downloads' as const, labelKey: 'sidebarDownloads' as const },
+  { id: 'documents' as const, labelKey: 'sidebarDocuments' as const },
 ] as const
 
-const displayFormSchema = z.object({
-  items: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: 'You have to select at least one item.',
-  }),
-  preferredLanguage: z.string().optional(),
-})
+const displayFormSchema = (t: (key: string) => string) =>
+  z.object({
+    items: z.array(z.string()).refine((value) => value.some((item) => item), {
+      message: t('selectAtLeastOneItem'),
+    }),
+    preferredLanguage: z.string().optional(),
+  })
 
-type DisplayFormValues = z.infer<typeof displayFormSchema>
+type DisplayFormValues = z.infer<ReturnType<typeof displayFormSchema>>
 
 const defaultValues: Partial<DisplayFormValues> = {
   items: ['recents', 'home'],
-  preferredLanguage: DEFAULT_LANG_VALUE,
+  preferredLanguage: DEFAULT_LANGUAGE,
 }
 
 export function DisplayForm() {
   const { t } = useTranslation('settings')
   const updateUser = useAuthStore((s) => s.checkAuth)
+  const effective = useEffectiveLanguage()
   const [loadingPrefs, setLoadingPrefs] = useState(true)
   const form = useForm<DisplayFormValues>({
-    resolver: zodResolver(displayFormSchema),
+    resolver: zodResolver(displayFormSchema(t)),
     defaultValues,
   })
 
@@ -93,19 +67,16 @@ export function DisplayForm() {
       .get('/api/auth/me')
       .then((res) => {
         const pref = res.data?.preferredLanguage ?? ''
-        form.setValue('preferredLanguage', pref || DEFAULT_LANG_VALUE)
+        form.setValue('preferredLanguage', pref || effective || DEFAULT_LANGUAGE)
       })
       .catch(() => {})
       .finally(() => setLoadingPrefs(false))
-  }, [form])
+  }, [form, effective])
 
   const handleSubmit = async (data: DisplayFormValues) => {
     try {
       await api.patch('/api/auth/me', {
-        preferredLanguage:
-          data.preferredLanguage === DEFAULT_LANG_VALUE || !data.preferredLanguage
-            ? null
-            : data.preferredLanguage,
+        preferredLanguage: data.preferredLanguage || null,
       })
       await updateUser()
       toast.success(t('preferredLanguageUpdated', { defaultValue: 'Preferred language updated' }))
@@ -127,11 +98,11 @@ export function DisplayForm() {
             <FormItem>
               <FormLabel>{t('preferredLanguage', { defaultValue: 'Preferred Language' })}</FormLabel>
               <FormDescription>
-                {t('preferredLanguageDescription', { defaultValue: 'Override the default language. Leave as "Default" to use tenant or app settings.' })}
+                {t('preferredLanguageDescription', { defaultValue: 'Override the default language.' })}
               </FormDescription>
               <Select
                 onValueChange={field.onChange}
-                value={field.value || DEFAULT_LANG_VALUE}
+                value={field.value || DEFAULT_LANGUAGE}
                 disabled={loadingPrefs}
               >
                 <FormControl>
@@ -142,7 +113,7 @@ export function DisplayForm() {
                 <SelectContent>
                   {LANGUAGE_OPTIONS.map((opt) => (
                     <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
+                      {'labelKey' in opt ? t(opt.labelKey as string) : opt.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -157,12 +128,12 @@ export function DisplayForm() {
           render={() => (
             <FormItem>
               <div className='mb-4'>
-                <FormLabel className='text-base'>Sidebar</FormLabel>
+                <FormLabel className='text-base'>{t('sidebar')}</FormLabel>
                 <FormDescription>
-                  Select the items you want to display in the sidebar.
+                  {t('sidebarDesc')}
                 </FormDescription>
               </div>
-              {items.map((item) => (
+              {SIDEBAR_ITEMS.map((item) => (
                 <FormField
                   key={item.id}
                   control={form.control}
@@ -188,7 +159,7 @@ export function DisplayForm() {
                           />
                         </FormControl>
                         <FormLabel className='font-normal'>
-                          {item.label}
+                          {t(item.labelKey)}
                         </FormLabel>
                       </FormItem>
                     )

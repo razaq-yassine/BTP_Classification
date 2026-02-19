@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ObjectDefinition, GenericRecord } from '@/types/object-definition'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -13,18 +14,19 @@ interface GenericObjectDetailViewSideSectionProps {
 }
 
 // Component for tab content that is under development
-function UnderDevelopmentTabContent({ name }: { name: string }) {
+function UnderDevelopmentTabContent({ name, underDevelopmentText }: { name: string; underDevelopmentText: string }) {
   return (
     <div className="flex items-center justify-center py-4 text-muted-foreground">
       <div className="text-center">
         <Construction className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-        <p className="text-sm font-medium">{name} - Under Development</p>
+        <p className="text-sm font-medium">{name} - {underDevelopmentText}</p>
       </div>
     </div>
   );
 }
 
 export function GenericObjectDetailViewSideSection({ objectDefinition, record }: GenericObjectDetailViewSideSectionProps) {
+  const { t } = useTranslation('common')
   const [activeTab, setActiveTab] = useState('history');
   const { canUpdate } = usePermissions();
   const recordId = record?.id != null ? Number(record.id) : null;
@@ -35,8 +37,8 @@ export function GenericObjectDetailViewSideSection({ objectDefinition, record }:
         <CardContent className="p-0">
           <Tabs defaultValue="history" value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full">
-              <TabsTrigger value="history" className="flex-1">History</TabsTrigger>
-              <TabsTrigger value="files" className="flex-1">Files</TabsTrigger>
+              <TabsTrigger value="history" className="flex-1">{t('history')}</TabsTrigger>
+              <TabsTrigger value="files" className="flex-1">{t('files')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="history" className="p-3 mt-0">
@@ -48,7 +50,7 @@ export function GenericObjectDetailViewSideSection({ objectDefinition, record }:
                   refreshTrigger={record?.updatedAt}
                 />
               ) : (
-                <UnderDevelopmentTabContent name="History" />
+                <UnderDevelopmentTabContent name={t('history')} underDevelopmentText={t('underDevelopment')} />
               )}
             </TabsContent>
 
@@ -60,7 +62,7 @@ export function GenericObjectDetailViewSideSection({ objectDefinition, record }:
                   canUpdate={canUpdate(objectDefinition.name)}
                 />
               ) : (
-                <UnderDevelopmentTabContent name="Files" />
+                <UnderDevelopmentTabContent name={t('files')} underDevelopmentText={t('underDevelopment')} />
               )}
             </TabsContent>
           </Tabs>
