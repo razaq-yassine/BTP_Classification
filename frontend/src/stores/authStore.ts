@@ -46,7 +46,15 @@ interface AuthState {
  * Authentication actions interface
  */
 interface AuthActions {
-  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>
+  login: (usernameOrEmail: string, password: string) => Promise<{
+    success: boolean
+    error?: string
+    requiresTwoFactor?: boolean
+    mustChangePassword?: boolean
+    tempToken?: string
+  }>
+  verify2FA: (tempToken: string, code: string) => Promise<{ success: boolean; error?: string; mustChangePassword?: boolean; tempToken?: string }>
+  completePasswordChange: (tempToken: string, newPassword: string, confirmPassword: string) => Promise<{ success: boolean; error?: string }>
   logout: () => void
   checkAuth: () => Promise<void>
   clearError: () => void
@@ -65,25 +73,29 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
   error: null,
 
   /**
-   * Login with username and password
+   * Login with username/email and password
    */
-  login: async (username: string, password: string) => {
-    
+  login: async (usernameOrEmail: string, password: string) => {
     set({ isLoading: true, error: null })
-    
     try {
-      // Make login request to backend
       const response = await api.post('/api/auth/login', {
-        username,
-        password
+        usernameOrEmail,
+        password,
       })
-      
-      const { accessToken, ...userData } = response.data
-      
-      // Store JWT token
+      const data = response.data
+
+      if (data.requiresTwoFactor && data.tempToken) {
+        set({ isLoading: false, error: null })
+        return { success: true, requiresTwoFactor: true, tempToken: data.tempToken }
+      }
+
+      if (data.mustChangePassword && data.tempToken) {
+        set({ isLoading: false, error: null })
+        return { success: true, mustChangePassword: true, tempToken: data.tempToken }
+      }
+
+      const { accessToken, ...userData } = data
       localStorage.setItem('jwt_token', accessToken)
-      
-      // Create user object (spread to include organizationId, tenantId from backend)
       const user: AuthUser = {
         id: userData.id,
         username: userData.username,
@@ -97,31 +109,80 @@ export const useAuthStore = create<AuthStore>()(subscribeWithSelector((set) => (
         emailVerified: userData.emailVerified ?? false,
         twoFactorEnabled: userData.twoFactorEnabled ?? false,
       }
-
-      // Update state
-      set({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null
-      })
-
+      set({ user, isAuthenticated: true, isLoading: false, error: null })
       return { success: true }
-      
     } catch (error: any) {
-      
-      // Clear any stored token on login failure
       localStorage.removeItem('jwt_token')
-      
       const errorMessage = error.response?.data?.message || error.message || 'Login failed'
-      
-      set({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: errorMessage
+      set({ user: null, isAuthenticated: false, isLoading: false, error: errorMessage })
+      return { success: false, error: errorMessage }
+    }
+  },
+
+  /**
+   * Verify 2FA code and complete login
+   */
+  verify2FA: async (tempToken: string, code: string) => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await api.post('/api/auth/verify-2fa', { tempToken, code })
+      const data = response.data
+      if (data.mustChangePassword && data.tempToken) {
+        set({ isLoading: false, error: null })
+        return { success: true, mustChangePassword: true, tempToken: data.tempToken }
+      }
+      const { accessToken, ...userData } = data
+      localStorage.setItem('jwt_token', accessToken)
+      const user: AuthUser = {
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        profile: userData.profile || 'standard-user',
+        organizationId: userData.organizationId ?? null,
+        tenantId: userData.tenantId ?? null,
+        preferredLanguage: userData.preferredLanguage ?? null,
+        emailVerified: userData.emailVerified ?? false,
+        twoFactorEnabled: userData.twoFactorEnabled ?? false,
+      }
+      set({ user, isAuthenticated: true, isLoading: false, error: null })
+      return { success: true }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Invalid code'
+      set({ isLoading: false, error: errorMessage })
+      return { success: false, error: errorMessage }
+    }
+  },
+
+  completePasswordChange: async (tempToken: string, newPassword: string, confirmPassword: string) => {
+    set({ isLoading: true, error: null })
+    try {
+      const response = await api.post('/api/auth/change-password-required', {
+        tempToken,
+        newPassword,
+        confirmPassword,
       })
-      
+      const { accessToken, ...userData } = response.data
+      localStorage.setItem('jwt_token', accessToken)
+      const user: AuthUser = {
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        profile: userData.profile || 'standard-user',
+        organizationId: userData.organizationId ?? null,
+        tenantId: userData.tenantId ?? null,
+        preferredLanguage: userData.preferredLanguage ?? null,
+        emailVerified: userData.emailVerified ?? false,
+        twoFactorEnabled: userData.twoFactorEnabled ?? false,
+      }
+      set({ user, isAuthenticated: true, isLoading: false, error: null })
+      return { success: true }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to change password'
+      set({ isLoading: false, error: errorMessage })
       return { success: false, error: errorMessage }
     }
   },

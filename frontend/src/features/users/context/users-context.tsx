@@ -9,22 +9,24 @@ interface UsersContextType {
   setOpen: (str: UsersDialogType | null) => void
   currentRow: User | null
   setCurrentRow: React.Dispatch<React.SetStateAction<User | null>>
+  refetchUsers?: () => void
 }
 
 const UsersContext = React.createContext<UsersContextType | null>(null)
 
 interface Props {
   children: React.ReactNode
+  refetchUsers?: () => void
 }
 
-export default function UsersProvider({ children }: Props) {
+export default function UsersProvider({ children, refetchUsers }: Props) {
   const [open, setOpen] = useDialogState<UsersDialogType>(null)
   const [currentRow, setCurrentRow] = useState<User | null>(null)
 
   return (
-    <UsersContext value={{ open, setOpen, currentRow, setCurrentRow }}>
+    <UsersContext.Provider value={{ open, setOpen, currentRow, setCurrentRow, refetchUsers }}>
       {children}
-    </UsersContext>
+    </UsersContext.Provider>
   )
 }
 

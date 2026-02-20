@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router'
 import type { FieldDefinition, GenericRecord } from '@/types/object-definition'
 import { useObjectDefinition } from '@/hooks/useObjectDefinition'
 import { getObjectIconClasses } from '@/utils/object-color'
+import { getReferenceDisplayName } from '@/utils/formatDetailValue'
 import { cn } from '@/lib/utils'
 
 const linkClass = 'text-blue-600 dark:text-primary hover:underline'
@@ -21,14 +22,7 @@ export function ReferenceFieldValue({ field, value }: ReferenceFieldValueProps) 
   const basePath = (field as { basePath?: string }).basePath
 
   const refId = typeof value === 'object' ? (value as { id?: string | number })?.id : value
-  const displayName =
-    typeof value === 'object'
-      ? ((value as { fullName?: string; firstName?: string; lastName?: string; name?: string; email?: string; id?: string | number }).fullName ??
-        ([(value as { firstName?: string }).firstName, (value as { lastName?: string }).lastName].filter(Boolean).join(' ').trim() ||
-          (value as { name?: string }).name ||
-          (value as { email?: string }).email ||
-          `#${((value as { id?: string | number }).id ?? '(Unknown)')}`))
-      : String(value)
+  const displayName = getReferenceDisplayName(value)
 
   const toPath = basePath ? `${basePath}/${refId}` : `/${objectName}/${refId}`
 

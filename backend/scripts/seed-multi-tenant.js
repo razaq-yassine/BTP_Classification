@@ -241,6 +241,27 @@ export async function seedMultiTenant() {
             console.log("[seed-multi-tenant] Created tenant users");
         }
     }
+    // 3b. Set org/tenant owners (required for invite API)
+    const acmeOwnerUser = await db.select().from(users).where(eq(users.username, "acme-owner")).then((r) => r[0]);
+    const techOwnerUser = await db.select().from(users).where(eq(users.username, "tech-org-user")).then((r) => r[0]);
+    const acmeUsUser = await db.select().from(users).where(eq(users.username, "acme-us-user")).then((r) => r[0]);
+    const techUsUser = await db.select().from(users).where(eq(users.username, "tech-us-user")).then((r) => r[0]);
+    if (acmeOwnerUser) {
+        await db.update(organizations).set({ ownerId: acmeOwnerUser.id }).where(eq(organizations.slug, "acme"));
+        console.log("[seed-multi-tenant] Set acme-owner as Acme Corp org owner");
+    }
+    if (techOwnerUser) {
+        await db.update(organizations).set({ ownerId: techOwnerUser.id }).where(eq(organizations.slug, "techstart"));
+        console.log("[seed-multi-tenant] Set tech-org-user as TechStart org owner");
+    }
+    if (acmeUsUser) {
+        await db.update(tenants).set({ ownerId: acmeUsUser.id }).where(eq(tenants.name, "Acme US"));
+        console.log("[seed-multi-tenant] Set acme-us-user as Acme US tenant owner");
+    }
+    if (techUsUser) {
+        await db.update(tenants).set({ ownerId: techUsUser.id }).where(eq(tenants.name, "TechStart US"));
+        console.log("[seed-multi-tenant] Set tech-us-user as TechStart US tenant owner");
+    }
     // 4. Products (platform-wide)
     const productCount = await db.select().from(products);
     if (productCount.length === 0) {

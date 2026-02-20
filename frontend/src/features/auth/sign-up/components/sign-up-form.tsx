@@ -3,8 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { IconBrandFacebook, IconBrandGithub } from '@tabler/icons-react'
+import { useNavigate } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import api from '@/services/api'
+import { useAuthStore } from '@/stores/authStore'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -17,47 +19,69 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 
-type SignUpFormProps = HTMLAttributes<HTMLFormElement>
+type SignUpFormProps = HTMLAttributes<HTMLFormElement> & {
+  inviteToken: string
+  defaultEmail?: string
+}
 
-const getFormSchema = (t: (key: string) => string) =>
+const getFormSchema = (t: (key: string, options?: { defaultValue?: string }) => string) =>
   z
     .object({
-      email: z.email({
-        error: (iss) =>
-          iss.input === '' ? t('pleaseEnterEmail') : undefined,
-      }),
+      username: z
+        .string()
+        .min(2, t('usernameMinLength', { defaultValue: 'Username must be at least 2 characters' }))
+        .max(255)
+        .regex(/^[a-zA-Z0-9_-]+$/, t('usernameFormat', { defaultValue: 'Username can only contain letters, numbers, underscores and hyphens' })),
+      email: z.string().email(t('pleaseEnterEmail', { defaultValue: 'Please enter a valid email' })),
       password: z
         .string()
         .min(1, t('pleaseEnterPassword'))
-        .min(7, t('passwordMinLength')),
+        .min(8, t('passwordMinLength', { defaultValue: 'Password must be at least 8 characters' }))
+        .refine((p) => /[a-z]/.test(p), t('passwordLowercase', { defaultValue: 'Password must contain at least one lowercase letter' }))
+        .refine((p) => /\d/.test(p), t('passwordNumber', { defaultValue: 'Password must contain at least one number' })),
       confirmPassword: z.string().min(1, t('pleaseConfirmPassword')),
     })
     .refine((data) => data.password === data.confirmPassword, {
-      message: "Passwords don't match.",
+      message: t('passwordsDoNotMatch', { defaultValue: "Passwords don't match" }),
       path: ['confirmPassword'],
     })
 
-export function SignUpForm({ className, ...props }: SignUpFormProps) {
+export function SignUpForm({ className, inviteToken, defaultEmail, ...props }: SignUpFormProps) {
   const { t } = useTranslation('common')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
+  const checkAuth = useAuthStore((s) => s.checkAuth)
 
   const form = useForm<z.infer<ReturnType<typeof getFormSchema>>>({
     resolver: zodResolver(getFormSchema(t)),
     defaultValues: {
-      email: '',
+      username: '',
+      email: defaultEmail ?? '',
       password: '',
       confirmPassword: '',
     },
   })
 
-  function onSubmit(data: z.infer<ReturnType<typeof getFormSchema>>) {
+  async function onSubmit(data: z.infer<ReturnType<typeof getFormSchema>>) {
     setIsLoading(true)
-    // eslint-disable-next-line no-console
-    console.log(data)
-
-    setTimeout(() => {
+    setError('')
+    try {
+      const response = await api.post('/api/auth/register', {
+        inviteToken,
+        username: data.username.trim(),
+        email: data.email.trim(),
+        password: data.password,
+      })
+      const { accessToken } = response.data
+      localStorage.setItem('jwt_token', accessToken)
+      await checkAuth()
+      navigate({ to: '/dashboard' })
+    } catch (err: any) {
+      setError(err.response?.data?.message ?? t('errors:unexpectedError', { defaultValue: 'An unexpected error occurred' }))
+    } finally {
       setIsLoading(false)
-    }, 3000)
+    }
   }
 
   return (
@@ -67,14 +91,32 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
         className={cn('grid gap-3', className)}
         {...props}
       >
+        {error && (
+          <div className='text-sm text-red-600 bg-red-50 dark:bg-red-950/50 dark:text-red-400 p-3 rounded-md'>
+            {error}
+          </div>
+        )}
+        <FormField
+          control={form.control}
+          name='username'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('username', { defaultValue: 'Username' })}</FormLabel>
+              <FormControl>
+                <Input placeholder='johndoe' {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name='email'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>{t('email', { defaultValue: 'Email' })}</FormLabel>
               <FormControl>
-                <Input placeholder='name@example.com' {...field} />
+                <Input placeholder='name@example.com' type='email' {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -109,36 +151,6 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
         <Button className='mt-2' disabled={isLoading}>
           Create Account
         </Button>
-
-        <div className='relative my-2'>
-          <div className='absolute inset-0 flex items-center'>
-            <span className='w-full border-t' />
-          </div>
-          <div className='relative flex justify-center text-xs uppercase'>
-            <span className='bg-background text-muted-foreground px-2'>
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <div className='grid grid-cols-2 gap-2'>
-          <Button
-            variant='outline'
-            className='w-full'
-            type='button'
-            disabled={isLoading}
-          >
-            <IconBrandGithub className='h-4 w-4' /> GitHub
-          </Button>
-          <Button
-            variant='outline'
-            className='w-full'
-            type='button'
-            disabled={isLoading}
-          >
-            <IconBrandFacebook className='h-4 w-4' /> Facebook
-          </Button>
-        </div>
       </form>
     </Form>
   )

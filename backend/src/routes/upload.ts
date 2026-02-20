@@ -7,6 +7,7 @@ import { eq, and, like } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth.js";
 import { db } from "../db/index.js";
 import { files } from "../db/schema.js";
+import { checkStorageLimit } from "../services/storage.js";
 import {
   entityRegistry,
   tenantConfig,
@@ -81,9 +82,8 @@ function getTenantFilter(
   tenantScope: string | undefined
 ): Record<string, number> | null {
   if (!user) return null;
-  const mode = tenantConfig.mode;
-  const hasOrgs =
-    mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
+  const mode = tenantConfig.mode as string;
+  const hasOrgs = ["single_tenant", "multi_tenant", "org_and_tenant"].includes(mode);
   if (!hasOrgs) return null;
   if (!tenantScope) return null;
   const isAdmin =
@@ -103,9 +103,9 @@ function getTenantFilter(
 function buildTenantConditions(
   table: { organizationId?: unknown; tenantId?: unknown },
   tenantFilter: Record<string, number> | null
-) {
+): ReturnType<typeof eq>[] {
   if (!tenantFilter) return [];
-  const conds = [];
+  const conds: ReturnType<typeof eq>[] = [];
   if (tenantFilter.organizationId != null && "organizationId" in table) {
     conds.push(eq((table as any).organizationId, tenantFilter.organizationId));
   }
@@ -115,7 +115,33 @@ function buildTenantConditions(
   return conds;
 }
 
-export const uploadRoutes = new Hono();
+/** Resolve org/tenant scope for storage from parent record and object type */
+function resolveStorageScope(
+  parentRecord: Record<string, unknown>,
+  objectName: string
+): { organizationId: number; tenantId: number | null } | null {
+  if (objectName === "organization") {
+    const id = parentRecord.id as number | undefined;
+    if (id == null) return null;
+    return { organizationId: id, tenantId: null };
+  }
+  if (objectName === "tenant") {
+    const orgId = parentRecord.organizationId as number | undefined;
+    const id = parentRecord.id as number | undefined;
+    if (orgId == null || id == null) return null;
+    return { organizationId: orgId, tenantId: id };
+  }
+  const orgId = parentRecord.organizationId as number | undefined;
+  if (orgId == null) return null;
+  const tenantId = parentRecord.tenantId as number | null | undefined;
+  return {
+    organizationId: orgId,
+    tenantId: tenantId ?? null
+  };
+}
+
+type Variables = { user: UserWithTenant };
+export const uploadRoutes = new Hono<{ Variables: Variables }>();
 
 uploadRoutes.use("*", authMiddleware);
 
@@ -234,6 +260,40 @@ uploadRoutes.post("/:objectName/:recordId/:fieldKey", async (c) => {
       );
     }
 
+    // Storage limit check - MUST happen BEFORE writing file (reusable for uploads, generated files, etc.)
+    if (parentRecord) {
+      const scope = resolveStorageScope(parentRecord, objName);
+      if (scope) {
+        let sizeToRemove = 0;
+        if (!isAttachments) {
+          const pathPrefix = `/uploads/${objName.replace(/[^a-zA-Z0-9_-]/g, "")}/${String(recordId).replace(/[^a-zA-Z0-9_-]/g, "")}/${fieldKey.replace(/[^a-zA-Z0-9_-]/g, "")}/`;
+          const existingFiles = await db
+            .select({ size: files.size })
+            .from(files)
+            .where(
+              and(
+                eq(files.objectName, objName.replace(/[^a-zA-Z0-9_-]/g, "")),
+                eq(files.recordId, Number(recordIdParam)),
+                like(files.storagePath, pathPrefix + "%")
+              )
+            );
+          sizeToRemove = existingFiles.reduce((sum, r) => sum + (r.size ?? 0), 0);
+        }
+        const check = await checkStorageLimit(
+          scope.organizationId,
+          scope.tenantId,
+          file.size,
+          sizeToRemove
+        );
+        if (!check.allowed) {
+          return c.json(
+            { message: check.message ?? "Storage limit exceeded." },
+            403
+          );
+        }
+      }
+    }
+
     const safeObject = objName.replace(/[^a-zA-Z0-9_-]/g, "");
     const safeRecord = String(recordId).replace(/[^a-zA-Z0-9_-]/g, "");
     const numericRecordId =
@@ -257,11 +317,15 @@ uploadRoutes.post("/:objectName/:recordId/:fieldKey", async (c) => {
     const relativePath = `/uploads/${safeObject}/${safeRecord}/${safeField}/${filename}`;
 
     if (parentRecord) {
-      const isPublic =
-        isAttachments &&
-        (body["isPublic"] === "true" || body["isPublic"] === true);
       const orgId = parentRecord.organizationId as number | null | undefined;
       const tenantIdVal = parentRecord.tenantId as number | null | undefined;
+      const resolvedScope = resolveStorageScope(parentRecord, objName);
+      const effectiveOrgId = resolvedScope?.organizationId ?? orgId;
+      const effectiveTenantId = resolvedScope?.tenantId ?? tenantIdVal ?? null;
+
+      const isPublic =
+        isAttachments &&
+        (body["isPublic"] === "true" || (body["isPublic"] as unknown) === true);
 
       if (!isAttachments) {
         const pathPrefix = `/uploads/${safeObject}/${safeRecord}/${safeField}/`;
@@ -286,8 +350,8 @@ uploadRoutes.post("/:objectName/:recordId/:fieldKey", async (c) => {
         isPublic: !!isPublic,
         uploadedById: user?.id ?? null,
         uploadedAt: new Date(),
-        organizationId: orgId ?? null,
-        tenantId: tenantIdVal ?? null
+        organizationId: effectiveOrgId ?? null,
+        tenantId: effectiveTenantId ?? null
       });
 
       const [inserted] = await db

@@ -89,6 +89,7 @@ export function EmailConfigForm() {
       })
       .then(() => {
         toast.success(t('emailConfigSaved'))
+        toast.info(t('restartBackendForChanges', { defaultValue: 'Restart the backend for changes to take effect.' }), { duration: 6000 })
       })
       .catch((err) => {
         toast.error(err.response?.data?.message ?? t('saveFailed'))

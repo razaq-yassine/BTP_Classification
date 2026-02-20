@@ -4,6 +4,7 @@ import {
   IconBug,
   IconChecklist,
   IconError404,
+  IconFileSearch,
   IconHelp,
   IconLanguage,
   IconLayoutDashboard,
@@ -56,6 +57,23 @@ export const settingsNavGroups: NavGroup[] = [
         titleKey: "navigation.tenant",
         url: "/settings/tenant",
         icon: Layers,
+        tenantUserOnly: true,
+        adminAlsoSees: true
+      },
+      {
+        title: "Users",
+        titleKey: "navigation.users",
+        url: "/settings/users",
+        icon: IconUsers,
+        orgUserOnly: true,
+        adminAlsoSees: true
+      },
+      {
+        title: "File Explorer",
+        titleKey: "navigation.fileExplorer",
+        url: "/settings/files",
+        icon: IconFileSearch,
+        orgUserOnly: true,
         tenantUserOnly: true,
         adminAlsoSees: true
       }
@@ -166,11 +184,6 @@ export const sidebarData: SidebarData = {
           badge: "3",
           icon: IconMessages
         },
-        {
-          title: "Users",
-          url: "/users",
-          icon: IconUsers
-        }
       ]
     },
     {

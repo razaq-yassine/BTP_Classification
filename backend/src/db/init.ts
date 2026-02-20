@@ -3,17 +3,18 @@ import { users, customers, orders, products, categories } from './schema.js'
 import { eq } from 'drizzle-orm'
 import bcrypt from 'bcrypt'
 import { tenantConfig } from '../routes/entity-registry.generated.js'
-import { seedMultiTenant } from '../../scripts/seed-multi-tenant.ts'
-import { seedSingleTenant } from '../../scripts/seed-single-tenant.ts'
-import { seedNotificationSettings } from '../../scripts/seed-notification-settings.ts'
+import { seedMultiTenant } from './seed-multi-tenant.js'
+import { seedSingleTenant } from './seed-single-tenant.js'
+import { seedNotificationSettings } from './seed-notification-settings.js'
 
 /** Seed data only - tables are created by Drizzle migrations */
 export async function initDb() {
-  if (tenantConfig.mode === 'single_tenant') {
+  const mode = tenantConfig.mode as string
+  if (mode === 'single_tenant') {
     await seedSingleTenant()
     return
   }
-  if (tenantConfig.mode === 'org_and_tenant') {
+  if (mode === 'org_and_tenant') {
     await initDbMultiTenant()
     return
   }
@@ -68,7 +69,7 @@ export async function initDb() {
       { firstName: 'Bob', lastName: 'Johnson', email: 'bob.johnson@example.com', phone: '+1555123456', company: 'Global Industries', address: '789 Pine Rd, Somewhere, USA', createdAt: now, updatedAt: now },
       { firstName: 'Alice', lastName: 'Williams', email: 'alice.williams@example.com', phone: '+1444987654', company: 'Innovation Labs', address: '321 Elm St, Elsewhere, USA', createdAt: now, updatedAt: now },
       { firstName: 'Charlie', lastName: 'Brown', email: 'charlie.brown@example.com', phone: '+1333456789', company: 'Creative Agency', address: '654 Maple Dr, Nowhere, USA', createdAt: now, updatedAt: now },
-    ])
+    ] as any)
     const custs = await db.select().from(customers)
     const orderNow = new Date()
     const orderPast = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)

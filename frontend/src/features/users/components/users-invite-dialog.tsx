@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { IconMailPlus, IconSend } from '@tabler/icons-react'
-import { showSubmittedData } from '@/utils/show-submitted-data'
+import api from '@/services/api'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -24,14 +26,16 @@ import {
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { SelectDropdown } from '@/components/select-dropdown'
-import { userTypes } from '../data/data'
+
+const INVITE_PROFILES = [
+  { label: 'Standard User', value: 'standard-user' },
+  { label: 'Tenant User', value: 'tenant-user' },
+  { label: 'Organization User', value: 'org-user' },
+] as const
 
 const formSchema = z.object({
-  email: z.email({
-    error: (iss) =>
-      iss.input === '' ? 'Please enter an email to invite.' : undefined,
-  }),
-  role: z.string().min(1, 'Role is required.'),
+  email: z.string().email('Please enter a valid email to invite.'),
+  profile: z.string().min(1, 'Profile is required.'),
   desc: z.string().optional(),
 })
 type UserInviteForm = z.infer<typeof formSchema>
@@ -42,15 +46,28 @@ interface Props {
 }
 
 export function UsersInviteDialog({ open, onOpenChange }: Props) {
+  const [isLoading, setIsLoading] = useState(false)
   const form = useForm<UserInviteForm>({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: '', role: '', desc: '' },
+    defaultValues: { email: '', profile: 'standard-user', desc: '' },
   })
 
-  const onSubmit = (values: UserInviteForm) => {
-    form.reset()
-    showSubmittedData(values)
-    onOpenChange(false)
+  const onSubmit = async (values: UserInviteForm) => {
+    setIsLoading(true)
+    try {
+      const res = await api.post<{ inviteUrl: string; expiresAt: string; message?: string }>('/api/auth/invites', {
+        email: values.email.trim().toLowerCase(),
+        profile: values.profile,
+      })
+      form.reset()
+      onOpenChange(false)
+      toast.success(res.data.message ?? 'Invite created. Share the link with the user.')
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to create invite'
+      toast.error(msg)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -96,15 +113,16 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
             />
             <FormField
               control={form.control}
-              name='role'
+              name='profile'
               render={({ field }) => (
                 <FormItem className='space-y-1'>
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel>Profile</FormLabel>
                   <SelectDropdown
                     defaultValue={field.value}
                     onValueChange={field.onChange}
-                    placeholder='Select a role'
-                    items={userTypes.map(({ label, value }) => ({
+                    isControlled
+                    placeholder='Select a profile'
+                    items={INVITE_PROFILES.map(({ label, value }) => ({
                       label,
                       value,
                     }))}
@@ -136,8 +154,8 @@ export function UsersInviteDialog({ open, onOpenChange }: Props) {
           <DialogClose asChild>
             <Button variant='outline'>Cancel</Button>
           </DialogClose>
-          <Button type='submit' form='user-invite-form'>
-            Invite <IconSend />
+          <Button type='submit' form='user-invite-form' disabled={isLoading}>
+            {isLoading ? 'Sending...' : 'Invite'} <IconSend />
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,9 +1,11 @@
 import { IconMailPlus, IconUserPlus } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
+import { useAuthStore } from '@/stores/authStore'
 import { useUsers } from '../context/users-context'
 
 export function UsersPrimaryButtons() {
   const { setOpen } = useUsers()
+  const isAdmin = useAuthStore((s) => s.user?.profile === 'admin')
   return (
     <div className='flex gap-2'>
       <Button
@@ -13,9 +15,11 @@ export function UsersPrimaryButtons() {
       >
         <span>Invite User</span> <IconMailPlus size={18} />
       </Button>
-      <Button className='space-x-1' onClick={() => setOpen('add')}>
-        <span>Add User</span> <IconUserPlus size={18} />
-      </Button>
+      {isAdmin && (
+        <Button className='space-x-1' onClick={() => setOpen('add')}>
+          <span>Add User</span> <IconUserPlus size={18} />
+        </Button>
+      )}
     </div>
   )
 }

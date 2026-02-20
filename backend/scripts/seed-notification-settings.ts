@@ -32,7 +32,7 @@ export async function seedNotificationSettings(): Promise<void> {
       .filter((e) => e && typeof e.key === "string")
       .map((e) => ({
         key: e.key as string,
-        defaultTemplateKey: (e.defaultTemplateKey as string) || e.key,
+        defaultTemplateKey: String((e.defaultTemplateKey as string) || e.key),
       }));
   } catch {
     return;

@@ -98,6 +98,7 @@
   "bodyHtml": "النص (HTML)",
   "htmlFormatted": "منسق HTML",
   "emailConfigSaved": "تم حفظ تكوين البريد الإلكتروني",
+  "restartBackendForChanges": "أعد تشغيل الخادم لتفعيل التغييرات.",
   "enableEmailSending": "تفعيل إرسال البريد الإلكتروني",
   "enableEmailSendingDesc": "عند التفعيل، سيتم إرسال رسائل البريد الإلكتروني عبر SMTP.",
   "fromEmail": "البريد الإلكتروني المرسل",

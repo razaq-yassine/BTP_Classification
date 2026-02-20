@@ -82,7 +82,10 @@ function FieldDisplay({
 
   const fieldEditable = canEditField(field.key)
   const editableForProfiles = field.editableForProfiles
-  const effectiveEditable = (field.editable !== false || (editableForProfiles?.length && profileName && editableForProfiles.includes(profileName))) && fieldEditable
+  // When editableForProfiles is set, only those profiles can edit; otherwise use field.editable
+  const effectiveEditable = editableForProfiles?.length
+    ? (profileName != null && editableForProfiles.includes(profileName)) && fieldEditable
+    : (field.editable !== false && fieldEditable)
 
   // Formula fields are always read-only
   if (isEditing && field.type !== 'formula') {

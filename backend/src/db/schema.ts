@@ -12,14 +12,16 @@ export const users = mysqlTable('users', {
   dateJoined: datetime('date_joined'),
   organizationId: int('organization_id').references(() => organizations.id),
   tenantId: int('tenant_id').references(() => tenants.id),
-  preferredLanguage: varchar('preferred_language', { length: 255 }),
   emailVerified: boolean('email_verified').default(false),
   emailVerificationToken: varchar('email_verification_token', { length: 255 }),
   emailVerificationTokenExpires: datetime('email_verification_token_expires'),
   twoFactorEnabled: boolean('two_factor_enabled').default(false),
+  twoFactorCode: varchar('two_factor_code', { length: 10 }),
+  twoFactorCodeExpires: datetime('two_factor_code_expires'),
   pendingEmail: varchar('pending_email', { length: 255 }),
   pendingEmailToken: varchar('pending_email_token', { length: 255 }),
   pendingEmailTokenExpires: datetime('pending_email_token_expires'),
+    preferredLanguage: varchar('preferred_language', { length: 255 }),
 })
 
 export const organizations = mysqlTable('organizations', {
@@ -38,6 +40,7 @@ export const organizations = mysqlTable('organizations', {
     timezone: varchar('timezone', { length: 255 }),
     defaultPreferredLanguage: varchar('default_preferred_language', { length: 255 }),
     sidebarTheme: varchar('sidebar_theme', { length: 255 }),
+    maxStorageBytes: decimal('max_storage_bytes', { precision: 10, scale: 2 }),
 })
 
 export const tenants = mysqlTable('tenants', {
@@ -56,6 +59,7 @@ export const tenants = mysqlTable('tenants', {
     timezone: varchar('timezone', { length: 255 }),
     defaultPreferredLanguage: varchar('default_preferred_language', { length: 255 }),
     sidebarTheme: varchar('sidebar_theme', { length: 255 }),
+    maxStorageBytes: decimal('max_storage_bytes', { precision: 10, scale: 2 }),
 })
 
 export const files = mysqlTable('files', {
@@ -91,6 +95,18 @@ export const notificationSettings = mysqlTable('notification_settings', {
   eventKey: varchar('event_key', { length: 255 }).notNull().unique(),
   enabled: boolean('enabled').default(false).notNull(),
   templateKey: varchar('template_key', { length: 255 }).notNull(),
+})
+
+export const inviteTokens = mysqlTable('invite_tokens', {
+  id: int('id').autoincrement().primaryKey(),
+  token: varchar('token', { length: 64 }).notNull().unique(),
+  organizationId: int('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
+  tenantId: int('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
+  email: varchar('email', { length: 255 }),
+  profile: varchar('profile', { length: 255 }).default('standard-user'),
+  invitedById: int('invited_by_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  expiresAt: datetime('expires_at').notNull(),
+  usedAt: datetime('used_at'),
 })
 
 export const categories = mysqlTable('categories', {
@@ -242,6 +258,7 @@ export type Tenant = typeof tenants.$inferSelect
 export type Fil = typeof files.$inferSelect
 export type RecordHistory = typeof recordHistory.$inferSelect
 export type NotificationSetting = typeof notificationSettings.$inferSelect
+export type InviteToken = typeof inviteTokens.$inferSelect
 export type Category = typeof categories.$inferSelect
 export type Customer = typeof customers.$inferSelect
 export type Deploytest = typeof deploytests.$inferSelect

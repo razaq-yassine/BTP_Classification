@@ -519,6 +519,8 @@ function main() {
   emailVerificationToken: varchar('email_verification_token', { length: 255 }),
   emailVerificationTokenExpires: datetime('email_verification_token_expires'),
   twoFactorEnabled: boolean('two_factor_enabled').default(false),
+  twoFactorCode: varchar('two_factor_code', { length: 10 }),
+  twoFactorCodeExpires: datetime('two_factor_code_expires'),
   pendingEmail: varchar('pending_email', { length: 255 }),
   pendingEmailToken: varchar('pending_email_token', { length: 255 }),
   pendingEmailTokenExpires: datetime('pending_email_token_expires'),${userExtCols}
@@ -537,6 +539,8 @@ function main() {
   emailVerificationToken: text('email_verification_token'),
   emailVerificationTokenExpires: integer('email_verification_token_expires', { mode: 'timestamp' }),
   twoFactorEnabled: integer('two_factor_enabled', { mode: 'boolean' }).default(false),
+  twoFactorCode: text('two_factor_code'),
+  twoFactorCodeExpires: integer('two_factor_code_expires', { mode: 'timestamp' }),
   pendingEmail: text('pending_email'),
   pendingEmailToken: text('pending_email_token'),
   pendingEmailTokenExpires: integer('pending_email_token_expires', { mode: 'timestamp' }),${userExtCols}
@@ -730,6 +734,34 @@ function main() {
 })`;
   tables.push(notificationSettingsTable);
   tableNames.push("notificationSettings");
+
+  // Internal invite_tokens table (invite-based signup)
+  const inviteTokensTable =
+    dialect === "mysql"
+      ? `export const inviteTokens = mysqlTable('invite_tokens', {
+  id: int('id').autoincrement().primaryKey(),
+  token: varchar('token', { length: 64 }).notNull().unique(),
+  organizationId: int('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
+  tenantId: int('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
+  email: varchar('email', { length: 255 }),
+  profile: varchar('profile', { length: 255 }).default('standard-user'),
+  invitedById: int('invited_by_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  expiresAt: datetime('expires_at').notNull(),
+  usedAt: datetime('used_at'),
+})`
+      : `export const inviteTokens = sqliteTable('invite_tokens', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  token: text('token').notNull().unique(),
+  organizationId: integer('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
+  tenantId: integer('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
+  email: text('email'),
+  profile: text('profile').default('standard-user'),
+  invitedById: integer('invited_by_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  usedAt: integer('used_at', { mode: 'timestamp' }),
+})`;
+  tables.push(inviteTokensTable);
+  tableNames.push("inviteTokens");
 
   const refs = new Map<string, string>();
 

@@ -44,7 +44,36 @@ function getValueAtPath(obj: Record<string, unknown>, pathStr: string): unknown 
   return current;
 }
 
+/**
+ * Load email config: env vars override app-config.json.
+ * Env: SMTP_ENABLED, SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASSWORD, SMTP_FROM_EMAIL, SMTP_FROM_NAME.
+ */
 export function loadEmailConfig(): EmailConfig | null {
+  const fromEnv: Partial<EmailConfig> = {};
+  if (process.env.SMTP_HOST) fromEnv.smtpHost = process.env.SMTP_HOST;
+  if (process.env.SMTP_PORT) fromEnv.smtpPort = parseInt(process.env.SMTP_PORT, 10);
+  if (process.env.SMTP_SECURE !== undefined) fromEnv.smtpSecure = process.env.SMTP_SECURE === "1" || process.env.SMTP_SECURE === "true";
+  if (process.env.SMTP_USER) fromEnv.smtpUser = process.env.SMTP_USER;
+  if (process.env.SMTP_PASSWORD) fromEnv.smtpPassword = process.env.SMTP_PASSWORD;
+  if (process.env.SMTP_FROM_EMAIL) fromEnv.fromEmail = process.env.SMTP_FROM_EMAIL;
+  if (process.env.SMTP_FROM_NAME) fromEnv.fromName = process.env.SMTP_FROM_NAME;
+  const envDisabled = process.env.SMTP_ENABLED === "0" || process.env.SMTP_ENABLED === "false";
+
+  const envConfigured =
+    !!fromEnv.smtpHost && !!fromEnv.smtpUser && !!fromEnv.smtpPassword;
+  if (envConfigured) {
+    return {
+      enabled: !envDisabled,
+      fromEmail: fromEnv.fromEmail ?? "noreply@example.com",
+      fromName: fromEnv.fromName ?? "My App",
+      smtpHost: fromEnv.smtpHost,
+      smtpPort: fromEnv.smtpPort ?? 587,
+      smtpSecure: fromEnv.smtpSecure ?? false,
+      smtpUser: fromEnv.smtpUser,
+      smtpPassword: fromEnv.smtpPassword,
+    };
+  }
+
   if (!fs.existsSync(APP_CONFIG_PATH)) return null;
   try {
     const data = JSON.parse(fs.readFileSync(APP_CONFIG_PATH, "utf-8")) as Record<string, unknown>;

@@ -19,9 +19,8 @@ function getTenantFilter(
   tenantScope: string | undefined
 ): Record<string, number> | null {
   if (!user) return null;
-  const mode = tenantConfig.mode;
-  const hasOrgs =
-    mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
+  const mode = tenantConfig.mode as string;
+  const hasOrgs = ["single_tenant", "multi_tenant", "org_and_tenant"].includes(mode);
   if (!hasOrgs) return null;
   if (!tenantScope) return null;
   const isAdmin =
@@ -38,7 +37,8 @@ function getTenantFilter(
   return null;
 }
 
-export const recordHistoryRoutes = new Hono();
+type Variables = { user: UserWithTenant | undefined };
+export const recordHistoryRoutes = new Hono<{ Variables: Variables }>();
 
 recordHistoryRoutes.get("/", authMiddleware, async (c) => {
   try {

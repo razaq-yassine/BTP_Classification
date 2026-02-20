@@ -1,14 +1,15 @@
 {
   "defaultCurrency": "MAD",
   "currencySymbol": "Dh",
+  "defaultPreferredLanguage": null,
   "emailConfig": {
-    "enabled": false,
-    "fromEmail": "noreply@example.com",
-    "fromName": "My App",
-    "smtpHost": "smtp.example.com",
+    "enabled": true,
+    "fromEmail": "noreply@genericsaas.com",
+    "fromName": "Generic Saas",
+    "smtpHost": "smtp.gmail.com",
     "smtpPort": 587,
     "smtpSecure": false,
-    "smtpUser": "",
+    "smtpUser": "opticnoreply@gmail.com",
     "smtpPassword": ""
   }
 }

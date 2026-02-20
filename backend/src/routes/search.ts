@@ -37,9 +37,8 @@ function getTenantFilter(
   objectConfig: EntityConfig
 ): Record<string, number> | null {
   if (!user) return null;
-  const mode = tenantConfig.mode;
-  const hasOrgs =
-    mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
+  const mode = tenantConfig.mode as string;
+  const hasOrgs = ["single_tenant", "multi_tenant", "org_and_tenant"].includes(mode);
   if (!hasOrgs) return null;
   const tenantScope = (objectConfig as { tenantScope?: string }).tenantScope;
   if (!tenantScope) return null;
@@ -181,7 +180,7 @@ async function searchOneEntity(
 ): Promise<Record<string, unknown>[]> {
   const { table, objectName, searchFields } = config;
   if (!hasObjectPermission(profile, objectName, "read")) return [];
-  if (!searchFields || (searchFields as unknown[]).length === 0) return [];
+  if (!searchFields || Array.from(searchFields).length === 0) return [];
 
   const tenantFilter = getTenantFilter(user, config);
   let tenantConds = buildTenantConditions(table as any, tenantFilter);
@@ -202,7 +201,7 @@ async function searchOneEntity(
   const join = "join" in config ? (config.join as JoinConfig | undefined) : undefined;
 
   const searchCond = or(
-    ...searchFields.map((f: any) => like(f, `%${searchQuery}%`))
+    ...Array.from(searchFields).map((f) => like(f as any, `%${searchQuery}%`))
   )!;
   const allConds = [...tenantConds, searchCond];
   const whereCond = and(...allConds);

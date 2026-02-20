@@ -14,6 +14,24 @@ import { formatCurrency } from '@/stores/appConfigStore'
 const linkClass = 'text-blue-600 dark:text-primary hover:underline'
 
 /**
+ * Extracts display name from a reference or masterDetail field value.
+ * Shared by formatDetailValue, ReferenceFieldValue, and ListViewFieldFormatter.
+ */
+export function getReferenceDisplayName(value: unknown): string {
+  if (value == null) return ''
+  if (typeof value === 'object') {
+    const v = value as Record<string, unknown>
+    const fullName = v.fullName as string | undefined
+    const joined = [v.firstName, v.lastName].filter(Boolean).join(' ').trim()
+    const name = v.name as string | undefined
+    const email = v.email as string | undefined
+    const fallback = `#${v.id ?? '(Unknown)'}`
+    return (fullName ?? joined) || name || email || fallback || String(value)
+  }
+  return String(value)
+}
+
+/**
  * Formats a field value for read-only display in the detail view.
  * Used by GenericObjectDetailViewMainSection and the dev-components detail-view-formatter.
  * @param objectName - Object name (e.g. 'order') for translating select/multiselect options
@@ -33,11 +51,8 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
     return i18n.t('common:empty')
   }
   if (field.type === 'reference' || field.type === 'masterDetail') {
-    const refId = typeof val === 'object' ? val?.id : val
-    const displayName =
-      typeof val === 'object'
-        ? (val.fullName ?? [val.firstName, val.lastName].filter(Boolean).join(' ').trim()) || val.name || val.email || `#${val.id ?? '(Unknown)'}`
-        : String(val)
+    const refId = typeof val === 'object' ? (val as { id?: string | number })?.id : val
+    const displayName = getReferenceDisplayName(val)
     const objectName = field.objectName
     const basePath = (field as { basePath?: string }).basePath
     const toPath = basePath ? `${basePath}/${refId}` : `/${objectName}/${refId}`

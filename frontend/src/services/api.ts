@@ -67,17 +67,17 @@ api.interceptors.response.use(
     if (status === 401 && !url.includes('/api/auth/login')) {
       // Check if this is a validation error vs authentication error
       const errorMessage = error.response?.data?.message || error.response?.data?.detail || ''
-      const isValidationError = errorMessage.toLowerCase().includes('validation') || 
-                               errorMessage.toLowerCase().includes('required') ||
-                               errorMessage.toLowerCase().includes('invalid')
-      
+      const isValidationError = errorMessage.toLowerCase().includes('validation') ||
+        errorMessage.toLowerCase().includes('required') ||
+        errorMessage.toLowerCase().includes('invalid')
+
       if (!isValidationError) {
-        
-        if (!isRedirecting) {
+        const path = typeof window !== 'undefined' ? window.location.pathname : ''
+        const isAuthPage = ['/login', '/sign-in', '/sign-in-2', '/login-verify-2fa', '/forgot-password', '/change-password-required'].some((p) => path.startsWith(p))
+        if (!isAuthPage && !isRedirecting) {
           isRedirecting = true
           localStorage.removeItem('jwt_token')
           setTimeout(() => {
-            // Clear any cached authentication state
             localStorage.clear()
             sessionStorage.clear()
             window.location.href = '/login'

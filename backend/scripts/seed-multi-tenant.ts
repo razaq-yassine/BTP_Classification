@@ -254,14 +254,36 @@ export async function seedMultiTenant() {
     }
   }
 
+  // 3b. Set org/tenant owners (required for invite API)
+  const acmeOwnerUser = await db.select().from(users).where(eq(users.username, "acme-owner")).then((r) => r[0]);
+  const techOwnerUser = await db.select().from(users).where(eq(users.username, "tech-org-user")).then((r) => r[0]);
+  const acmeUsUser = await db.select().from(users).where(eq(users.username, "acme-us-user")).then((r) => r[0]);
+  const techUsUser = await db.select().from(users).where(eq(users.username, "tech-us-user")).then((r) => r[0]);
+  if (acmeOwnerUser) {
+    await db.update(organizations).set({ ownerId: acmeOwnerUser.id }).where(eq(organizations.slug, "acme"));
+    console.log("[seed-multi-tenant] Set acme-owner as Acme Corp org owner");
+  }
+  if (techOwnerUser) {
+    await db.update(organizations).set({ ownerId: techOwnerUser.id }).where(eq(organizations.slug, "techstart"));
+    console.log("[seed-multi-tenant] Set tech-org-user as TechStart org owner");
+  }
+  if (acmeUsUser) {
+    await db.update(tenants).set({ ownerId: acmeUsUser.id }).where(eq(tenants.name, "Acme US"));
+    console.log("[seed-multi-tenant] Set acme-us-user as Acme US tenant owner");
+  }
+  if (techUsUser) {
+    await db.update(tenants).set({ ownerId: techUsUser.id }).where(eq(tenants.name, "TechStart US"));
+    console.log("[seed-multi-tenant] Set tech-us-user as TechStart US tenant owner");
+  }
+
   // 4. Products (platform-wide)
   const productCount = await db.select().from(products);
   if (productCount.length === 0) {
     await db.insert(products).values([
-      { name: "Widget Pro", sku: "SKU-001", price: 29.99, description: "Premium widget", createdAt: now, updatedAt: now },
-      { name: "Gadget X", sku: "SKU-002", price: 49.99, description: "Advanced gadget", createdAt: now, updatedAt: now },
-      { name: "Tool Kit", sku: "SKU-003", price: 79.99, description: "Complete tool set", createdAt: now, updatedAt: now },
-    ]);
+      { name: "Widget Pro", sku: "SKU-001", price: "29.99", description: "Premium widget", createdAt: now, updatedAt: now },
+      { name: "Gadget X", sku: "SKU-002", price: "49.99", description: "Advanced gadget", createdAt: now, updatedAt: now },
+      { name: "Tool Kit", sku: "SKU-003", price: "79.99", description: "Complete tool set", createdAt: now, updatedAt: now },
+    ] as any);
     console.log("[seed-multi-tenant] Created products");
   }
 
@@ -305,15 +327,15 @@ export async function seedMultiTenant() {
     await db.insert(orders).values({
       name: "ORD-A1-001",
       status: "CONFIRMED",
-      totalAmount: 299.99,
+      totalAmount: "299.99",
       description: "Acme US Order 1",
       orderDate: now,
       organizationId: acmeOrg.id!,
       tenantId: acmeUS.id!,
-      customerId: c1.id,
+      customerId: c1.id!,
       createdAt: now,
       updatedAt: now,
-    });
+    } as any);
 
     const acmeUSOrders = await db
       .select()
@@ -325,13 +347,13 @@ export async function seedMultiTenant() {
       name: "OI-A1-001",
       orderId: o1.id!,
       productId: prods[0].id!,
-      quantity: 2,
-      unitPrice: 29.99,
+      quantity: "2",
+      unitPrice: "29.99",
       organizationId: acmeOrg.id!,
       tenantId: acmeUS.id!,
       createdAt: now,
       updatedAt: now,
-    });
+    } as any);
 
     // Acme EU
     await db.insert(customers).values({
@@ -355,15 +377,15 @@ export async function seedMultiTenant() {
     await db.insert(orders).values({
       name: "ORD-A2-001",
       status: "PENDING",
-      totalAmount: 149.5,
+      totalAmount: "149.5",
       description: "Acme EU Order 1",
       orderDate: now,
       organizationId: acmeOrg.id!,
       tenantId: acmeEU.id!,
-      customerId: c3.id,
+      customerId: c3.id!,
       createdAt: now,
       updatedAt: now,
-    });
+    } as any);
 
     // TechStart US
     await db.insert(customers).values({
@@ -387,15 +409,15 @@ export async function seedMultiTenant() {
     await db.insert(orders).values({
       name: "ORD-T1-001",
       status: "SHIPPED",
-      totalAmount: 599,
+      totalAmount: "599",
       description: "TechStart US Order 1",
       orderDate: now,
       organizationId: techOrg.id!,
       tenantId: techUS.id!,
-      customerId: c4.id,
+      customerId: c4.id!,
       createdAt: now,
       updatedAt: now,
-    });
+    } as any);
 
     console.log("[seed-multi-tenant] Created customers and orders per tenant");
   }

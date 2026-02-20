@@ -192,6 +192,7 @@
       "basicInformation": "المعلومات الأساسية",
       "regionalSettings": "الإعدادات الإقليمية",
       "appearance": "المظهر",
+      "storage": "التخزين",
       "systemInformation": "معلومات النظام"
     },
     "fields": {
@@ -204,6 +205,7 @@
       "timezone": "المنطقة الزمنية",
       "defaultPreferredLanguage": "اللغة المفضلة الافتراضية",
       "sidebarTheme": "مظهر الشريط الجانبي",
+      "maxStorageBytes": "الحد الأقصى للتخزين (ميجابايت)",
       "id": "المعرف",
       "createdAt": "تاريخ الإنشاء",
       "updatedAt": "تاريخ التحديث",
@@ -219,6 +221,7 @@
       "basicInformation": "المعلومات الأساسية",
       "regionalSettings": "الإعدادات الإقليمية",
       "appearance": "المظهر",
+      "storage": "التخزين",
       "systemInformation": "معلومات النظام"
     },
     "fields": {
@@ -231,6 +234,7 @@
       "timezone": "المنطقة الزمنية",
       "defaultPreferredLanguage": "اللغة المفضلة الافتراضية",
       "sidebarTheme": "مظهر الشريط الجانبي",
+      "maxStorageBytes": "الحد الأقصى للتخزين (ميجابايت)",
       "id": "المعرف",
       "createdAt": "تاريخ الإنشاء",
       "updatedAt": "تاريخ التحديث",

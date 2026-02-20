@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { stream } from "hono/streaming";
-import { eq, and } from "drizzle-orm";
+import { eq, and, like, desc, asc } from "drizzle-orm";
 import { createReadStream, existsSync, unlink } from "fs";
 import { stat } from "fs/promises";
 import path from "path";
@@ -11,7 +11,7 @@ import { verifyToken } from "../lib/jwt.js";
 import { users } from "../db/schema.js";
 import { authMiddleware } from "../middleware/auth.js";
 import { db } from "../db/index.js";
-import { files } from "../db/schema.js";
+import { files, organizations, tenants } from "../db/schema.js";
 import {
   entityRegistry,
   tenantConfig,
@@ -56,9 +56,8 @@ function getTenantFilter(
   tenantScope: string | undefined
 ): Record<string, number> | null {
   if (!user) return null;
-  const mode = tenantConfig.mode;
-  const hasOrgs =
-    mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
+  const mode = tenantConfig.mode as string;
+  const hasOrgs = ["single_tenant", "multi_tenant", "org_and_tenant"].includes(mode);
   if (!hasOrgs) return null;
   if (!tenantScope) return null;
   const isAdmin =
@@ -95,9 +94,9 @@ const optionalAuthMiddleware = createMiddleware(async (c, next) => {
 function buildTenantConditions(
   table: { organizationId?: unknown; tenantId?: unknown },
   tenantFilter: Record<string, number> | null
-) {
+): ReturnType<typeof eq>[] {
   if (!tenantFilter) return [];
-  const conds = [];
+  const conds: ReturnType<typeof eq>[] = [];
   if (tenantFilter.organizationId != null && "organizationId" in table) {
     conds.push(eq((table as any).organizationId, tenantFilter.organizationId));
   }
@@ -107,7 +106,159 @@ function buildTenantConditions(
   return conds;
 }
 
-export const fileRoutes = new Hono();
+type Variables = { user: UserWithTenant };
+export const fileRoutes = new Hono<{ Variables: Variables }>();
+
+type FileExplorerScope =
+  | { isAll: true }
+  | { organizationId: number; tenantId?: number };
+
+/**
+ * Resolve file explorer scope for the current user.
+ * Returns scope the user can access, or null if unauthorized.
+ * Admin: no selection = all files; with org/tenant = filtered.
+ * Org owner: org scope. Tenant owner: tenant scope.
+ */
+async function getFileExplorerScope(
+  user: UserWithTenant | undefined,
+  queryOrgId?: string | null,
+  queryTenantId?: string | null
+): Promise<FileExplorerScope | null> {
+  if (!user) return null;
+  const isAdmin =
+    user.profile === "admin" ||
+    (user.organizationId == null && user.tenantId == null);
+
+  if (isAdmin) {
+    const orgId = queryOrgId ? Number(queryOrgId) : null;
+    const tenantId = queryTenantId ? Number(queryTenantId) : null;
+    if (orgId != null && !isNaN(orgId)) {
+      return tenantId != null && !isNaN(tenantId)
+        ? { organizationId: orgId, tenantId }
+        : { organizationId: orgId };
+    }
+    return { isAll: true };
+  }
+
+  const mode = tenantConfig.mode as string;
+  const hasTenants = ["single_tenant", "org_and_tenant"].includes(mode);
+
+  if (user.tenantId != null && hasTenants) {
+    const [tenant] = await db
+      .select()
+      .from(tenants)
+      .where(eq(tenants.id, user.tenantId));
+    if (!tenant) return null;
+    const [isOwner] = await db
+      .select()
+      .from(tenants)
+      .where(
+        and(
+          eq(tenants.id, user.tenantId),
+          eq(tenants.ownerId, user.id!)
+        )
+      );
+    if (!isOwner) return null;
+    return {
+      organizationId: tenant.organizationId,
+      tenantId: user.tenantId
+    };
+  }
+
+  if (user.organizationId != null) {
+    const [org] = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, user.organizationId));
+    if (!org) return null;
+    const [isOwner] = await db
+      .select()
+      .from(organizations)
+      .where(
+        and(
+          eq(organizations.id, user.organizationId),
+          eq(organizations.ownerId, user.id!)
+        )
+      );
+    if (!isOwner) return null;
+    return { organizationId: user.organizationId };
+  }
+
+  return null;
+}
+
+/**
+ * GET /api/files/explorer - List files for file explorer with filters.
+ */
+fileRoutes.get("/explorer", authMiddleware, async (c) => {
+  const user = c.get("user") as UserWithTenant;
+  const profile = await getUserProfile(user?.id ?? 0);
+  if (!profile) {
+    return c.json({ message: "Unauthorized" }, 401);
+  }
+
+  const orgIdParam = c.req.query("organizationId");
+  const tenantIdParam = c.req.query("tenantId");
+  const scope = await getFileExplorerScope(user, orgIdParam, tenantIdParam);
+  if (!scope) {
+    return c.json(
+      {
+        message:
+          "Select an organization (and optionally tenant) to view files, or ensure you have access"
+      },
+      403
+    );
+  }
+
+  const objectName = c.req.query("objectName");
+  const search = c.req.query("search");
+  const sortBy = c.req.query("sortBy") || "uploadedAt";
+  const sortOrder = c.req.query("sortOrder") || "desc";
+
+  const conds: ReturnType<typeof eq>[] = [];
+  if (!("isAll" in scope && scope.isAll)) {
+    const orgScope = scope as { organizationId: number; tenantId?: number };
+    conds.push(eq(files.organizationId, orgScope.organizationId));
+    if (orgScope.tenantId != null) {
+      conds.push(eq(files.tenantId, orgScope.tenantId));
+    }
+  }
+  if (objectName && objectName.trim()) {
+    conds.push(eq(files.objectName, objectName.trim()));
+  }
+  if (search && search.trim()) {
+    conds.push(like(files.filename, `%${search.trim()}%`));
+  }
+
+  const finalWhere =
+    conds.length === 0 ? undefined : conds.length > 1 ? and(...conds) : conds[0];
+  const orderCol =
+    sortBy === "size"
+      ? files.size
+      : sortBy === "filename"
+        ? files.filename
+        : files.uploadedAt;
+  const orderFn = sortOrder === "asc" ? asc : desc;
+
+  let q = db
+    .select({
+      id: files.id,
+      objectName: files.objectName,
+      recordId: files.recordId,
+      filename: files.filename,
+      storagePath: files.storagePath,
+      size: files.size,
+      mimeType: files.mimeType,
+      uploadedAt: files.uploadedAt,
+      organizationId: files.organizationId,
+      tenantId: files.tenantId
+    })
+    .from(files);
+  if (finalWhere) q = q.where(finalWhere) as typeof q;
+  const rows = await q.orderBy(orderFn(orderCol));
+
+  return c.json({ files: rows });
+});
 
 /**
  * Serve field-uploaded files (e.g. logo, file-type fields) with auth.
@@ -199,23 +350,14 @@ fileRoutes.get("/serve", authMiddleware, async (c) => {
 
   const filename = parts[parts.length - 1];
   const statResult = await stat(diskPath);
+  c.header("Content-Type", getMimeTypeFromFilename(filename));
+  c.header("Content-Length", String(statResult.size));
+  c.header("Content-Disposition", `inline; filename="${encodeURIComponent(filename)}"`);
   const readStream = createReadStream(diskPath);
   const webStream = Readable.toWeb(readStream) as ReadableStream;
-  return stream(
-    c,
-    async (s) => {
-      await s.pipe(webStream);
-    },
-    undefined,
-    {
-      status: 200,
-      headers: {
-        "Content-Type": getMimeTypeFromFilename(filename),
-        "Content-Length": String(statResult.size),
-        "Content-Disposition": `inline; filename="${encodeURIComponent(filename)}"`
-      }
-    }
-  );
+  return stream(c, async (s) => {
+    await s.pipe(webStream);
+  });
 });
 
 fileRoutes.get("/", authMiddleware, async (c) => {
@@ -363,25 +505,14 @@ fileRoutes.get("/download/:fileId", optionalAuthMiddleware, async (c) => {
 
   if (fileRow.isPublic) {
     const statResult = await stat(filePath);
+    c.header("Content-Type", fileRow.mimeType ?? "application/octet-stream");
+    c.header("Content-Length", String(statResult.size));
+    c.header("Content-Disposition", `inline; filename="${encodeURIComponent(fileRow.filename)}"`);
     const readStream = createReadStream(filePath);
     const webStream = Readable.toWeb(readStream) as ReadableStream;
-    return stream(
-      c,
-      async (s) => {
-        await s.pipe(webStream);
-      },
-      undefined,
-      {
-        status: 200,
-        headers: {
-          "Content-Type": fileRow.mimeType ?? "application/octet-stream",
-          "Content-Length": String(statResult.size),
-          "Content-Disposition": `inline; filename="${encodeURIComponent(
-            fileRow.filename
-          )}"`
-        }
-      }
-    );
+    return stream(c, async (s) => {
+      await s.pipe(webStream);
+    });
   }
 
   const user = c.get("user") as UserWithTenant | undefined;
@@ -427,25 +558,14 @@ fileRoutes.get("/download/:fileId", optionalAuthMiddleware, async (c) => {
   }
 
   const statResult = await stat(filePath);
+  c.header("Content-Type", fileRow.mimeType ?? "application/octet-stream");
+  c.header("Content-Length", String(statResult.size));
+  c.header("Content-Disposition", `inline; filename="${encodeURIComponent(fileRow.filename)}"`);
   const readStream = createReadStream(filePath);
   const webStream = Readable.toWeb(readStream) as ReadableStream;
-  return stream(
-    c,
-    async (s) => {
-      await s.pipe(webStream);
-    },
-    undefined,
-    {
-      status: 200,
-      headers: {
-        "Content-Type": fileRow.mimeType ?? "application/octet-stream",
-        "Content-Length": String(statResult.size),
-        "Content-Disposition": `inline; filename="${encodeURIComponent(
-          fileRow.filename
-        )}"`
-      }
-    }
-  );
+  return stream(c, async (s) => {
+    await s.pipe(webStream);
+  });
 });
 
 fileRoutes.patch("/:fileId", authMiddleware, async (c) => {

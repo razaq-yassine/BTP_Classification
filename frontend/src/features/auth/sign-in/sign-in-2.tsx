@@ -1,7 +1,12 @@
+import { useSearch } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import ViteLogo from '@/assets/vite.svg'
 import { UserAuthForm } from './components/user-auth-form'
+import { LoginLanguageSwitcher } from './components/login-language-switcher'
 
 export default function SignIn2() {
+  const { message } = useSearch({ from: '/login' })
+  const { t } = useTranslation('common')
   return (
     <div className='relative container grid h-svh flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0'>
       <div className='bg-muted relative hidden h-full flex-col p-10 text-white lg:flex dark:border-r'>
@@ -19,7 +24,7 @@ export default function SignIn2() {
           >
             <path d='M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3' />
           </svg>
-          Shadcn Admin
+          {t('signInAppName')}
         </div>
 
         <img
@@ -41,30 +46,37 @@ export default function SignIn2() {
           </blockquote>
         </div>
       </div>
-      <div className='lg:p-8'>
+      <div className='relative lg:p-8'>
+        <div className='absolute right-4 top-4'>
+          <LoginLanguageSwitcher />
+        </div>
         <div className='mx-auto flex w-full flex-col justify-center space-y-2 sm:w-[350px]'>
           <div className='flex flex-col space-y-2 text-left'>
-            <h1 className='text-2xl font-semibold tracking-tight'>Login</h1>
+            <h1 className='text-2xl font-semibold tracking-tight'>{t('login')}</h1>
             <p className='text-muted-foreground text-sm'>
-              Enter your email and password below <br />
-              to log into your account
+              {t('loginPageDescription')}
             </p>
           </div>
+          {message && (
+            <div className='text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/50 dark:text-amber-400 p-3 rounded-md'>
+              {message}
+            </div>
+          )}
           <UserAuthForm />
-          <p className='text-muted-foreground px-8 text-center text-sm'>
-            By clicking login, you agree to our{' '}
+          <p className='hidden text-muted-foreground px-8 text-center text-sm'>
+            {t('loginAgreement')}{' '}
             <a
               href='/terms'
               className='hover:text-primary underline underline-offset-4'
             >
-              Terms of Service
+              {t('termsOfService')}
             </a>{' '}
-            and{' '}
+            {t('loginAgreementAnd')}{' '}
             <a
               href='/privacy'
               className='hover:text-primary underline underline-offset-4'
             >
-              Privacy Policy
+              {t('privacyPolicy')}
             </a>
             .
           </p>

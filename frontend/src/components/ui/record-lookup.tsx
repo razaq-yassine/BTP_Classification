@@ -39,7 +39,7 @@ interface AdditionalField {
 
 interface RecordLookupProps {
   objectName: string
-  value?: string | number
+  value?: string | number | null
   onValueChange: (value: string | number | null, record?: LookupRecord) => void
   additionalFields?: AdditionalField[]
   searchBy?: string // Field to search by (e.g., 'full_name', 'name', 'title')
@@ -48,7 +48,8 @@ interface RecordLookupProps {
   disabled?: boolean
   className?: string
   emptyMessage?: string
-  apiEndpoint?: string // Optional custom endpoint
+  apiEndpoint?: string // Optional custom endpoint (base URL, no query params)
+  filterParams?: Record<string, string | number> // Appended to list/search URLs (e.g. organizationId for tenants)
   userId?: number | null // Current user ID for user-specific recently viewed sorting
 }
 
@@ -64,6 +65,7 @@ export function RecordLookup({
   className,
   emptyMessage,
   apiEndpoint,
+  filterParams,
   userId
 }: RecordLookupProps) {
   const [open, setOpen] = useState(false)
@@ -88,17 +90,24 @@ export function RecordLookup({
   const dynamicSearchPlaceholder = searchPlaceholder || t('searchBy', { field: searchBy.replace('_', ' ') })
 
   // Construct API endpoint - use the object's API endpoint or construct from object name
-  const endpoint = apiEndpoint || `/api/${pluralize(objectName)}`
+  const baseEndpoint = apiEndpoint || `/api/${pluralize(objectName)}`
 
-  // Fetch initial records (last 5 created)
+  // Fetch initial records (last 5 created). FilterParams applied client-side when backend doesn't support them.
   const fetchInitialRecords = useCallback(async () => {
     try {
       setLoading(true)
       
-      const response = await api.get(endpoint)
+      const response = await api.get(baseEndpoint)
       
       const responseKey = pluralize(objectName)
       let recordsData = response.data?.results ?? response.data?.[responseKey] ?? (Array.isArray(response.data) ? response.data : response.data?.data) ?? []
+      
+      // Client-side filter by filterParams (e.g. organizationId for tenants) when backend doesn't support it
+      if (filterParams && recordsData.length > 0) {
+        recordsData = recordsData.filter((r: LookupRecord) =>
+          Object.entries(filterParams).every(([k, v]) => r[k] == null || r[k] === v || Number(r[k]) === Number(v))
+        )
+      }
       
       // Sort by recently viewed (most recent first)
       recordsData = sortByRecentlyViewed(recordsData, objectName, userId)
@@ -109,7 +118,7 @@ export function RecordLookup({
     } finally {
       setLoading(false)
     }
-  }, [endpoint, objectName])
+  }, [baseEndpoint, objectName, filterParams])
 
   // Search records with debouncing
   const searchRecords = useCallback(
@@ -117,12 +126,23 @@ export function RecordLookup({
       try {
         setLoading(true)
         
-        // Use search endpoint with query parameter
-        const searchEndpoint = `${endpoint}?search=${encodeURIComponent(query)}`
+        // Use search endpoint with query parameter (merge with filterParams)
+        const searchParams = new URLSearchParams({ search: query })
+        if (filterParams) {
+          Object.entries(filterParams).forEach(([k, v]) => searchParams.set(k, String(v)))
+        }
+        const searchEndpoint = `${baseEndpoint}?${searchParams.toString()}`
         const response = await api.get(searchEndpoint)
         
         const responseKey = pluralize(objectName)
         let recordsData = response.data?.results ?? response.data?.[responseKey] ?? (Array.isArray(response.data) ? response.data : response.data?.data) ?? []
+        
+        // Client-side filter by filterParams when backend doesn't support it
+        if (filterParams && recordsData.length > 0) {
+          recordsData = recordsData.filter((r: LookupRecord) =>
+            Object.entries(filterParams).every(([k, v]) => r[k] == null || r[k] === v || Number(r[k]) === Number(v))
+          )
+        }
         
         // Filter records client-side by the searchBy field if server doesn't filter
         if (recordsData.length > 0 && searchBy) {
@@ -142,8 +162,17 @@ export function RecordLookup({
         setLoading(false)
       }
     }, 300),
-    [endpoint, objectName, searchBy]
+    [baseEndpoint, filterParams, objectName, searchBy, userId]
   )
+
+  // Clear selected record when value changes so we refetch the new record
+  useEffect(() => {
+    setSelectedRecord((prev) => {
+      if (!value) return null
+      if (prev && prev.id === value) return prev
+      return null
+    })
+  }, [value])
 
   // Fetch selected record details if value exists
   useEffect(() => {
@@ -154,10 +183,10 @@ export function RecordLookup({
           let response
           try {
             // Try with trailing slash first
-            response = await api.get(`${endpoint}/${value}/`)
+            response = await api.get(`${baseEndpoint}/${value}/`)
           } catch (error) {
             // Try without trailing slash
-            response = await api.get(`${endpoint}/${value}`)
+            response = await api.get(`${baseEndpoint}/${value}`)
           }
           
           setSelectedRecord(response.data)
@@ -171,7 +200,7 @@ export function RecordLookup({
       }
       fetchSelectedRecord()
     }
-  }, [value, endpoint, selectedRecord, records])
+  }, [value, baseEndpoint, selectedRecord, records])
 
   // Load initial records when popover opens
   useEffect(() => {

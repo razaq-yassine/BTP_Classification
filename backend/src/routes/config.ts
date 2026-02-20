@@ -26,8 +26,45 @@ const defaultMetadataPath = path.join(
 const METADATA_PATH = process.env.METADATA_PATH || defaultMetadataPath;
 
 const APP_CONFIG_PATH = path.join(METADATA_PATH, "app-config.json");
+const ENV_PATH = path.join(backendRoot, ".env");
 
-export const configRoutes = new Hono();
+function getEnvValue(content: string, key: string): string | null {
+  const m = content.match(new RegExp(`^${key}=(.*)$`, "m"));
+  return m ? m[1].trim() : null;
+}
+
+function updateEnvFileForSmtp(ec: Record<string, unknown>): void {
+  let content = fs.existsSync(ENV_PATH) ? fs.readFileSync(ENV_PATH, "utf-8") : "";
+  const enabled = ec.enabled === true;
+  const password =
+    typeof ec.smtpPassword === "string" && ec.smtpPassword !== "********" && ec.smtpPassword !== ""
+      ? ec.smtpPassword
+      : getEnvValue(content, "SMTP_PASSWORD") ?? "";
+  const updates: Record<string, string> = {
+    SMTP_ENABLED: enabled ? "1" : "0",
+    SMTP_HOST: String(ec.smtpHost ?? ""),
+    SMTP_PORT: String(ec.smtpPort ?? 587),
+    SMTP_SECURE: ec.smtpSecure === true ? "true" : "false",
+    SMTP_USER: String(ec.smtpUser ?? ""),
+    SMTP_PASSWORD: password,
+    SMTP_FROM_EMAIL: String(ec.fromEmail ?? ""),
+    SMTP_FROM_NAME: String(ec.fromName ?? ""),
+  };
+  for (const [key, value] of Object.entries(updates)) {
+    const regex = new RegExp(`^${key}=.*$`, "m");
+    if (regex.test(content)) {
+      content = content.replace(regex, `${key}=${value}`);
+    } else {
+      const sep = content && !content.endsWith("\n") ? "\n" : "";
+      const block = !content.includes("SMTP_") ? "\n# SMTP (managed via Settings > Email)\n" : "";
+      content = content + sep + block + `${key}=${value}`;
+    }
+  }
+  fs.writeFileSync(ENV_PATH, content.trimEnd() + "\n", "utf-8");
+}
+
+type Variables = { user?: Record<string, unknown> };
+export const configRoutes = new Hono<{ Variables: Variables }>();
 
 configRoutes.use("*", authMiddleware);
 
@@ -48,9 +85,8 @@ configRoutes.get("/tenant-context", async (c) => {
     tenantId?: number | null;
     profile?: string;
   };
-  const mode = tenantConfig.mode;
-  const hasTenants =
-    mode === "single_tenant" || mode === "org_and_tenant";
+  const mode = tenantConfig.mode as string;
+  const hasTenants = ["single_tenant", "org_and_tenant"].includes(mode);
 
   if (user.tenantId != null && hasTenants) {
     const [tenant] = await db
@@ -134,15 +170,30 @@ function maskEmailConfig(data: Record<string, unknown>): Record<string, unknown>
 }
 
 configRoutes.get("/app-config", (c) => {
-  if (!fs.existsSync(APP_CONFIG_PATH)) {
-    return c.json({ defaultCurrency: "USD", currencySymbol: "$", defaultPreferredLanguage: "en" });
+  let data: Record<string, unknown> = { defaultCurrency: "USD", currencySymbol: "$", defaultPreferredLanguage: "en" };
+  if (fs.existsSync(APP_CONFIG_PATH)) {
+    try {
+      data = JSON.parse(fs.readFileSync(APP_CONFIG_PATH, "utf-8")) as Record<string, unknown>;
+    } catch {
+      // keep defaults
+    }
   }
-  try {
-    const data = JSON.parse(fs.readFileSync(APP_CONFIG_PATH, "utf-8")) as Record<string, unknown>;
-    return c.json(maskEmailConfig(data));
-  } catch {
-    return c.json({ defaultCurrency: "USD", currencySymbol: "$" });
+  // Merge effective email config (from env or file) so UI shows what's actually used
+  const effectiveEmailConfig = loadEmailConfig();
+  if (effectiveEmailConfig) {
+    const ec = {
+      enabled: effectiveEmailConfig.enabled ?? false,
+      fromEmail: effectiveEmailConfig.fromEmail ?? "noreply@example.com",
+      fromName: effectiveEmailConfig.fromName ?? "My App",
+      smtpHost: effectiveEmailConfig.smtpHost ?? "smtp.example.com",
+      smtpPort: effectiveEmailConfig.smtpPort ?? 587,
+      smtpSecure: effectiveEmailConfig.smtpSecure ?? false,
+      smtpUser: effectiveEmailConfig.smtpUser ?? "",
+      smtpPassword: effectiveEmailConfig.smtpPassword ?? "",
+    };
+    data = { ...data, emailConfig: ec };
   }
+  return c.json(maskEmailConfig(data));
 });
 
 const DEFAULT_EMAIL_CONFIG = {
@@ -181,22 +232,26 @@ configRoutes.put("/app-config", adminOnlyMiddleware, async (c) => {
         : {};
       const existingEc = (existing.emailConfig as Record<string, unknown>) || {};
       emailConfig = {
-        enabled: typeof ec.enabled === "boolean" ? ec.enabled : existingEc.enabled ?? false,
-        fromEmail: typeof ec.fromEmail === "string" ? ec.fromEmail : existingEc.fromEmail ?? "noreply@example.com",
-        fromName: typeof ec.fromName === "string" ? ec.fromName : existingEc.fromName ?? "My App",
-        smtpHost: typeof ec.smtpHost === "string" ? ec.smtpHost : existingEc.smtpHost ?? "smtp.example.com",
-        smtpPort: typeof ec.smtpPort === "number" ? ec.smtpPort : (existingEc.smtpPort as number) ?? 587,
-        smtpSecure: typeof ec.smtpSecure === "boolean" ? ec.smtpSecure : existingEc.smtpSecure ?? false,
-        smtpUser: typeof ec.smtpUser === "string" ? ec.smtpUser : (existingEc.smtpUser as string) ?? "",
+        enabled: typeof ec.enabled === "boolean" ? ec.enabled : (existingEc.enabled === true || existingEc.enabled === false ? existingEc.enabled : false),
+        fromEmail: typeof ec.fromEmail === "string" ? ec.fromEmail : (typeof existingEc.fromEmail === "string" ? existingEc.fromEmail : "noreply@example.com"),
+        fromName: typeof ec.fromName === "string" ? ec.fromName : (typeof existingEc.fromName === "string" ? existingEc.fromName : "My App"),
+        smtpHost: typeof ec.smtpHost === "string" ? ec.smtpHost : (typeof existingEc.smtpHost === "string" ? existingEc.smtpHost : "smtp.example.com"),
+        smtpPort: typeof ec.smtpPort === "number" ? ec.smtpPort : (typeof existingEc.smtpPort === "number" ? existingEc.smtpPort : 587),
+        smtpSecure: typeof ec.smtpSecure === "boolean" ? ec.smtpSecure : (existingEc.smtpSecure === true || existingEc.smtpSecure === false ? existingEc.smtpSecure : false),
+        smtpUser: typeof ec.smtpUser === "string" ? ec.smtpUser : (typeof existingEc.smtpUser === "string" ? existingEc.smtpUser : ""),
         smtpPassword:
           typeof ec.smtpPassword === "string" && ec.smtpPassword !== "********"
             ? ec.smtpPassword
-            : (existingEc.smtpPassword as string) ?? ""
+            : (typeof existingEc.smtpPassword === "string" ? existingEc.smtpPassword : "")
       };
     }
 
     const data = { defaultCurrency, currencySymbol, defaultPreferredLanguage, emailConfig };
     fs.writeFileSync(APP_CONFIG_PATH, JSON.stringify(data, null, 2), "utf-8");
+    // Persist SMTP to .env when emailConfig was provided (env overrides app-config)
+    if (ec && typeof ec === "object") {
+      updateEnvFileForSmtp(emailConfig);
+    }
     return c.json(maskEmailConfig(data));
   } catch (err) {
     console.error("[config] PUT app-config error:", err);

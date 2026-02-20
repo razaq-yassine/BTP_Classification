@@ -1,0 +1,1 @@
+{"key":"maxStorageBytes","label":"Max Storage (MB)","type":"number","editable":true,"required":false,"editableForProfiles":["admin"]}

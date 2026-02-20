@@ -5,14 +5,21 @@ const SECRET = new TextEncoder().encode(
 )
 const EXPIRY = process.env.JWT_EXPIRY || '24h'
 
-export async function signToken(payload: { sub: string; id: number }): Promise<string> {
-  return new jose.SignJWT({ ...payload })
+export async function signToken(
+  payload: Record<string, unknown>,
+  opts?: { expiresIn?: string }
+): Promise<string> {
+  return new jose.SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime(EXPIRY)
+    .setExpirationTime(opts?.expiresIn ?? EXPIRY)
     .sign(SECRET)
 }
 
-export async function verifyToken(token: string): Promise<{ sub: string; id: number }> {
+export async function verifyToken(token: string): Promise<{ sub: string; id: number; purpose?: string }> {
   const { payload } = await jose.jwtVerify(token, SECRET)
-  return { sub: payload.sub as string, id: payload.id as number }
+  return {
+    sub: payload.sub as string,
+    id: payload.id as number,
+    purpose: payload.purpose as string | undefined,
+  }
 }

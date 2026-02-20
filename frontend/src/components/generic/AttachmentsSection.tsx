@@ -83,7 +83,8 @@ export function AttachmentsSection({ objectName, recordId, canUpdate = true }: A
       toast.success(t('fileUploaded'))
       fetchFiles()
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? t('uploadFailed')
+      const apiMsg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? ''
+      const msg = apiMsg.toLowerCase().includes('storage limit') ? t('storageLimitExceeded') : (apiMsg || t('uploadFailed'))
       toast.error(msg)
     } finally {
       setUploading(false)

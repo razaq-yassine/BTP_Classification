@@ -18,11 +18,11 @@ export const Route = createFileRoute('/_authenticated')({
       // If checkAuth succeeds, user is authenticated, allow access
       const { isAuthenticated: currentAuthStatus } = useAuthStore.getState()
       if (!currentAuthStatus) {
-        throw redirect({ to: '/login' })
+        throw redirect({ to: '/login', search: { message: undefined } })
       }
     } catch (error) {
       // If checkAuth fails, user is not authenticated, redirect to login
-      throw redirect({ to: '/login' })
+      throw redirect({ to: '/login', search: { message: undefined } })
     }
   },
 })

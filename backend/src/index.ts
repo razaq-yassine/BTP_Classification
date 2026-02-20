@@ -7,13 +7,15 @@ import { entityRoutes } from "./routes/entities.js";
 import { metadataRoutes } from "./routes/metadata.js";
 import { uploadRoutes } from "./routes/upload.js";
 import { fileRoutes } from "./routes/files.js";
+import { storageRoutes } from "./routes/storage.js";
 import { recordHistoryRoutes } from "./routes/record-history.js";
 import { searchRoutes } from "./routes/search.js";
 import { emailRoutes } from "./routes/email.js";
 import { runMigrations } from "./db/migrate.js";
 import { initDb } from "./db/init.js";
 
-const app = new Hono();
+type Variables = { user?: Record<string, unknown> };
+const app = new Hono<{ Variables: Variables }>();
 
 app.use(
   "*",
@@ -39,6 +41,7 @@ app.route("/api/search", searchRoutes);
 app.route("/api", entityRoutes);
 app.route("/api/upload", uploadRoutes);
 app.route("/api/files", fileRoutes);
+app.route("/api/storage", storageRoutes);
 app.route("/api/record-history", recordHistoryRoutes);
 app.route("/api/admin/metadata", metadataRoutes);
 

@@ -19,8 +19,8 @@
     "db:seed": "tsx src/seed.ts",
     "db:seed-customers": "tsx scripts/seed-customers.ts",
     "db:seed-deploytest": "tsx scripts/seed-deploytest.ts",
-    "db:seed-multi-tenant": "tsx scripts/seed-multi-tenant.ts",
-    "db:seed-single-tenant": "tsx scripts/seed-single-tenant.ts",
+    "db:seed-multi-tenant": "tsx src/db/seed-multi-tenant.ts",
+    "db:seed-single-tenant": "tsx src/db/seed-single-tenant.ts",
     "db:validate-metadata": "tsx scripts/validate-metadata.ts",
     "db:verify-schema": "tsx scripts/verify-schema.ts",
     "translation-report": "tsx scripts/translation-report.ts"

@@ -51,7 +51,7 @@ export function ProfileDropdown() {
   const handleLogout = useCallback(async () => {
     try {
       logout()
-      navigate({ to: '/login' })
+      navigate({ to: '/login', search: { message: undefined } })
     } catch (error) {
       console.error('Logout error:', error)
     }

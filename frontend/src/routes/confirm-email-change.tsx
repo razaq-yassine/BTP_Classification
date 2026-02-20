@@ -53,7 +53,7 @@ function ConfirmEmailChangePage() {
             <p className='text-foreground font-medium text-green-600 dark:text-green-400'>{message}</p>
             <div className='flex flex-col gap-2'>
               <Button asChild>
-                <Link to='/login'>{t('goToLogin', { defaultValue: 'Go to login' })}</Link>
+                <Link to='/login' search={{ message: undefined }}>{t('goToLogin', { defaultValue: 'Go to login' })}</Link>
               </Button>
               <Button variant='outline' asChild>
                 <Link to='/settings'>{t('goToSettings', { defaultValue: 'Go to settings' })}</Link>
@@ -65,7 +65,7 @@ function ConfirmEmailChangePage() {
           <>
             <p className='text-destructive'>{message}</p>
             <Button asChild>
-              <Link to='/login'>{t('goToLogin', { defaultValue: 'Go to login' })}</Link>
+              <Link to='/login' search={{ message: undefined }}>{t('goToLogin', { defaultValue: 'Go to login' })}</Link>
             </Button>
           </>
         )}

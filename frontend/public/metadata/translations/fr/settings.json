@@ -98,6 +98,7 @@
   "bodyHtml": "Corps (HTML)",
   "htmlFormatted": "Format HTML",
   "emailConfigSaved": "Configuration e-mail enregistrée",
+  "restartBackendForChanges": "Redémarrez le backend pour que les modifications prennent effet.",
   "enableEmailSending": "Activer l'envoi d'e-mails",
   "enableEmailSendingDesc": "Lorsqu'activé, les e-mails transactionnels seront envoyés via SMTP.",
   "fromEmail": "E-mail de l'expéditeur",

@@ -122,9 +122,9 @@ export async function seedSingleTenant() {
   const productCount = await db.select().from(products);
   if (productCount.length === 0) {
     await db.insert(products).values([
-      { name: "Widget Pro", sku: "SKU-001", price: 29.99, description: "Premium widget", createdAt: now, updatedAt: now },
-      { name: "Gadget X", sku: "SKU-002", price: 49.99, description: "Advanced gadget", createdAt: now, updatedAt: now },
-    ]);
+      { name: "Widget Pro", sku: "SKU-001", price: "29.99", description: "Premium widget", createdAt: now, updatedAt: now },
+      { name: "Gadget X", sku: "SKU-002", price: "49.99", description: "Advanced gadget", createdAt: now, updatedAt: now },
+    ] as any);
     console.log("[seed-single-tenant] Created products");
   }
 
@@ -151,7 +151,7 @@ export async function seedSingleTenant() {
       await db.insert(orders).values({
         name: "ORD-001",
         status: "CONFIRMED",
-        totalAmount: 99.99,
+        totalAmount: "99.99",
         description: "Sample order",
         orderDate: now,
         organizationId: org.id!,
@@ -159,20 +159,20 @@ export async function seedSingleTenant() {
         customerId: c1.id!,
         createdAt: now,
         updatedAt: now,
-      });
+      } as any);
       const [o1] = await db.select().from(orders).where(eq(orders.tenantId, tenant.id!));
       if (o1) {
         await db.insert(orderitems).values({
           name: "OI-001",
           orderId: o1.id!,
           productId: prods[0].id!,
-          quantity: 1,
-          unitPrice: 99.99,
+          quantity: "1",
+          unitPrice: "99.99",
           organizationId: org.id!,
           tenantId: tenant.id!,
           createdAt: now,
           updatedAt: now,
-        });
+        } as any);
       }
     }
     console.log("[seed-single-tenant] Created sample customer and order");

@@ -192,6 +192,7 @@
       "basicInformation": "Informations de base",
       "regionalSettings": "Paramètres régionaux",
       "appearance": "Apparence",
+      "storage": "Stockage",
       "systemInformation": "Informations système"
     },
     "fields": {
@@ -204,6 +205,7 @@
       "timezone": "Fuseau horaire",
       "defaultPreferredLanguage": "Langue préférée par défaut",
       "sidebarTheme": "Thème de la barre latérale",
+      "maxStorageBytes": "Stockage max (Mo)",
       "id": "ID",
       "createdAt": "Créé le",
       "updatedAt": "Mis à jour le",
@@ -219,6 +221,7 @@
       "basicInformation": "Informations de base",
       "regionalSettings": "Paramètres régionaux",
       "appearance": "Apparence",
+      "storage": "Stockage",
       "systemInformation": "Informations système"
     },
     "fields": {
@@ -231,6 +234,7 @@
       "timezone": "Fuseau horaire",
       "defaultPreferredLanguage": "Langue préférée par défaut",
       "sidebarTheme": "Thème de la barre latérale",
+      "maxStorageBytes": "Stockage max (Mo)",
       "id": "ID",
       "createdAt": "Créé le",
       "updatedAt": "Mis à jour le",

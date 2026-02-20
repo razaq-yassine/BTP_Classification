@@ -1,6 +1,7 @@
 import React from 'react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { translateSelectOptionLabel } from '@/utils/translateMetadata'
+import { getReferenceDisplayName } from '@/utils/formatDetailValue'
 import { isValid } from 'date-fns'
 import { formatDateShort, formatDateTimeShort } from '@/utils/formatDateLocale'
 import { formatCurrency } from '@/stores/appConfigStore'
@@ -217,10 +218,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
     case 'reference':
     case 'masterDetail': {
       const refId = typeof value === 'object' ? value?.id : value
-      const displayName =
-        typeof value === 'object'
-          ? (value.fullName ?? value.name ?? [value.firstName, value.lastName].filter(Boolean).join(' ')) || value.id
-          : value
+      const displayName = getReferenceDisplayName(value) || value
       const canNavigate = objectName && refId != null && onReferenceClick
       if (canNavigate) {
         return (

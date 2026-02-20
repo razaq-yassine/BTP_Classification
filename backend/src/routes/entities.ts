@@ -34,9 +34,8 @@ function getTenantFilter(
   objectConfig: EntityConfig
 ): Record<string, number> | null {
   if (!user) return null;
-  const mode = tenantConfig.mode;
-  const hasOrgs =
-    mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
+  const mode = tenantConfig.mode as string;
+  const hasOrgs = ["single_tenant", "multi_tenant", "org_and_tenant"].includes(mode);
   if (!hasOrgs) return null;
   const tenantScope = (objectConfig as { tenantScope?: string }).tenantScope;
   if (!tenantScope) return null;
@@ -172,9 +171,8 @@ async function enrichWithTenantScope(
 ): Promise<Record<string, unknown>> {
   const out = { ...record };
   const tenantScope = (config as { tenantScope?: string }).tenantScope;
-  const mode = tenantConfig.mode;
-  const hasOrgs =
-    mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
+  const mode = tenantConfig.mode as string;
+  const hasOrgs = ["single_tenant", "multi_tenant", "org_and_tenant"].includes(mode);
 
   if (tenantScope && hasOrgs) {
     const orgId = record.organizationId as number | undefined;
@@ -191,7 +189,7 @@ async function enrichWithTenantScope(
         .select()
         .from(tenants)
         .where(eq(tenants.id, tenantId));
-      out.tenant = tenant ? { id: tenant.id, ...tenant } : null;
+      out.tenant = tenant ? { ...tenant } : null;
     }
   }
 
@@ -353,7 +351,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
           const user = (c.get as (k: string) => unknown)("user") as
             | UserWithTenant
             | undefined;
-          let profile = null;
+          let profile: Awaited<ReturnType<typeof getUserProfile>> | null = null;
           if (user?.id) {
             profile = await getUserProfile(user.id);
             if (!hasObjectPermission(profile, objectName, "read")) {
@@ -494,7 +492,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       const user = (c.get as (k: string) => unknown)("user") as
         | UserWithTenant
         | undefined;
-      let profile = null;
+      let profile: Awaited<ReturnType<typeof getUserProfile>> | null = null;
       if (user?.id) {
         profile = await getUserProfile(user.id);
         if (!hasObjectPermission(profile, objectName, "read")) {
@@ -648,7 +646,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       const user = (c.get as (k: string) => unknown)("user") as
         | UserWithTenant
         | undefined;
-      let profile = null;
+      let profile: Awaited<ReturnType<typeof getUserProfile>> | null = null;
       if (user?.id) {
         profile = await getUserProfile(user.id);
         if (!hasObjectPermission(profile, objectName, "read")) {
@@ -744,7 +742,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     const user = (c.get as (k: string) => unknown)("user") as
       | UserWithTenant
       | undefined;
-    let profile = null;
+    let profile: Awaited<ReturnType<typeof getUserProfile>> | null = null;
     if (user?.id) {
       profile = await getUserProfile(user.id);
       if (!hasObjectPermission(profile, objectName, "create")) {
@@ -753,9 +751,8 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     }
     const body = (await c.req.json()) as Record<string, unknown>;
     const tenantScope = (config as { tenantScope?: string }).tenantScope;
-    const mode = tenantConfig.mode;
-    const hasOrgs =
-      mode === "single_tenant" || mode === "multi_tenant" || mode === "org_and_tenant";
+    const mode = tenantConfig.mode as string;
+    const hasOrgs = ["single_tenant", "multi_tenant", "org_and_tenant"].includes(mode);
     const isAdmin =
       user &&
       (user.profile === "admin" ||
@@ -1010,7 +1007,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     const user = (c.get as (k: string) => unknown)("user") as
       | UserWithTenant
       | undefined;
-    let profile = null;
+    let profile: Awaited<ReturnType<typeof getUserProfile>> | null = null;
     if (user?.id) {
       profile = await getUserProfile(user.id);
       if (!hasObjectPermission(profile, objectName, "update")) {
@@ -1048,7 +1045,16 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       tenantConds.length > 0 ? and(idCond, ...tenantConds) : idCond;
     const [oldRow] = await db.select().from(table).where(whereCond);
     if (!oldRow) return c.json({ message: "Not found" }, 404);
-    const body = (await c.req.json()) as Record<string, unknown>;
+    let body = (await c.req.json()) as Record<string, unknown>;
+    // maxStorageBytes is admin-only: non-admins cannot change storage limits
+    if (
+      (entityPath === "organizations" || entityPath === "tenants") &&
+      !isAdmin &&
+      "maxStorageBytes" in body
+    ) {
+      body = { ...body };
+      delete body.maxStorageBytes;
+    }
     let newPayload = buildUpdatePayload(
       body,
       oldRow as Record<string, unknown>,

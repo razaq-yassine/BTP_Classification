@@ -98,6 +98,7 @@
   "bodyHtml": "Body (HTML)",
   "htmlFormatted": "HTML formatted",
   "emailConfigSaved": "Email configuration saved",
+  "restartBackendForChanges": "Restart the backend for changes to take effect.",
   "enableEmailSending": "Enable email sending",
   "enableEmailSendingDesc": "When enabled, transactional emails will be sent via SMTP.",
   "fromEmail": "From email",

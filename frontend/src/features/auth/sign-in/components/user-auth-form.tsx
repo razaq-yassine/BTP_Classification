@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { IconBrandFacebook, IconBrandGithub } from '@tabler/icons-react'
+import { IconBrandGoogle } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/stores/authStore'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 
+const TEMP_TOKEN_KEY = '2fa_temp_token'
+const MUST_CHANGE_PW_TOKEN_KEY = 'must_change_pw_token'
+
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
@@ -29,31 +32,38 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const login = useAuthStore((state) => state.login)
 
   const formSchema = z.object({
-    username: z.string().min(1, t('pleaseEnterUsername', { defaultValue: 'Please enter your username' })),
-    password: z.string().min(1, t('pleaseEnterPassword', { defaultValue: 'Please enter your password' })),
+    usernameOrEmail: z.string().min(1, t('pleaseEnterUsernameOrEmail')),
+    password: z.string().min(1, t('pleaseEnterPassword')),
   })
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: 'admin',
-      password: 'admin123',
+      usernameOrEmail: '',
+      password: '',
     },
   })
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsLoading(true)
     setError('')
-    
     try {
-      const result = await login(data.username, data.password)
+      const result = await login(data.usernameOrEmail, data.password)
       if (result.success) {
-        navigate({ to: '/dashboard' })
+        if (result.requiresTwoFactor && result.tempToken) {
+          sessionStorage.setItem(TEMP_TOKEN_KEY, result.tempToken)
+          navigate({ to: '/login-verify-2fa' })
+        } else if (result.mustChangePassword && result.tempToken) {
+          sessionStorage.setItem(MUST_CHANGE_PW_TOKEN_KEY, result.tempToken)
+          navigate({ to: '/change-password-required' })
+        } else {
+          navigate({ to: '/dashboard' })
+        }
       } else {
-        setError(result.error || 'Login failed')
+        setError(result.error || t('loginFailed'))
       }
     } catch (err) {
-      setError(t('errors:unexpectedError', { defaultValue: 'An unexpected error occurred' }))
+      setError(t('errors:unexpectedError'))
     } finally {
       setIsLoading(false)
     }
@@ -67,18 +77,18 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
         {...props}
       >
         {error && (
-          <div className='text-sm text-red-600 bg-red-50 p-3 rounded-md'>
+          <div className='text-sm text-red-600 bg-red-50 dark:bg-red-950/50 dark:text-red-400 p-3 rounded-md'>
             {error}
           </div>
         )}
         <FormField
           control={form.control}
-          name='username'
+          name='usernameOrEmail'
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('username', { defaultValue: 'Username' })}</FormLabel>
+              <FormLabel>{t('usernameOrEmail')}</FormLabel>
               <FormControl>
-                <Input placeholder='admin' {...field} />
+                <Input placeholder={t('usernameOrEmailPlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -89,7 +99,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           name='password'
           render={({ field }) => (
             <FormItem className='relative'>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{t('password')}</FormLabel>
               <FormControl>
                 <PasswordInput placeholder='********' {...field} />
               </FormControl>
@@ -98,32 +108,29 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
                 to='/forgot-password'
                 className='text-muted-foreground absolute -top-0.5 right-0 text-sm font-medium hover:opacity-75'
               >
-                Forgot password?
+                {t('forgotPassword')}
               </Link>
             </FormItem>
           )}
         />
         <Button type='submit' className='mt-2' disabled={isLoading}>
-          Login
+          {t('login')}
         </Button>
 
-        <div className='relative my-2'>
-          <div className='absolute inset-0 flex items-center'>
-            <span className='w-full border-t' />
+        <div className='hidden'>
+          <div className='relative my-2'>
+            <div className='absolute inset-0 flex items-center'>
+              <span className='w-full border-t' />
+            </div>
+            <div className='relative flex justify-center text-xs uppercase'>
+              <span className='bg-background text-muted-foreground px-2'>
+                {t('orContinueWith')}
+              </span>
+            </div>
           </div>
-          <div className='relative flex justify-center text-xs uppercase'>
-            <span className='bg-background text-muted-foreground px-2'>
-              Or continue with
-            </span>
-          </div>
-        </div>
 
-        <div className='grid grid-cols-2 gap-2'>
           <Button variant='outline' type='button' disabled={isLoading}>
-            <IconBrandGithub className='h-4 w-4' /> GitHub
-          </Button>
-          <Button variant='outline' type='button' disabled={isLoading}>
-            <IconBrandFacebook className='h-4 w-4' /> Facebook
+            <IconBrandGoogle className='h-4 w-4' /> {t('continueWithGoogle')}
           </Button>
         </div>
       </form>

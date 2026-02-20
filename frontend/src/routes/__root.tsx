@@ -4,27 +4,31 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Toaster } from '@/components/ui/sonner'
 import { NavigationProgress } from '@/components/navigation-progress'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import GeneralError from '@/features/errors/general-error'
 import NotFoundError from '@/features/errors/not-found-error'
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
 }>()({
-  component: () => {
-    return (
-      <>
-        <NavigationProgress />
-        <Outlet />
-        <Toaster duration={4000} position="top-center" />
-        {import.meta.env.MODE === 'development' && (
-          <>
-            <ReactQueryDevtools buttonPosition='bottom-left' />
-            <TanStackRouterDevtools position='bottom-right' />
-          </>
-        )}
-      </>
-    )
-  },
+  component: RootComponent,
   notFoundComponent: NotFoundError,
   errorComponent: GeneralError,
 })
+
+function RootComponent() {
+  useDocumentTitle()
+  return (
+    <>
+      <NavigationProgress />
+      <Outlet />
+      <Toaster duration={4000} position="top-center" />
+      {import.meta.env.MODE === 'development' && (
+        <>
+          <ReactQueryDevtools buttonPosition='bottom-left' />
+          <TanStackRouterDevtools position='bottom-right' />
+        </>
+      )}
+    </>
+  )
+}

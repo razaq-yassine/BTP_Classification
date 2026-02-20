@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
-import { IconLayoutDashboard, IconSettings } from '@tabler/icons-react'
+import { IconFileSearch, IconLayoutDashboard, IconSettings } from '@tabler/icons-react'
 import type { ObjectDefinition } from '@/types/object-definition'
 import type { SidebarData, NavGroup, NavItem, NavLink, NavCollapsible } from '@/components/layout/types'
 import { useObjectDefinitionsQuery } from '@/hooks/useObjectDefinitionsQuery'
@@ -133,7 +133,19 @@ export function useSidebarData(): SidebarData {
     }
     const dataItems = defs ? buildDataNavItems(defs, canRead, t) : []
 
-    const allItems: NavItem[] = [dashboardItem, ...dataItems, settingsItem]
+    const fileExplorerItem: NavLink = {
+      title: t('navigation:fileExplorer', { defaultValue: 'File Explorer' }),
+      url: '/files',
+      icon: IconFileSearch
+    }
+
+    const showFileExplorer = isAdmin || hasOrgId || hasTenantId
+    const allItems: NavItem[] = [
+      dashboardItem,
+      ...dataItems,
+      ...(showFileExplorer ? [fileExplorerItem] : []),
+      settingsItem
+    ]
 
     return [{ title: '', items: allItems }]
   }, [defs, isSettings, canRead, isAdmin, hasOrgId, hasTenantId, t])

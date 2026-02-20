@@ -1,9 +1,11 @@
 'use client'
 
+import { useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { showSubmittedData } from '@/utils/show-submitted-data'
+import api from '@/services/api'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -24,20 +26,24 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { SelectDropdown } from '@/components/select-dropdown'
-import { userTypes } from '../data/data'
+import { useUsers } from '../context/users-context'
 import { User } from '../data/schema'
+
+const ADMIN_PROFILES = [
+  { label: 'Standard User', value: 'standard-user' },
+  { label: 'Tenant User', value: 'tenant-user' },
+  { label: 'Organization User', value: 'org-user' },
+  { label: 'Admin', value: 'admin' },
+] as const
 
 const formSchema = z
   .object({
-    firstName: z.string().min(1, 'First Name is required.'),
-    lastName: z.string().min(1, 'Last Name is required.'),
-    username: z.string().min(1, 'Username is required.'),
-    phoneNumber: z.string().min(1, 'Phone number is required.'),
-    email: z.email({
-      error: (iss) => (iss.input === '' ? 'Email is required.' : undefined),
-    }),
+    firstName: z.string().optional(),
+    lastName: z.string().optional(),
+    username: z.string().min(2, 'Username must be at least 2 characters.'),
+    email: z.string().email('Email is required.'),
     password: z.string().transform((pwd) => pwd.trim()),
-    role: z.string().min(1, 'Role is required.'),
+    profile: z.string().min(1, 'Profile is required.'),
     confirmPassword: z.string().transform((pwd) => pwd.trim()),
     isEdit: z.boolean(),
   })
@@ -56,30 +62,21 @@ const formSchema = z
       if (isEdit && !password) return true
       return password.length >= 8
     },
-    {
-      message: 'Password must be at least 8 characters long.',
-      path: ['password'],
-    }
+    { message: 'Password must be at least 8 characters long.', path: ['password'] }
   )
   .refine(
     ({ isEdit, password }) => {
       if (isEdit && !password) return true
       return /[a-z]/.test(password)
     },
-    {
-      message: 'Password must contain at least one lowercase letter.',
-      path: ['password'],
-    }
+    { message: 'Password must contain at least one lowercase letter.', path: ['password'] }
   )
   .refine(
     ({ isEdit, password }) => {
       if (isEdit && !password) return true
       return /\d/.test(password)
     },
-    {
-      message: 'Password must contain at least one number.',
-      path: ['password'],
-    }
+    { message: 'Password must contain at least one number.', path: ['password'] }
   )
   .refine(
     ({ isEdit, password, confirmPassword }) => {
@@ -101,12 +98,18 @@ interface Props {
 
 export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
   const isEdit = !!currentRow
+  const [isLoading, setIsLoading] = useState(false)
+  const { refetchUsers } = useUsers()
   const form = useForm<UserForm>({
     resolver: zodResolver(formSchema),
     defaultValues: isEdit
       ? {
-          ...currentRow,
+          firstName: currentRow.firstName,
+          lastName: currentRow.lastName,
+          username: currentRow.username,
+          email: currentRow.email,
           password: '',
+          profile: String(currentRow.role),
           confirmPassword: '',
           isEdit,
         }
@@ -115,18 +118,39 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           lastName: '',
           username: '',
           email: '',
-          role: '',
-          phoneNumber: '',
+          profile: 'standard-user',
           password: '',
           confirmPassword: '',
           isEdit,
         },
   })
 
-  const onSubmit = (values: UserForm) => {
-    form.reset()
-    showSubmittedData(values)
-    onOpenChange(false)
+  const onSubmit = async (values: UserForm) => {
+    if (isEdit) {
+      // Edit not yet supported by admin API
+      toast.error('Edit user is not yet supported.')
+      return
+    }
+    setIsLoading(true)
+    try {
+      await api.post('/api/auth/admin/users', {
+        username: values.username.trim(),
+        email: values.email.trim().toLowerCase(),
+        password: values.password,
+        firstName: values.firstName?.trim() || undefined,
+        lastName: values.lastName?.trim() || undefined,
+        profile: values.profile,
+      })
+      form.reset()
+      onOpenChange(false)
+      refetchUsers?.()
+      toast.success('User created successfully')
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Failed to create user'
+      toast.error(msg)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const isPasswordTouched = !!form.formState.dirtyFields.password
@@ -234,37 +258,19 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
               />
               <FormField
                 control={form.control}
-                name='phoneNumber'
+                name='profile'
                 render={({ field }) => (
                   <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
                     <FormLabel className='col-span-2 text-right'>
-                      Phone Number
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder='+123456789'
-                        className='col-span-4'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage className='col-span-4 col-start-3' />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='role'
-                render={({ field }) => (
-                  <FormItem className='grid grid-cols-6 items-center space-y-0 gap-x-4 gap-y-1'>
-                    <FormLabel className='col-span-2 text-right'>
-                      Role
+                      Profile
                     </FormLabel>
                     <SelectDropdown
                       defaultValue={field.value}
                       onValueChange={field.onChange}
-                      placeholder='Select a role'
+                      isControlled
+                      placeholder='Select a profile'
                       className='col-span-4'
-                      items={userTypes.map(({ label, value }) => ({
+                      items={ADMIN_PROFILES.map(({ label, value }) => ({
                         label,
                         value,
                       }))}
@@ -316,8 +322,8 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
           </Form>
         </div>
         <DialogFooter>
-          <Button type='submit' form='user-form'>
-            Save changes
+          <Button type='submit' form='user-form' disabled={isLoading}>
+            {isEdit ? 'Save changes' : isLoading ? 'Creating...' : 'Create User'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -19,6 +19,6 @@ export const Route = createFileRoute('/')({
     }
     
     // Redirect to login if not authenticated
-    throw redirect({ to: '/login' })
+    throw redirect({ to: '/login', search: { message: undefined } })
   },
 })
