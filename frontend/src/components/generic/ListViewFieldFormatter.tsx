@@ -74,8 +74,16 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
       )
 
     case 'url': {
-      const href = /^https?:\/\//i.test(value) ? value : `https://${value}`
+      const isDangerousScheme = /^(javascript|data|vbscript):/i.test(value)
+      const href = isDangerousScheme
+        ? undefined
+        : /^https?:\/\//i.test(value)
+          ? value
+          : `https://${value}`
       const display = value.length > 40 ? `${value.substring(0, 40)}...` : value
+      if (!href) {
+        return <span className="text-sm">{display}</span>
+      }
       return (
         <a
           href={href}

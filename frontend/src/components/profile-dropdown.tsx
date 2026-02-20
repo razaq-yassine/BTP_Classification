@@ -2,8 +2,6 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  Bell,
-  CreditCard,
   LogOut,
   Palette,
   User,
@@ -89,18 +87,6 @@ export function ProfileDropdown() {
             <Link to='/settings/appearance' target='_blank' rel='noopener noreferrer'>
               <Palette className='mr-2 h-4 w-4' />
               {t('appearance')}
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to='/settings/notifications' target='_blank' rel='noopener noreferrer'>
-              <Bell className='mr-2 h-4 w-4' />
-              {t('notifications')}
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to='/billing' target='_blank' rel='noopener noreferrer'>
-              <CreditCard className='mr-2 h-4 w-4' />
-              {t('billing')}
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>

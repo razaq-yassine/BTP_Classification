@@ -13,6 +13,7 @@ import {
   hasObjectPermission,
   isFieldVisible
 } from "../lib/permissions.js";
+import { escapeLikePattern } from "../lib/db-utils.js";
 
 export const searchRoutes = new Hono();
 
@@ -200,8 +201,9 @@ async function searchOneEntity(
   );
   const join = "join" in config ? (config.join as JoinConfig | undefined) : undefined;
 
+  const escapedSearch = escapeLikePattern(searchQuery);
   const searchCond = or(
-    ...Array.from(searchFields).map((f) => like(f as any, `%${searchQuery}%`))
+    ...Array.from(searchFields).map((f) => like(f as any, `%${escapedSearch}%`))
   )!;
   const allConds = [...tenantConds, searchCond];
   const whereCond = and(...allConds);

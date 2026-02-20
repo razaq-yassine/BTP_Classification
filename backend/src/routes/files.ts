@@ -18,9 +18,21 @@ import {
   type EntityPath
 } from "./entity-registry.generated.js";
 import { getUserProfile, hasObjectPermission } from "../lib/permissions.js";
+import { escapeLikePattern } from "../lib/db-utils.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOADS_ROOT = path.join(__dirname, "..", "..", "uploads");
+const UPLOADS_ROOT_RESOLVED = path.resolve(UPLOADS_ROOT);
+
+/** Resolve path and ensure it stays under UPLOADS_ROOT to prevent path traversal. */
+function resolveUploadPath(relativePath: string): string | null {
+  const joined = path.join(UPLOADS_ROOT, relativePath);
+  const resolved = path.resolve(joined);
+  if (!resolved.startsWith(UPLOADS_ROOT_RESOLVED)) {
+    return null;
+  }
+  return resolved;
+}
 
 function getMimeTypeFromFilename(filename: string): string {
   const ext = path.extname(filename).toLowerCase();
@@ -227,7 +239,7 @@ fileRoutes.get("/explorer", authMiddleware, async (c) => {
     conds.push(eq(files.objectName, objectName.trim()));
   }
   if (search && search.trim()) {
-    conds.push(like(files.filename, `%${search.trim()}%`));
+    conds.push(like(files.filename, `%${escapeLikePattern(search.trim())}%`));
   }
 
   const finalWhere =
@@ -343,8 +355,9 @@ fileRoutes.get("/serve", authMiddleware, async (c) => {
     return c.json({ message: "Record not found or access denied" }, 403);
   }
 
-  const diskPath = path.join(UPLOADS_ROOT, normalizedPath.replace(/^\/uploads\//, ""));
-  if (!existsSync(diskPath)) {
+  const relativePath = normalizedPath.replace(/^\/uploads\//, "");
+  const diskPath = resolveUploadPath(relativePath);
+  if (!diskPath || !existsSync(diskPath)) {
     return c.json({ message: "File not found" }, 404);
   }
 
@@ -431,11 +444,9 @@ fileRoutes.get("/", authMiddleware, async (c) => {
       )
         continue;
       const normalizedPath = pathStr.startsWith("/") ? pathStr : `/${pathStr}`;
-      const diskPath = path.join(
-        UPLOADS_ROOT,
-        normalizedPath.replace(/^\/uploads\//, "")
-      );
-      if (!existsSync(diskPath)) continue;
+      const relativePath = normalizedPath.replace(/^\/uploads\//, "");
+      const diskPath = resolveUploadPath(relativePath);
+      if (!diskPath || !existsSync(diskPath)) continue;
       const [existing] = await db
         .select()
         .from(files)
@@ -495,11 +506,9 @@ fileRoutes.get("/download/:fileId", optionalAuthMiddleware, async (c) => {
     return c.json({ message: "File not found" }, 404);
   }
 
-  const filePath = path.join(
-    UPLOADS_ROOT,
-    fileRow.storagePath.replace(/^\/uploads\//, "")
-  );
-  if (!existsSync(filePath)) {
+  const relativePath = fileRow.storagePath.replace(/^\/uploads\//, "");
+  const filePath = resolveUploadPath(relativePath);
+  if (!filePath || !existsSync(filePath)) {
     return c.json({ message: "File not found on disk" }, 404);
   }
 
@@ -692,11 +701,9 @@ fileRoutes.delete("/:fileId", authMiddleware, async (c) => {
     return c.json({ message: "Record not found or access denied" }, 403);
   }
 
-  const filePath = path.join(
-    UPLOADS_ROOT,
-    fileRow.storagePath.replace(/^\/uploads\//, "")
-  );
-  if (existsSync(filePath)) {
+  const relativePath = fileRow.storagePath.replace(/^\/uploads\//, "");
+  const filePath = resolveUploadPath(relativePath);
+  if (filePath && existsSync(filePath)) {
     unlink(filePath, () => {});
   }
 

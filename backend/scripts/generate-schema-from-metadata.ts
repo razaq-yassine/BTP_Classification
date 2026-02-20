@@ -1024,6 +1024,14 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
         ? JSON.stringify(relatedPaths)
         : "undefined";
 
+    const richTextFields = allFields
+      .filter((f) => f.type === "richText" && f.key)
+      .map((f) => f.key);
+    const richTextFieldsConfig =
+      richTextFields.length > 0
+        ? `richTextFields: [${richTextFields.map((s) => `'${s}'`).join(", ")}]`
+        : "";
+
     const autoNumberFields = allFields
       .filter(
         (f) => (f.type === "autoNumber" || f.type === "autonumber") && f.key
@@ -1066,6 +1074,7 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
       `table: ${tableName}`,
       `objectName: '${objectName}'`,
       tenantScopeConfig,
+      richTextFieldsConfig,
       `searchFields: [${searchFieldsArr.join(", ")}]`,
       `insertFields: [${insertFieldsArr.map((s) => `'${s}'`).join(", ")}]`,
       `updateFields: [${updateFieldsArr.map((s) => `'${s}'`).join(", ")}]`,
@@ -1199,6 +1208,14 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
         ? `dateFields: [${dateFields.map((s) => `'${s}'`).join(", ")}]`
         : "";
 
+    const systemRichTextFields = combinedFields
+      .filter((f) => f.type === "richText" && f.key)
+      .map((f) => f.key);
+    const systemRichTextFieldsConfig =
+      systemRichTextFields.length > 0
+        ? `richTextFields: [${systemRichTextFields.map((s) => `'${s}'`).join(", ")}]`
+        : "";
+
     const relatedPaths = relatedListPathsByEntity.get(tableName);
     const relatedPathsStr =
       relatedPaths && Object.keys(relatedPaths).length > 0
@@ -1208,6 +1225,7 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
     const configParts = [
       `table: ${tableName}`,
       `objectName: '${objectName}'`,
+      systemRichTextFieldsConfig,
       `searchFields: [${searchFieldsArr.join(", ")}]`,
       `insertFields: [${insertFieldsArr.map((s) => `'${s}'`).join(", ")}]`,
       `updateFields: [${updateFieldsArr.map((s) => `'${s}'`).join(", ")}]`,

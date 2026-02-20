@@ -3,6 +3,7 @@ import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
 import { randomUUID } from "crypto";
+import { fileTypeFromBuffer } from "file-type";
 import { eq, and, like } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth.js";
 import { db } from "../db/index.js";
@@ -42,7 +43,57 @@ const IMAGE_EXTENSIONS = new Set([
   ".webp",
   ".svg"
 ]);
+
+/** Text-based formats that file-type cannot detect; allow when detection returns undefined. */
+const TEXT_EXTENSIONS = new Set([".txt", ".csv", ".svg"]);
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+/** Extension to file-type ext (no leading dot). */
+const EXT_TO_FILETYPE: Record<string, string> = {
+  ".jpg": "jpg",
+  ".jpeg": "jpeg",
+  ".png": "png",
+  ".gif": "gif",
+  ".webp": "webp",
+  ".svg": "svg",
+  ".pdf": "pdf",
+  ".doc": "doc",
+  ".docx": "docx",
+  ".xls": "xls",
+  ".xlsx": "xlsx"
+};
+
+async function validateFileContent(
+  buffer: Buffer,
+  declaredExt: string,
+  allowedSet: Set<string>
+): Promise<{ valid: boolean; message?: string }> {
+  const detected = await fileTypeFromBuffer(new Uint8Array(buffer));
+  if (TEXT_EXTENSIONS.has(declaredExt)) {
+    return { valid: true };
+  }
+  if (!detected) {
+    return {
+      valid: false,
+      message: "File content could not be verified. The file may be corrupted or not match its extension."
+    };
+  }
+  const expectedExt = EXT_TO_FILETYPE[declaredExt];
+  if (!expectedExt || detected.ext !== expectedExt) {
+    return {
+      valid: false,
+      message: `File content does not match extension. Expected ${declaredExt}, detected ${detected.ext}.`
+    };
+  }
+  const detectedExt = "." + detected.ext;
+  if (!allowedSet.has(detectedExt)) {
+    return {
+      valid: false,
+      message: `Detected file type (${detectedExt}) is not allowed.`
+    };
+  }
+  return { valid: true };
+}
 
 function sanitizeFilename(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 200);
@@ -210,6 +261,13 @@ uploadRoutes.post("/:objectName/:recordId/:fieldKey", async (c) => {
       );
     }
 
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const contentCheck = await validateFileContent(buffer, ext, allowedSet);
+    if (!contentCheck.valid) {
+      return c.json({ message: contentCheck.message }, 400);
+    }
+
     const user = c.get("user") as UserWithTenant;
     const profile = await getUserProfile(user?.id ?? 0);
     if (!profile) {
@@ -310,8 +368,6 @@ uploadRoutes.post("/:objectName/:recordId/:fieldKey", async (c) => {
       : `${Date.now()}_${safeName}`;
     const filePath = path.join(dir, filename);
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
     await writeFile(filePath, buffer);
 
     const relativePath = `/uploads/${safeObject}/${safeRecord}/${safeField}/${filename}`;

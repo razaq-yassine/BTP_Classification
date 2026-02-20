@@ -31,7 +31,6 @@ export const PATH_TITLE_MAP: Record<string, string> = {
   '/settings/email-templates': 'navigation:emailTemplates',
   '/settings/files': 'navigation:fileExplorer',
   '/settings/notification-settings': 'navigation:notificationSettings',
-  '/settings/notifications': 'Notifications',
   '/settings/object-manager': 'navigation:objectManager',
   '/settings/organization': 'navigation:organization',
   '/settings/profiles': 'navigation:permissionProfiles',

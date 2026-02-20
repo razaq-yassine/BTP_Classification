@@ -98,10 +98,19 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
           {val}
         </a>
       )
-    case 'url':
+    case 'url': {
+      const isDangerousScheme = /^(javascript|data|vbscript):/i.test(val)
+      const href = isDangerousScheme
+        ? undefined
+        : /^https?:\/\//i.test(val)
+          ? val
+          : `https://${val}`
+      if (!href) {
+        return <span>{val}</span>
+      }
       return (
         <a
-          href={/^https?:\/\//i.test(val) ? val : `https://${val}`}
+          href={href}
           target="_blank"
           rel="noopener noreferrer"
           className={linkClass}
@@ -110,6 +119,7 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
           {val}
         </a>
       )
+    }
     case 'color': {
       const hex = typeof val === 'string' ? val : ''
       if (!hex) return i18n.t('common:empty')

@@ -16,6 +16,12 @@ import {
   isFieldVisible,
   canEditField
 } from "../lib/permissions.js";
+import {
+  escapeLikePattern,
+  parseRequestedFields,
+  sanitizeRichText,
+  validateStringFieldLength
+} from "../lib/db-utils.js";
 
 export const entityRoutes = new Hono();
 
@@ -250,7 +256,14 @@ function buildInsertPayload(
       val = new Date(val);
     }
     if (Array.isArray(val)) val = JSON.stringify(val);
-    if (val !== undefined) payload[field] = val;
+    if (val !== undefined) {
+      validateStringFieldLength(val, field);
+      const richTextFields = (config as { richTextFields?: string[] }).richTextFields;
+      if (richTextFields?.includes(field) && typeof val === "string") {
+        val = sanitizeRichText(val);
+      }
+      payload[field] = val;
+    }
   }
   return payload;
 }
@@ -301,7 +314,14 @@ function buildUpdatePayload(
     )
       val = new Date(val);
     if (Array.isArray(val)) val = JSON.stringify(val);
-    if (val !== undefined) payload[field] = val;
+    if (val !== undefined) {
+      validateStringFieldLength(val, field);
+      const richTextFields = (config as { richTextFields?: string[] }).richTextFields;
+      if (richTextFields?.includes(field) && typeof val === "string") {
+        val = sanitizeRichText(val);
+      }
+      payload[field] = val;
+    }
   }
   return payload;
 }
@@ -373,9 +393,10 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
           );
           const search = c.req.query("search")?.trim();
           const fieldsParam = c.req.query("fields");
-          const requestedFields = fieldsParam
-            ? fieldsParam.split(",").map((f) => f.trim().toLowerCase())
-            : null;
+          const requestedFields = parseRequestedFields(fieldsParam);
+          if (fieldsParam?.trim() && requestedFields === null) {
+            return c.json({ message: "Invalid fields parameter" }, 400);
+          }
 
           let rows: Array<
             | {
@@ -541,9 +562,10 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       );
       const search = c.req.query("search")?.trim();
       const fieldsParam = c.req.query("fields");
-      const requestedFields = fieldsParam
-        ? fieldsParam.split(",").map((f) => f.trim().toLowerCase())
-        : null;
+      const requestedFields = parseRequestedFields(fieldsParam);
+      if (fieldsParam?.trim() && requestedFields === null) {
+        return c.json({ message: "Invalid fields parameter" }, 400);
+      }
 
       let rows: unknown[];
 
@@ -561,9 +583,10 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
         const result = await q;
         rows = result as any;
       } else {
+        const escapedSearch = escapeLikePattern(search ?? "");
         const searchCond =
           search && searchFields.length > 0
-            ? or(...searchFields.map((f: any) => like(f, `%${search}%`)))!
+            ? or(...searchFields.map((f: any) => like(f, `%${escapedSearch}%`)))!
             : undefined;
         const allConds = [...tenantConds];
         if (searchCond) allConds.push(searchCond);
@@ -998,7 +1021,8 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     } catch (err) {
       console.error(`POST /${entityPath} error:`, err);
       const msg = (err as Error).message || "Internal server error";
-      return c.json({ message: msg }, 500);
+      const isValidation = msg.includes("maximum length");
+      return c.json({ message: msg }, isValidation ? 400 : 500);
     }
   });
 
@@ -1055,12 +1079,19 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       body = { ...body };
       delete body.maxStorageBytes;
     }
-    let newPayload = buildUpdatePayload(
+    let newPayload: Record<string, unknown>;
+    try {
+      newPayload = buildUpdatePayload(
       body,
       oldRow as Record<string, unknown>,
       config,
       profile
     );
+    } catch (err) {
+      const msg = (err as Error).message || "Internal server error";
+      const isValidation = msg.includes("maximum length");
+      return c.json({ message: msg }, isValidation ? 400 : 500);
+    }
     // Set editedBy from current user
     if (config.updateFields?.includes("editedById"))
       newPayload = { ...newPayload, editedById: user?.id ?? null };

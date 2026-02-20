@@ -20,7 +20,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedFilesRouteImport } from './routes/_authenticated/files'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors404RouteImport } from './routes/(errors)/404'
@@ -46,7 +45,6 @@ import { Route as AuthenticatedSettingsSidebarAssignmentRouteImport } from './ro
 import { Route as AuthenticatedSettingsProfilesRouteImport } from './routes/_authenticated/settings/profiles'
 import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings/organization'
 import { Route as AuthenticatedSettingsObjectManagerRouteImport } from './routes/_authenticated/settings/object-manager'
-import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings/notifications'
 import { Route as AuthenticatedSettingsNotificationSettingsRouteImport } from './routes/_authenticated/settings/notification-settings'
 import { Route as AuthenticatedSettingsFilesRouteImport } from './routes/_authenticated/settings/files'
 import { Route as AuthenticatedSettingsEmailTemplatesRouteImport } from './routes/_authenticated/settings/email-templates'
@@ -126,11 +124,6 @@ const AuthenticatedFilesRoute = AuthenticatedFilesRouteImport.update({
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const errors503Route = errors503RouteImport.update({
@@ -267,12 +260,6 @@ const AuthenticatedSettingsObjectManagerRoute =
   AuthenticatedSettingsObjectManagerRouteImport.update({
     id: '/object-manager',
     path: '/object-manager',
-    getParentRoute: () => AuthenticatedSettingsRouteRoute,
-  } as any)
-const AuthenticatedSettingsNotificationsRoute =
-  AuthenticatedSettingsNotificationsRouteImport.update({
-    id: '/notifications',
-    path: '/notifications',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
 const AuthenticatedSettingsNotificationSettingsRoute =
@@ -451,7 +438,6 @@ export interface FileRoutesByFullPath {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/files': typeof AuthenticatedFilesRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -465,7 +451,6 @@ export interface FileRoutesByFullPath {
   '/settings/email-templates': typeof AuthenticatedSettingsEmailTemplatesRouteWithChildren
   '/settings/files': typeof AuthenticatedSettingsFilesRoute
   '/settings/notification-settings': typeof AuthenticatedSettingsNotificationSettingsRoute
-  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/object-manager': typeof AuthenticatedSettingsObjectManagerRouteWithChildren
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/settings/profiles': typeof AuthenticatedSettingsProfilesRouteWithChildren
@@ -515,7 +500,6 @@ export interface FileRoutesByTo {
   '/404': typeof errors404Route
   '/500': typeof errors500Route
   '/503': typeof errors503Route
-  '/billing': typeof AuthenticatedBillingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/files': typeof AuthenticatedFilesRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -528,7 +512,6 @@ export interface FileRoutesByTo {
   '/settings/email': typeof AuthenticatedSettingsEmailRoute
   '/settings/files': typeof AuthenticatedSettingsFilesRoute
   '/settings/notification-settings': typeof AuthenticatedSettingsNotificationSettingsRoute
-  '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/settings/tenant': typeof AuthenticatedSettingsTenantRoute
   '/$objectName': typeof AuthenticatedObjectNameIndexRoute
@@ -574,7 +557,6 @@ export interface FileRoutesById {
   '/(errors)/404': typeof errors404Route
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
-  '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/files': typeof AuthenticatedFilesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -588,7 +570,6 @@ export interface FileRoutesById {
   '/_authenticated/settings/email-templates': typeof AuthenticatedSettingsEmailTemplatesRouteWithChildren
   '/_authenticated/settings/files': typeof AuthenticatedSettingsFilesRoute
   '/_authenticated/settings/notification-settings': typeof AuthenticatedSettingsNotificationSettingsRoute
-  '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/_authenticated/settings/object-manager': typeof AuthenticatedSettingsObjectManagerRouteWithChildren
   '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/_authenticated/settings/profiles': typeof AuthenticatedSettingsProfilesRouteWithChildren
@@ -641,7 +622,6 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
-    | '/billing'
     | '/dashboard'
     | '/files'
     | '/profile'
@@ -655,7 +635,6 @@ export interface FileRouteTypes {
     | '/settings/email-templates'
     | '/settings/files'
     | '/settings/notification-settings'
-    | '/settings/notifications'
     | '/settings/object-manager'
     | '/settings/organization'
     | '/settings/profiles'
@@ -705,7 +684,6 @@ export interface FileRouteTypes {
     | '/404'
     | '/500'
     | '/503'
-    | '/billing'
     | '/dashboard'
     | '/files'
     | '/profile'
@@ -718,7 +696,6 @@ export interface FileRouteTypes {
     | '/settings/email'
     | '/settings/files'
     | '/settings/notification-settings'
-    | '/settings/notifications'
     | '/settings/organization'
     | '/settings/tenant'
     | '/$objectName'
@@ -763,7 +740,6 @@ export interface FileRouteTypes {
     | '/(errors)/404'
     | '/(errors)/500'
     | '/(errors)/503'
-    | '/_authenticated/billing'
     | '/_authenticated/dashboard'
     | '/_authenticated/files'
     | '/_authenticated/profile'
@@ -777,7 +753,6 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/email-templates'
     | '/_authenticated/settings/files'
     | '/_authenticated/settings/notification-settings'
-    | '/_authenticated/settings/notifications'
     | '/_authenticated/settings/object-manager'
     | '/_authenticated/settings/organization'
     | '/_authenticated/settings/profiles'
@@ -908,13 +883,6 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/billing': {
-      id: '/_authenticated/billing'
-      path: '/billing'
-      fullPath: '/billing'
-      preLoaderRoute: typeof AuthenticatedBillingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/(errors)/503': {
@@ -1090,13 +1058,6 @@ declare module '@tanstack/react-router' {
       path: '/object-manager'
       fullPath: '/settings/object-manager'
       preLoaderRoute: typeof AuthenticatedSettingsObjectManagerRouteImport
-      parentRoute: typeof AuthenticatedSettingsRouteRoute
-    }
-    '/_authenticated/settings/notifications': {
-      id: '/_authenticated/settings/notifications'
-      path: '/notifications'
-      fullPath: '/settings/notifications'
-      preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
     '/_authenticated/settings/notification-settings': {
@@ -1434,7 +1395,6 @@ interface AuthenticatedSettingsRouteRouteChildren {
   AuthenticatedSettingsEmailTemplatesRoute: typeof AuthenticatedSettingsEmailTemplatesRouteWithChildren
   AuthenticatedSettingsFilesRoute: typeof AuthenticatedSettingsFilesRoute
   AuthenticatedSettingsNotificationSettingsRoute: typeof AuthenticatedSettingsNotificationSettingsRoute
-  AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
   AuthenticatedSettingsObjectManagerRoute: typeof AuthenticatedSettingsObjectManagerRouteWithChildren
   AuthenticatedSettingsOrganizationRoute: typeof AuthenticatedSettingsOrganizationRoute
   AuthenticatedSettingsProfilesRoute: typeof AuthenticatedSettingsProfilesRouteWithChildren
@@ -1455,8 +1415,6 @@ const AuthenticatedSettingsRouteRouteChildren: AuthenticatedSettingsRouteRouteCh
     AuthenticatedSettingsFilesRoute: AuthenticatedSettingsFilesRoute,
     AuthenticatedSettingsNotificationSettingsRoute:
       AuthenticatedSettingsNotificationSettingsRoute,
-    AuthenticatedSettingsNotificationsRoute:
-      AuthenticatedSettingsNotificationsRoute,
     AuthenticatedSettingsObjectManagerRoute:
       AuthenticatedSettingsObjectManagerRouteWithChildren,
     AuthenticatedSettingsOrganizationRoute:
@@ -1480,7 +1438,6 @@ const AuthenticatedSettingsRouteRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
-  AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFilesRoute: typeof AuthenticatedFilesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -1498,7 +1455,6 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
-  AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFilesRoute: AuthenticatedFilesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,

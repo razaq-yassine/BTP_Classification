@@ -29,6 +29,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import api from '@/services/api'
+import DOMPurify from 'dompurify'
 
 const getTemplateSchema = (t: (key: string) => string) =>
   z.object({
@@ -266,7 +267,7 @@ export function TemplateEditor({ templateKey }: TemplateEditorProps) {
                 <p className='text-muted-foreground mb-2 text-sm font-medium'>Body</p>
                 <div
                   className='rounded border bg-muted/30 p-4 text-sm'
-                  dangerouslySetInnerHTML={{ __html: preview.bodyHtml }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(preview.bodyHtml || '') }}
                 />
               </div>
             </div>

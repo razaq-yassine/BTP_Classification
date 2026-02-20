@@ -1,6 +1,9 @@
 import "dotenv/config";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
+import { secureHeaders } from "hono/secure-headers";
+import { rateLimiter } from "hono-rate-limiter";
+import { getClientIp } from "./lib/rate-limit-utils.js";
 import { authRoutes } from "./routes/auth.js";
 import { configRoutes } from "./routes/config.js";
 import { entityRoutes } from "./routes/entities.js";
@@ -28,6 +31,17 @@ app.use(
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     credentials: true
+  })
+);
+
+app.use("*", secureHeaders());
+
+app.use(
+  "*",
+  rateLimiter({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    keyGenerator: (c) => getClientIp(c),
   })
 );
 

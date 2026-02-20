@@ -1,8 +1,10 @@
 import * as jose from 'jose'
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'mySecretKey123456789012345678901234567890'
-)
+const secret = process.env.JWT_SECRET
+if (!secret || secret.length < 32) {
+  throw new Error('JWT_SECRET must be set and at least 32 characters')
+}
+const SECRET = new TextEncoder().encode(secret)
 const EXPIRY = process.env.JWT_EXPIRY || '24h'
 
 export async function signToken(

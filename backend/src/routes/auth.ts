@@ -2,15 +2,46 @@ import crypto from 'crypto'
 import { Hono } from 'hono'
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
+import { rateLimiter } from 'hono-rate-limiter'
 import { db } from '../db/index.js'
 import { users, inviteTokens, organizations, tenants } from '../db/schema.js'
 import { eq, or, and } from 'drizzle-orm'
 import { signToken, verifyToken } from '../lib/jwt.js'
+import { getClientIp } from '../lib/rate-limit-utils.js'
 import { authMiddleware } from '../middleware/auth.js'
 import { adminOnlyMiddleware } from '../middleware/admin.js'
 import { loadEmailConfig, enqueueEmail } from '../services/email.js'
 
-const loginSchema = z.object({ usernameOrEmail: z.string().min(1), password: z.string() })
+const rateLimiterLogin = rateLimiter({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  keyGenerator: (c) => getClientIp(c),
+})
+const rateLimiterVerify2FA = rateLimiter({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  keyGenerator: (c) => getClientIp(c),
+})
+const rateLimiterRegister = rateLimiter({
+  windowMs: 60 * 60 * 1000,
+  limit: 3,
+  keyGenerator: (c) => getClientIp(c),
+})
+const rateLimiterChangePasswordRequired = rateLimiter({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  keyGenerator: (c) => getClientIp(c),
+})
+const rateLimiterInviteValidate = rateLimiter({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  keyGenerator: (c) => getClientIp(c),
+})
+
+const loginSchema = z.object({
+  usernameOrEmail: z.string().min(1).max(320),
+  password: z.string().max(256),
+})
 const verify2FASchema = z.object({ tempToken: z.string(), code: z.string().length(6) })
 const registerSchema = z.object({
   inviteToken: z.string().min(1, 'Invite token is required'),
@@ -109,7 +140,7 @@ type Variables = { user?: Record<string, unknown> };
 export const authRoutes = new Hono<{ Variables: Variables }>()
 
 // Public: validate invite token (no auth)
-authRoutes.get('/invites/validate', async (c) => {
+authRoutes.get('/invites/validate', rateLimiterInviteValidate, async (c) => {
   const token = c.req.query('token')?.trim()
   if (!token) {
     return c.json({ valid: false })
@@ -241,7 +272,7 @@ authRoutes.post('/invites', authMiddleware, async (c) => {
   })
 })
 
-authRoutes.post('/login', async (c) => {
+authRoutes.post('/login', rateLimiterLogin, async (c) => {
   const body = await c.req.json()
   const parsed = loginSchema.safeParse(body)
   if (!parsed.success) {
@@ -324,7 +355,7 @@ authRoutes.post('/login', async (c) => {
   return c.json(response)
 })
 
-authRoutes.post('/verify-2fa', async (c) => {
+authRoutes.post('/verify-2fa', rateLimiterVerify2FA, async (c) => {
   const body = await c.req.json()
   const parsed = verify2FASchema.safeParse(body)
   if (!parsed.success) {
@@ -387,7 +418,7 @@ authRoutes.post('/verify-2fa', async (c) => {
   }
 })
 
-authRoutes.post('/change-password-required', async (c) => {
+authRoutes.post('/change-password-required', rateLimiterChangePasswordRequired, async (c) => {
   const body = await c.req.json()
   const parsed = changePasswordRequiredSchema.safeParse(body)
   if (!parsed.success) {
@@ -431,7 +462,7 @@ authRoutes.post('/change-password-required', async (c) => {
   }
 })
 
-authRoutes.post('/register', async (c) => {
+authRoutes.post('/register', rateLimiterRegister, async (c) => {
   const body = await c.req.json()
   const parsed = registerSchema.safeParse(body)
   if (!parsed.success) {
