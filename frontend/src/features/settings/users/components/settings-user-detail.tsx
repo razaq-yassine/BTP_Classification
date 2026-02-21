@@ -32,6 +32,11 @@ import api from '@/services/api'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/stores/authStore'
 import { useSettingsUser, type UserDetail } from '../hooks/useSettingsUser'
+import { getProfileNames, getProfile } from '@/services/profiles-api'
+
+function formatProfileLabel(name: string): string {
+  return name.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
 
 const profileFormSchema = z.object({
   firstName: z.string().max(255).optional().nullable(),
@@ -58,11 +63,8 @@ const changePasswordSchema = z
 type ProfileFormValues = z.infer<typeof profileFormSchema>
 type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>
 
-const PROFILES = [
+const FALLBACK_PROFILES = [
   { label: 'Standard User', value: 'standard-user' },
-  { label: 'Tenant User', value: 'tenant-user' },
-  { label: 'Organization User', value: 'org-user' },
-  { label: 'Organization Owner', value: 'org-owner' },
   { label: 'Admin', value: 'admin' },
 ]
 
@@ -88,6 +90,33 @@ function UserProfileForm({
   onRefetch: () => void
   emailConfigured: boolean
 }) {
+  const { data: profileNames = [] } = useQuery({
+    queryKey: ['profiles'],
+    queryFn: () => getProfileNames(),
+  })
+  const { data: profilesWithLabels = [] } = useQuery({
+    queryKey: ['profiles-with-labels', profileNames],
+    queryFn: async () => {
+      const result = await Promise.all(
+        profileNames.map(async (name) => {
+          try {
+            const p = await getProfile(name)
+            return { label: p.label ?? formatProfileLabel(name), value: name }
+          } catch {
+            return { label: formatProfileLabel(name), value: name }
+          }
+        })
+      )
+      return result
+    },
+    enabled: profileNames.length > 0,
+  })
+  const profileOptions = profilesWithLabels.length > 0 ? profilesWithLabels : FALLBACK_PROFILES
+  // Ensure current user's profile is in the list (e.g. custom profile from business project)
+  const optionsWithCurrent = user.profile && !profileOptions.some((p) => p.value === user.profile)
+    ? [...profileOptions, { label: formatProfileLabel(user.profile), value: user.profile }]
+    : profileOptions
+
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -295,7 +324,7 @@ function UserProfileForm({
                             onValueChange={field.onChange}
                             isControlled
                             placeholder='Select profile'
-                            items={(isAdmin ? PROFILES : PROFILES.filter((p) => p.value !== 'admin')).map(({ label, value }) => ({ label, value }))}
+                            items={(isAdmin ? optionsWithCurrent : optionsWithCurrent.filter((p) => p.value !== 'admin')).map(({ label, value }) => ({ label, value }))}
                           />
                           <FormMessage />
                         </FormItem>

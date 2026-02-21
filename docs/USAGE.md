@@ -174,7 +174,7 @@ Each object has its own folder with these files:
 
    This validates metadata, generates schema, runs migrations, and updates `objects/index.json`.
 
-8. **Add profile permissions** (for non-admin users): Add the object to `objectPermissions` in `metadata/profiles/{profile}.json` for each profile that should access it (e.g. `tenant-user`, `org-user`, `sales-rep`). For example:
+8. **Add profile permissions** (for non-admin users): Add the object to `objectPermissions` in `metadata/profiles/{profile}.json` for each profile that should access it (base has `standard-user`; business projects add more, e.g. `tenant-user`, `org-user`, `sales-rep`). For example:
 
    ```json
    "objectPermissions": {
@@ -696,7 +696,9 @@ Replace `dbname` with your database name and `table_name` with any table from yo
 
 ### Profiles
 
-Profiles live in `metadata/profiles/{profileId}.json`. Each file defines `objectPermissions` (per-object `create`, `read`, `update`, `delete`, `list`) and optional `fieldPermissions`. Admin has full access without being in profile metadata. Assign profile via user's `profile` field (e.g. `admin`, `tenant-user`).
+Profiles live in `metadata/profiles/{profileId}.json`. Each file defines `objectPermissions` (per-object `create`, `read`, `update`, `delete`, `list`) and optional `fieldPermissions`. Admin has full access without being in profile metadata. Assign profile via user's `profile` field.
+
+**Base profiles** (in generic_saas): `admin` and `standard-user`. Additional profiles (e.g. `tenant-user`, `org-user`, `sales-rep`) are created in the business project.
 
 ### Mandatory: Admin Profile
 
@@ -720,7 +722,7 @@ The minimal seed creates only the admin user. Login: `admin` / `admin123`.
 
 4. **Test other profiles** — Create a user via Settings → Users, assign a non-admin profile, then log in to verify restricted access.
 
-5. **Create a custom profile** — Add `metadata/profiles/sales-rep.json` with object/field permissions, assign to a user.
+5. **Create a custom profile** — Add `metadata/profiles/{profile}.json` with object/field permissions (e.g. `sales-rep.json`), assign to a user. Base has only `admin` and `standard-user`; add more in the business project.
 
 ### Troubleshooting
 

@@ -25,10 +25,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { SelectDropdown } from '@/components/select-dropdown'
 
-const PROFILES = [
+const BASE_PROFILES = [
   { label: 'Standard User', value: 'standard-user' },
-  { label: 'Tenant User', value: 'tenant-user' },
-  { label: 'Organization User', value: 'org-user' },
 ] as const
 
 const formSchema = z.object({
@@ -153,7 +151,7 @@ export function SettingsInviteUserDialog({ open, onOpenChange, onSuccess, isAdmi
                     onValueChange={field.onChange}
                     isControlled
                     placeholder='Select profile'
-                    items={PROFILES.map(({ label, value }) => ({ label, value }))}
+                    items={BASE_PROFILES.map(({ label, value }) => ({ label, value }))}
                   />
                   <FormMessage />
                 </FormItem>

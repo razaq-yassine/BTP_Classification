@@ -1,13 +1,6 @@
 /**
- * Seeds multi-org, multi-tenant test data.
- * Run after db:deploy when tenant-config.json mode is org_and_tenant.
- *
- * Creates:
- * - 2 organizations: Acme Corp, TechStart
- * - 2 tenants per org: Acme-US, Acme-EU; TechStart-US, TechStart-UK
- * - Users: admin (platform), acme-us-user, acme-eu-user, tech-us-user
- * - Customers and orders per tenant
- * - Products (platform-wide)
+ * Seeds org_and_tenant mode: one org, one tenant, admin only.
+ * Run after db:deploy or db:fresh when tenant-config.json mode is org_and_tenant.
  */
 import "dotenv/config";
 export declare function seedMultiTenant(): Promise<void>;

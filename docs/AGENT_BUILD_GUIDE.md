@@ -32,7 +32,7 @@
 
 ### 4. Profiles
 
-- How many **profiles** (roles) do we need? (e.g. admin, org-user, tenant-user, sales-rep, viewer)
+- How many **profiles** (roles) do we need? Base has admin and standard-user; add more in the business project (e.g. manager, viewer, sales-rep)
 - For each profile:
   - Object permissions: create, read, update, delete, list per object
   - Field permissions (optional): restrict which fields are visible/editable

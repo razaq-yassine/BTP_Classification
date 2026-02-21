@@ -29,10 +29,8 @@ import { SelectDropdown } from '@/components/select-dropdown'
 import { useUsers } from '../context/users-context'
 import { User } from '../data/schema'
 
-const ADMIN_PROFILES = [
+const BASE_PROFILES = [
   { label: 'Standard User', value: 'standard-user' },
-  { label: 'Tenant User', value: 'tenant-user' },
-  { label: 'Organization User', value: 'org-user' },
   { label: 'Admin', value: 'admin' },
 ] as const
 
@@ -270,7 +268,7 @@ export function UsersActionDialog({ currentRow, open, onOpenChange }: Props) {
                       isControlled
                       placeholder='Select a profile'
                       className='col-span-4'
-                      items={ADMIN_PROFILES.map(({ label, value }) => ({
+                      items={BASE_PROFILES.map(({ label, value }) => ({
                         label,
                         value,
                       }))}

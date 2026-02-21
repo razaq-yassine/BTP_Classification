@@ -1,6 +1,0 @@
-{
-  "name": "sales-rep",
-  "label": "Sales Representative",
-  "description": "Can manage orders and view customers",
-  "objectPermissions": {}
-}

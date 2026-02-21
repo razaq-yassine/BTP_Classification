@@ -23,11 +23,11 @@ interface Props {
   isAdmin: boolean
 }
 
+function formatProfileLabel(profile: string): string {
+  return profile.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
 const PROFILE_LABELS: Record<string, string> = {
   'standard-user': 'Standard User',
-  'tenant-user': 'Tenant User',
-  'org-user': 'Organization User',
-  'org-owner': 'Organization Owner',
   admin: 'Admin',
 }
 
@@ -100,7 +100,7 @@ export function SettingsUsersTable({ data, search, onSearchChange, isAdmin }: Pr
                     {u.firstName} {u.lastName}
                   </TableCell>
                   <TableCell>{u.email}</TableCell>
-                  <TableCell>{PROFILE_LABELS[u.profile] ?? u.profile}</TableCell>
+                  <TableCell>{PROFILE_LABELS[u.profile] ?? formatProfileLabel(u.profile ?? '')}</TableCell>
                   <TableCell>
                     <Badge variant='outline' className={cn('capitalize', u.status === 'active' ? 'bg-teal-100/30 text-teal-900 dark:text-teal-200' : 'bg-neutral-300/40')}>
                       {u.status}

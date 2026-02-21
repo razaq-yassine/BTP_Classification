@@ -25,13 +25,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
 import { SelectDropdown } from '@/components/select-dropdown'
+import { getProfileNames, getProfile } from '@/services/profiles-api'
 
-const PROFILES = [
-  { label: 'Standard User', value: 'standard-user' },
-  { label: 'Tenant User', value: 'tenant-user' },
-  { label: 'Organization User', value: 'org-user' },
-  { label: 'Admin', value: 'admin' },
-] as const
+function formatProfileLabel(name: string): string {
+  return name.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
 
 const formSchema = z
   .object({
@@ -73,6 +71,33 @@ export function SettingsCreateUserDialog({ open, onOpenChange, onSuccess, isAdmi
     },
     enabled: open && isAdmin,
   })
+  const { data: profileNames = [] } = useQuery({
+    queryKey: ['profiles'],
+    queryFn: () => getProfileNames(),
+    enabled: open,
+  })
+  const { data: profilesWithLabels = [] } = useQuery({
+    queryKey: ['profiles-with-labels', profileNames],
+    queryFn: async () => {
+      const result = await Promise.all(
+        profileNames.map(async (name) => {
+          try {
+            const p = await getProfile(name)
+            return { label: p.label ?? formatProfileLabel(name), value: name }
+          } catch {
+            return { label: formatProfileLabel(name), value: name }
+          }
+        })
+      )
+      return result
+    },
+    enabled: open && profileNames.length > 0,
+  })
+  const profileOptions = profilesWithLabels.length > 0 ? profilesWithLabels : [
+    { label: 'Standard User', value: 'standard-user' },
+    { label: 'Admin', value: 'admin' },
+  ]
+
   const { data: tenantsRaw = [] } = useQuery({
     queryKey: ['tenants-list'],
     queryFn: async () => {
@@ -247,7 +272,7 @@ export function SettingsCreateUserDialog({ open, onOpenChange, onSuccess, isAdmi
                     onValueChange={field.onChange}
                     isControlled
                     placeholder='Select profile'
-                    items={PROFILES.filter((p) => isAdmin || p.value !== 'admin').map(({ label, value }) => ({ label, value }))}
+                    items={profileOptions.filter((p) => isAdmin || p.value !== 'admin').map(({ label, value }) => ({ label, value }))}
                   />
                   <FormMessage />
                 </FormItem>

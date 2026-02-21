@@ -12,13 +12,8 @@ import { translateObjectLabel } from '@/utils/translateMetadata'
  * Uses canUseGlobalAction() to show/hide based on profile permissions.
  * Configure permissions at Settings → Administration → Profiles → [Profile] → Global action permissions.
  */
-const QUICK_CREATE_CONFIG = [
-  { actionId: 'quick-create-order', objectName: 'order' },
-  { actionId: 'quick-create-customer', objectName: 'customer' },
-  { actionId: 'quick-create-product', objectName: 'product' },
-  { actionId: 'quick-create-opportunity', objectName: 'opportunity' },
-  { actionId: 'quick-create-category', objectName: 'category' },
-] as const
+// Add quick-create entries when you add objects. Example: { actionId: 'quick-create-product', objectName: 'product' }
+const QUICK_CREATE_CONFIG = [] as const
 
 export function GlobalActions() {
   const { t } = useTranslation('common')

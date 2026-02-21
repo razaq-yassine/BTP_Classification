@@ -27,11 +27,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { SelectDropdown } from '@/components/select-dropdown'
 
-const INVITE_PROFILES = [
-  { label: 'Standard User', value: 'standard-user' },
-  { label: 'Tenant User', value: 'tenant-user' },
-  { label: 'Organization User', value: 'org-user' },
-] as const
+const INVITE_PROFILES = [{ label: 'Standard User', value: 'standard-user' }] as const
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email to invite.'),
