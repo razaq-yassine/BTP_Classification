@@ -65,7 +65,7 @@ function loadColumnsFromObject(objectsPath: string, objectName: string): { table
           computed?: boolean;
         };
         if (fd.computed || fd.type === "formula") continue;
-        if (fd.type === "reference") {
+        if (fd.type === "reference" || fd.type === "masterDetail") {
           cols.add(toSnakeCase(key) + "_id");
         } else {
           cols.add(toSnakeCase(key));

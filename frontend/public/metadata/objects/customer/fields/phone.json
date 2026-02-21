@@ -1,7 +1,0 @@
-{
-  "key": "phone",
-  "label": "Phone",
-  "type": "phone",
-  "editable": true,
-  "searchable": true
-}

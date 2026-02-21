@@ -1,1 +1,0 @@
-{"key":"name","label":"Order Number","type":"autoNumber","required":true,"editable":false,"sortable":true,"searchable":true,"autoNumberPattern":"ORD-{0000}","autoNumberStart":1}

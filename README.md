@@ -19,10 +19,12 @@ generic_saas/
 - **Authentication**: JWT-based authentication
 - **Frontend**: React with TanStack Router, Zustand state management, shadcn/ui components
 - **Backend**: Hono + Drizzle ORM with MySQL database
-- **Pre-populated Data**: Admin user and sample customers/orders
+- **Pre-populated Data**: Admin user on first run (minimal seed)
 - **Triggers**: Extensible before/after hooks for entity operations
 
 ## Quick Start
+
+**Building with an AI agent?** Have the agent read `docs/USAGE.md` and `docs/AGENT_BUILD_GUIDE.md` first. The agent must answer planning questions (multi-tenancy, naming, data models, profiles, list views, dashboard, translations) before implementing.
 
 ### Backend (Hono)
 
@@ -38,7 +40,7 @@ generic_saas/
    pnpm install
    ```
 
-3. Start the development server (auto-seeds admin + sample data on first run):
+3. Start the development server (auto-seeds admin on first run):
    ```bash
    pnpm run dev
    ```
@@ -76,23 +78,13 @@ The frontend will be available at `http://localhost:5173`
 
 - `POST /api/auth/login` - User login (returns JWT)
 - `GET /api/auth/me` - Get current user (requires Bearer token)
-- `GET /api/customers` - List customers (paginated)
-- `GET /api/customers/:id` - Get customer by ID
-- `POST /api/customers` - Create customer
-- `PUT /api/customers/:id` - Update customer
-- `DELETE /api/customers/:id` - Soft delete customer
-- `GET /api/orders` - List orders
-- `GET /api/orders/:id` - Get order by ID
-- `GET /api/orders/customer/:customerId` - List orders for a customer
-- `POST /api/orders` - Create order
-- `PUT /api/orders/:id` - Update order
-- `DELETE /api/orders/:id` - Soft delete order
+- Entity CRUD: `GET/POST/PUT/DELETE /api/{objectName}` — generated from metadata. See `docs/USAGE.md` for adding objects.
 
 ## Application Flow
 
 1. **Landing Page**: Redirects to login if not authenticated
 2. **Login Page**: JWT login with admin/admin123
-3. **Dashboard**: Customer and order management with list/detail views
+3. **Dashboard**: Metadata-driven list/detail views for configured objects
 
 ## Database (Metadata-Driven + Migrations)
 
@@ -109,7 +101,7 @@ The schema is generated from metadata. Workflow:
    ```
 4. **Apply migrations** (runs automatically on `pnpm run dev`)
 
-To add a new object: create metadata folder, run `db:generate-from-metadata`, add entity routes in `entities.ts`, then `db:generate`.
+To add a new object: create metadata folder in `frontend/public/metadata/objects/{name}/`, run `db:deploy`. See `docs/USAGE.md`.
 
 ## Development Notes
 
@@ -156,8 +148,5 @@ Ensure both servers are running on the correct ports:
 
 ## Future Enhancements
 
-- Add customer CRUD operations
-- Implement role-based permissions
-- Add data validation and error handling
-- Implement pagination for customer list
-- Add search and filtering capabilities
+- Role-based permissions (profiles) — see `docs/USAGE.md`
+- Data validation and error handling

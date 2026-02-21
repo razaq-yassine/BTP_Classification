@@ -1,13 +1,4 @@
 [
-  "category",
-  "customer",
-  "deploytest",
-  "opportunity",
-  "order",
-  "orderitem",
-  "product",
-  "supplier",
-  "warehouse",
   "organization",
   "tenant"
 ]

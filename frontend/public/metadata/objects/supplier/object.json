@@ -1,1 +1,0 @@
-{"name":"supplier","label":"Supplier","labelPlural":"Suppliers","description":"Manage supplier information","apiEndpoint":"/api/suppliers","basePath":"/suppliers","detailPath":"/suppliers/$supplierId","icon":"Package","color":"teal","trigger":"supplier","sidebar":{"showInSidebar":true,"group":"Data"}}

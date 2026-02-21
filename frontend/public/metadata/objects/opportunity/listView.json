@@ -1,9 +1,0 @@
-{
-  "fields": [
-    "name",
-    "createdAt"
-  ],
-  "defaultSort": "createdAt",
-  "defaultSortOrder": "desc",
-  "pageSize": 10
-}

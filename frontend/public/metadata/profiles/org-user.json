@@ -3,15 +3,17 @@
   "label": "Organization User",
   "description": "Access to all tenants within the organization. Same permissions as tenant-user but sees data across all sub-tenants.",
   "objectPermissions": {
-    "customer": { "create": true, "read": true, "update": true, "delete": true },
-    "order": { "create": true, "read": true, "update": true, "delete": true },
-    "orderitem": { "create": true, "read": true, "update": true, "delete": true },
-    "product": { "create": false, "read": true, "update": false, "delete": false },
-    "category": { "create": false, "read": true, "update": false, "delete": false },
-    "supplier": { "create": false, "read": true, "update": false, "delete": false },
-    "warehouse": { "create": false, "read": true, "update": false, "delete": false },
-    "opportunity": { "create": true, "read": true, "update": true, "delete": true },
-    "organization": { "create": false, "read": true, "update": false, "delete": false },
-    "tenant": { "create": false, "read": true, "update": false, "delete": false }
+    "organization": {
+      "create": false,
+      "read": true,
+      "update": false,
+      "delete": false
+    },
+    "tenant": {
+      "create": false,
+      "read": true,
+      "update": false,
+      "delete": false
+    }
   }
 }

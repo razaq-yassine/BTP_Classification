@@ -1,1 +1,0 @@
-{"key":"sku","label":"SKU","type":"string","required":true,"unique":true,"editable":true,"sortable":true,"searchable":true}

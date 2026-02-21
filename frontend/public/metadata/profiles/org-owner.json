@@ -3,15 +3,17 @@
   "label": "Organization Owner",
   "description": "Full access within the organization: edit org/tenant config, manage all tenant-scoped data.",
   "objectPermissions": {
-    "customer": { "create": true, "read": true, "update": true, "delete": true },
-    "order": { "create": true, "read": true, "update": true, "delete": true },
-    "orderitem": { "create": true, "read": true, "update": true, "delete": true },
-    "product": { "create": false, "read": true, "update": false, "delete": false },
-    "category": { "create": false, "read": true, "update": false, "delete": false },
-    "supplier": { "create": false, "read": true, "update": false, "delete": false },
-    "warehouse": { "create": false, "read": true, "update": false, "delete": false },
-    "opportunity": { "create": true, "read": true, "update": true, "delete": true },
-    "organization": { "create": false, "read": true, "update": true, "delete": false },
-    "tenant": { "create": true, "read": true, "update": true, "delete": false }
+    "organization": {
+      "create": false,
+      "read": true,
+      "update": true,
+      "delete": false
+    },
+    "tenant": {
+      "create": true,
+      "read": true,
+      "update": true,
+      "delete": false
+    }
   }
 }

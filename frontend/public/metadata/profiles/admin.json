@@ -4,55 +4,13 @@
   "description": "Full access to all objects and fields",
   "sidebar": "admin",
   "objectPermissions": {
-    "category": {
+    "organization": {
       "create": true,
       "read": true,
       "update": true,
       "delete": true
     },
-    "customer": {
-      "create": true,
-      "read": true,
-      "update": true,
-      "delete": true
-    },
-    "deploytest": {
-      "create": true,
-      "read": true,
-      "update": true,
-      "delete": true
-    },
-    "opportunity": {
-      "create": true,
-      "read": true,
-      "update": true,
-      "delete": true
-    },
-    "order": {
-      "create": true,
-      "read": true,
-      "update": true,
-      "delete": true
-    },
-    "orderitem": {
-      "create": true,
-      "read": true,
-      "update": true,
-      "delete": true
-    },
-    "product": {
-      "create": true,
-      "read": true,
-      "update": true,
-      "delete": true
-    },
-    "supplier": {
-      "create": true,
-      "read": true,
-      "update": true,
-      "delete": true
-    },
-    "warehouse": {
+    "tenant": {
       "create": true,
       "read": true,
       "update": true,

@@ -1,1 +1,0 @@
-{"name":"warehouse","label":"Warehouse","labelPlural":"Warehouses","description":"Manage warehouse locations","apiEndpoint":"/api/warehouses","basePath":"/warehouses","detailPath":"/warehouses/$warehouseId","icon":"Warehouse","color":"orange","trigger":"warehouse","sidebar":{"showInSidebar":true,"group":"Data"}}

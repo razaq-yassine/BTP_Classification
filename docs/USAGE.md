@@ -1,6 +1,17 @@
 # Metadata Usage Guide
 
-This project is **metadata-driven**. The UI, API routes, and database schema are generated from JSON metadata files. You configure objects, fields, views, and behavior by editing metadata—no code changes needed for most CRUD features.
+This project is **metadata-driven**. For AI-assisted builds, see [AGENT_BUILD_GUIDE.md](./AGENT_BUILD_GUIDE.md) — the agent must read USAGE.md and confirm planning questions before implementing. The UI, API routes, and database schema are generated from JSON metadata files. You configure objects, fields, views, and behavior by editing metadata—no code changes needed for most CRUD features.
+
+---
+
+## Quick Start
+
+1. **Prerequisites**: Node 18+, pnpm, MySQL
+2. **Clone & install**: `pnpm install` in project root (or `frontend` and `backend` separately)
+3. **Environment**: Copy `backend/.env.example` to `backend/.env`. Set `DATABASE_URL` (e.g. `mysql://user:pass@localhost:3306/dbname`) and `JWT_SECRET` (min 32 chars).
+4. **Deploy**: `cd backend && pnpm run db:deploy` — validates metadata, generates schema, runs migrations
+5. **Start**: `pnpm run dev` in backend and frontend (or from root if configured). Backend seeds admin on first run.
+6. **Login**: `admin` / `admin123`
 
 ---
 
@@ -35,6 +46,7 @@ This project is **metadata-driven**. The UI, API routes, and database schema are
 ## Overview
 
 - **Metadata location**: `frontend/public/metadata/`
+- **Environment**: See `backend/.env.example`. Required: `DATABASE_URL`, `JWT_SECRET`. Optional: SMTP vars for email.
 - **Objects index**: `metadata/objects/index.json` (auto-generated)
 - **Per-object folder**: `metadata/objects/{objectName}/`
 
@@ -61,6 +73,16 @@ Each object has its own folder with these files:
 ---
 
 ## Adding a New Object
+
+**Checklist:**
+
+1. Create object folder and metadata (`object.json`, `fields.json`, `listView.json`, `detailView.json`)
+2. Add profile permissions for non-admin users (see step 8 below)
+3. Add translations to `metadata/translations/{locale}/objects.json` for each locale
+4. Add triggers (optional) — `backend/triggers/{objectName}.ts`
+5. Run `db:deploy`
+
+---
 
 1. **Create the object folder**:
 
@@ -101,6 +123,7 @@ Each object has its own folder with these files:
    | `color`       | No       | Theme color                                          |
    | `trigger`     | No       | Object name for triggers (see [Triggers](#triggers)) |
    | `sidebar`     | No       | `showInSidebar`, `group`, `parent`                   |
+   | `tenantScope` | No       | `null` (platform-wide), `"tenant"`, or `"org_and_tenant"`. Must match `tenant-config.json` mode. Omit = platform-wide. |
 
 3. **Add `fields.json`** (must include `name`):
 
@@ -150,6 +173,16 @@ Each object has its own folder with these files:
    ```
 
    This validates metadata, generates schema, runs migrations, and updates `objects/index.json`.
+
+8. **Add profile permissions** (for non-admin users): Add the object to `objectPermissions` in `metadata/profiles/{profile}.json` for each profile that should access it (e.g. `tenant-user`, `org-user`, `sales-rep`). For example:
+
+   ```json
+   "objectPermissions": {
+     "product": { "create": true, "read": true, "update": true, "delete": false }
+   }
+   ```
+
+   The **admin** profile has full access automatically and does not need to be updated.
 
 ---
 
@@ -661,14 +694,17 @@ mysql -u user -p -e "DESCRIBE dbname.table_name"
 
 Replace `dbname` with your database name and `table_name` with any table from your metadata (e.g. `customers`, `orders`). You should see the columns defined in your metadata.
 
+### Profiles
+
+Profiles live in `metadata/profiles/{profileId}.json`. Each file defines `objectPermissions` (per-object `create`, `read`, `update`, `delete`, `list`) and optional `fieldPermissions`. Admin has full access without being in profile metadata. Assign profile via user's `profile` field (e.g. `admin`, `tenant-user`).
+
+### Mandatory: Admin Profile
+
+The platform requires at least one user with `profile: 'admin'`. The admin profile is special: it has full access to all objects and settings without being defined in profile metadata. Seed scripts ensure an admin user exists on startup. If the admin user is missing or has the wrong profile, `initDb` will create or update it.
+
 ### Testing Permissions
 
-The permissions system uses profiles. Two users are seeded on startup:
-
-| User       | Password   | Profile         | Access                                |
-| ---------- | ---------- | --------------- | ------------------------------------- |
-| `admin`    | `admin123` | `admin`         | Full access to all objects and fields |
-| `testuser` | `test123`  | `standard-user` | No permissions (deny by default)      |
+The minimal seed creates only the admin user. Login: `admin` / `admin123`.
 
 **To test permissions:**
 
@@ -678,22 +714,13 @@ The permissions system uses profiles. Two users are seeded on startup:
    cd backend && pnpm run db:migrate
    ```
 
-2. **Start the backend** — `initDb` runs on startup and will:
-
-   - Set existing `admin` user's profile to `admin`
-   - Create `testuser` with profile `standard-user` if they don't exist
+2. **Start the backend** — `initDb` runs on startup and creates the admin user if missing.
 
 3. **Log in as admin** — You should see all objects, create/edit/delete buttons, and all fields.
 
-4. **Log out and log in as testuser** — You should see:
+4. **Test other profiles** — Create a user via Settings → Users, assign a non-admin profile, then log in to verify restricted access.
 
-   - No Create or Delete buttons
-   - Empty or restricted list views (no object read permission)
-   - 403 Forbidden if you try to access entity APIs directly
-
-5. **Create a custom profile** — Add `frontend/public/metadata/profiles/sales-rep.json` with object/field permissions, then assign that profile to a user in the database to test granular access.
-
-Profiles are defined in `frontend/public/metadata/profiles/`. See the permissions implementation plan for the full structure.
+5. **Create a custom profile** — Add `metadata/profiles/sales-rep.json` with object/field permissions, assign to a user.
 
 ### Troubleshooting
 
@@ -733,6 +760,10 @@ See `.cursor/rules/metadata-validation.mdc` for the full checklist when adding n
 
 - **`metadata/system/`** — Read-only UI definitions for organization and tenant (listView, detailView, fields). Shipped with the app.
 - **`metadata/system-extensions/`** — Add-only extension fields for user, organization, and tenant. You can add new fields but cannot remove or override base fields.
+
+### Object Manager
+
+Settings → Administration → **Object Manager** (admin only). Create and edit metadata objects via UI: object.json, fields, listView, detailView. Changes persist to metadata files. Run `db:deploy` after schema changes.
 
 ### Adding Extension Fields to System Objects
 
@@ -854,7 +885,7 @@ The platform supports transactional emails via SMTP. Admins configure SMTP setti
 
 Triggers call `maybeSendNotification(eventKey, record, context)` from `backend/triggers/helpers/email.ts`. The helper checks `notification_settings`, resolves the recipient, and enqueues the email via `setImmediate` (non-blocking). For production, consider a proper queue (Redis/BullMQ).
 
-**Built-in events**: `order_created` (sends to customer email), `customer_signup` (sends to new customer email).
+**Adding events**: Add entry to `metadata/notification-events.json` (`eventKey`, `label`, `defaultTemplateKey`). Seed or initDb populates `notification_settings`. Wire triggers to call `maybeSendNotification(eventKey, record, context)`.
 
 ---
 
@@ -1012,6 +1043,8 @@ Global actions are **not** tied to objects—they can be tools (Export, Sync) or
    ```
 
 4. **Backend** — For endpoints that perform global actions (e.g. export, sync), use `hasGlobalActionPermission(profile, actionId)` from `backend/src/lib/permissions.ts`.
+
+**Export**: List export uses `export-data` global action. Define in `metadata/global-actions.json`; grant via Profiles → Global action permissions. Export uses current list view columns and filters.
 
 ### Security summary
 

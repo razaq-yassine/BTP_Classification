@@ -1,9 +1,0 @@
-{
-  "key": "bignotes",
-  "label": "Big Notes",
-  "type": "text",
-  "editable": true,
-  "sortable": false,
-  "searchable": false,
-  "required": false
-}
