@@ -10,18 +10,23 @@
 
 ## Planning Checklist (Answer Before Building)
 
-### 1. Multi-tenancy mode
+### 1. Greenfield vs back office
+
+- Is this a **greenfield** build (metadata → schema → DB) or a **back office** on an existing database?
+- If back office: follow [BACK_OFFICE.md](./BACK_OFFICE.md). Create metadata to match existing tables; use triggers or autoNumber for the required `name` field; run `db:deploy` only after metadata matches the schema.
+
+### 2. Multi-tenancy mode
 
 - Is this a **single tenant** (one org/tenant, platform-wide data), **multi-tenant** (multiple tenants, no org hierarchy), or **org and tenant** (orgs with child tenants)?
 - Set `metadata/tenant-config.json` → `mode`: `single_tenant`, `multi_tenant`, or `org_and_tenant`
 
-### 2. Naming: Organization and Tenant
+### 3. Naming: Organization and Tenant
 
 - What should we call the **organization** in the UI? (e.g. "Delivery Company", "Franchise", "Brand")
 - What should we call the **tenant** in the UI? (e.g. "Branch", "Store", "Customer", "Seller")
 - Update labels in `metadata/system/organization/` and `metadata/system/tenant/` (or system-extensions) so the UI reflects domain terms
 
-### 3. Data models (objects)
+### 4. Data models (objects)
 
 - List all **business objects** needed (e.g. Order, Customer, Product, Invoice)
 - For each object, decide:
@@ -30,7 +35,7 @@
   - Which fields, types, required/optional
 - Order of creation: create parent objects before children; references must point to existing objects
 
-### 4. Profiles
+### 5. Profiles
 
 - How many **profiles** (roles) do we need? Base has admin and standard-user; add more in the business project (e.g. manager, viewer, sales-rep)
 - For each profile:
@@ -40,7 +45,7 @@
   - Sidebar: which sidebar config (or default)
 - Admin profile always has full access; ensure at least one admin user exists
 
-### 5. List views per object
+### 6. List views per object
 
 - How many **list views** per object? (e.g. "All Orders", "My Orders", "Open Orders")
 - For each view:
@@ -50,7 +55,7 @@
   - Statistics (count, sum, avg, etc.)
   - **Profiles**: which profiles can see this view? Use `profiles` array; omit = visible to all who can read the object
 
-### 6. Detail view layout and configuration
+### 7. Detail view layout and configuration
 
 - **Layout**: `single-column`, `two-column`, or `tabs` — choose per object (e.g. tabs for multi-step workflows)
 - **Sections**: Group fields into sections (e.g. "Basic Information", "Company", "System"); decide columns (1 or 2) and `defaultOpen` (expanded vs collapsed)
@@ -64,18 +69,18 @@
 - **Related objects**: Which objects show related tables on detail? Columns, sort, permissions (create/read/update/delete) per related table
 - **Side section**: Use built-in History and Files tabs; add custom tabs (e.g. Activity, Notes) if needed
 
-### 7. Create form defaults and validation
+### 8. Create form defaults and validation
 
 - **Default values**: `defaultValue` for selects, booleans, etc.
 - **Auto-number**: For `name` field — `autoNumberPattern` (e.g. `OP-{0000}`), `autoNumberStart` when needed
 - **Validation**: Required fields, `maxLength` for text, reference constraints
 
-### 8. App config
+### 9. App config
 
 - **Default currency**: `defaultCurrency`, `currencySymbol` in `app-config.json`
 - **Tenant/org inheritance**: Currency, timezone, language — which levels override (tenant vs org vs app)
 
-### 9. Reports
+### 10. Reports
 
 - Do we need **reports**? (aggregations, charts, saved filters)
 - If yes:
@@ -83,14 +88,14 @@
   - Where do they live? (Dashboard tabs, dedicated Reports section, or both)
   - Who can see each report? (profile-based)
 
-### 10. Other features
+### 11. Other features
 
 - **Triggers**: Any before/after insert/update/delete logic? (e.g. auto-number, email on status change)
 - **Notification events**: Which events send emails? Add to `metadata/notification-events.json`, wire in triggers
 - **Global actions**: Quick-create buttons, Export, Sync — who gets them?
 - **File attachments**: Which objects support attachments?
 
-### 11. Dashboard
+### 12. Dashboard
 
 - Use **tabs** in `metadata/dashboards/{profileName}.json` for multiple reports/dashboards per profile
 - For each profile that needs a custom dashboard:
@@ -99,20 +104,20 @@
 - Specify which **reports** go in which tab and for which profile
 - When no dashboard metadata exists for a profile, default tabs are used
 
-### 12. Sidebar
+### 13. Sidebar
 
 - Which objects appear in the sidebar? (`object.json` → `sidebar.showInSidebar`, `group`, `parent`)
 - Group structure: e.g. "Catalog" (Products, Categories), "Sales" (Orders, Invoices)
 - Per-profile sidebar: assign `sidebar` in `metadata/profiles/{name}.json` if different from default
 
-### 13. Translations (last step)
+### 14. Translations (last step)
 
 - Translate everything to **all available locales** in `metadata/translations/{locale}/`
 - Namespaces: `common.json`, `navigation.json`, `objects.json`, `settings.json`, `errors.json`
 - For new objects: add `objects.{objectName}.label`, `objects.{objectName}.labelPlural`, `objects.{objectName}.fields.{fieldKey}` for each locale
 - Run `pnpm run translation-report` to find missing keys
 
-### 14. Custom buttons per object
+### 15. Custom buttons per object
 
 - For each object, decide which **header actions** to add (`header.json` → `primaryActions`, `secondaryActions`):
   - Built-in: `edit`, `delete`, `mailto`, `tel` (with `targetField` for email/phone)
@@ -125,7 +130,7 @@
 - Which profiles see which buttons? (tied to object permissions or custom checks)
 - Add custom action types to `action-registry.ts` and wire in `GenericObjectDetailViewMainSection` or header renderer
 
-### 15. Useful tools and custom interfaces
+### 16. Useful tools and custom interfaces
 
 - **Detail view side section**: Beyond History and Files — add custom tabs (e.g. Activity feed, Notes, Map, Document preview, Timeline)
 - **Embedded tools**: Map viewer (for address fields), PDF preview, image gallery, calendar for date ranges

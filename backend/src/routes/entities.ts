@@ -881,12 +881,6 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
         (config.insertFields as readonly string[]).includes(f) &&
         !(autoNumberFields && f in autoNumberFields)
     );
-    for (const field of requiredIdFields) {
-      const val = body[field];
-      if (val == null || String(val).trim() === "") {
-        return c.json({ message: "Name is required" }, 400);
-      }
-    }
 
     let insertBody = { ...body };
     if (autoNumberFields) {
@@ -964,6 +958,12 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     const modified =
       (await runTrigger(objectName, "beforeInsert", undefined, payload)) ??
       payload;
+    for (const field of requiredIdFields) {
+      const val = (modified as Record<string, unknown>)[field];
+      if (val == null || String(val).trim() === "") {
+        return c.json({ message: "Name is required" }, 400);
+      }
+    }
     const insertFieldsSet = new Set(config.insertFields as readonly string[]);
     const filteredPayload = Object.fromEntries(
       Object.entries(modified as Record<string, unknown>).filter(([k]) =>

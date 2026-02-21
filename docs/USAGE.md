@@ -2,6 +2,8 @@
 
 This project is **metadata-driven**. For AI-assisted builds, see [AGENT_BUILD_GUIDE.md](./AGENT_BUILD_GUIDE.md) — the agent must read USAGE.md and confirm planning questions before implementing. The UI, API routes, and database schema are generated from JSON metadata files. You configure objects, fields, views, and behavior by editing metadata—no code changes needed for most CRUD features.
 
+**Using generic_saas as a back office for an existing app?** See [BACK_OFFICE.md](./BACK_OFFICE.md) for the flow when the main app already owns the database.
+
 ---
 
 ## Quick Start
@@ -18,28 +20,29 @@ This project is **metadata-driven**. For AI-assisted builds, see [AGENT_BUILD_GU
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Metadata Structure](#metadata-structure)
-3. [Adding a New Object](#adding-a-new-object)
-4. [Adding a Field](#adding-a-field)
-5. [Field Types Reference](#field-types-reference)
-6. [Field Properties](#field-properties)
-7. [List View Configuration](#list-view-configuration)
-8. [Detail View Configuration](#detail-view-configuration)
-9. [Header Configuration](#header-configuration)
-10. [Related Objects](#related-objects)
-11. [Triggers](#triggers)
-12. [Validation & Deployment](#validation--deployment)
-13. [System Objects](#system-objects)
-14. [Multi-Tenancy (Org/Tenant)](#multi-tenancy-orgtenant)
-15. [File Attachments](#file-attachments)
-16. [Default Currency](#default-currency)
-17. [Record History](#record-history)
-18. [Detail View Side Section](#detail-view-side-section)
-19. [Global Actions Bar](#global-actions-bar)
-20. [Sidebars](#sidebars)
-21. [Dashboard](#dashboard)
-22. [Email and Notifications](#email-and-notifications)
-23. [Translations and Localization](#translations-and-localization)
+2. [Back Office on Existing DB](#back-office-on-existing-db)
+3. [Metadata Structure](#metadata-structure)
+4. [Adding a New Object](#adding-a-new-object)
+5. [Adding a Field](#adding-a-field)
+6. [Field Types Reference](#field-types-reference)
+7. [Field Properties](#field-properties)
+8. [List View Configuration](#list-view-configuration)
+9. [Detail View Configuration](#detail-view-configuration)
+10. [Header Configuration](#header-configuration)
+11. [Related Objects](#related-objects)
+12. [Triggers](#triggers)
+13. [Validation & Deployment](#validation--deployment)
+14. [System Objects](#system-objects)
+15. [Multi-Tenancy (Org/Tenant)](#multi-tenancy-orgtenant)
+16. [File Attachments](#file-attachments)
+17. [Default Currency](#default-currency)
+18. [Record History](#record-history)
+19. [Detail View Side Section](#detail-view-side-section)
+20. [Global Actions Bar](#global-actions-bar)
+21. [Sidebars](#sidebars)
+22. [Dashboard](#dashboard)
+23. [Email and Notifications](#email-and-notifications)
+24. [Translations and Localization](#translations-and-localization)
 
 ---
 
@@ -51,6 +54,12 @@ This project is **metadata-driven**. For AI-assisted builds, see [AGENT_BUILD_GU
 - **Per-object folder**: `metadata/objects/{objectName}/`
 
 The frontend loads metadata at runtime. The backend generates Drizzle schema and entity routes from metadata via `db:generate-from-metadata` and `db:deploy`.
+
+---
+
+## Back Office on Existing DB
+
+Using generic_saas as an admin UI for an app that already owns the database? See **[BACK_OFFICE.md](./BACK_OFFICE.md)** for the full flow: creating metadata to match existing tables, handling the required `name` field (autoNumber vs trigger), backfill scripts, and deploy cautions.
 
 ---
 
