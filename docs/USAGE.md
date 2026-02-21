@@ -9,7 +9,7 @@ This project is **metadata-driven**. For AI-assisted builds, see [AGENT_BUILD_GU
 1. **Prerequisites**: Node 18+, pnpm, MySQL
 2. **Clone & install**: `pnpm install` in project root (or `frontend` and `backend` separately)
 3. **Environment**: Copy `backend/.env.example` to `backend/.env`. Set `DATABASE_URL` (e.g. `mysql://user:pass@localhost:3306/dbname`) and `JWT_SECRET` (min 32 chars).
-4. **Deploy**: `cd backend && pnpm run db:deploy` — validates metadata, generates schema, runs migrations
+4. **Deploy**: `cd backend && pnpm run db:deploy` — validates metadata, generates schema, runs migrations. For **fresh install** (empty DB): use `pnpm run db:fresh` instead — drops DB, creates schema via push, seeds admin.
 5. **Start**: `pnpm run dev` in backend and frontend (or from root if configured). Backend seeds admin on first run.
 6. **Login**: `admin` / `admin123`
 

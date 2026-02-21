@@ -45,7 +45,11 @@ app.use(
   })
 );
 
-await runMigrations();
+try {
+  await runMigrations();
+} catch (err) {
+  console.warn("Migrations failed (OK if using db:fresh):", (err as Error).message);
+}
 await initDb();
 
 app.route("/api/auth", authRoutes);

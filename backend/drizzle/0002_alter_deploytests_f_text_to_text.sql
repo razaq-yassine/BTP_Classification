@@ -1,1 +1,2 @@
-ALTER TABLE `deploytests` MODIFY COLUMN `f_text` TEXT;
+-- No-op: deploytests removed in minimal seed
+SELECT 1;
