@@ -25,13 +25,13 @@ function serializeError(err: unknown): string {
   if (err == null) return ''
   if (typeof err === 'string') return err
   if (err instanceof Error) {
+    const errWithResponse = err as unknown as { response?: { data?: unknown } }
     return [
       err.name,
       err.message,
       err.stack,
-      (err as { response?: { data?: unknown } }).response?.data != null
-        ? '\nResponse: ' +
-          JSON.stringify((err as { response: { data: unknown } }).response.data, null, 2)
+      errWithResponse.response?.data != null
+        ? '\nResponse: ' + JSON.stringify(errWithResponse.response.data, null, 2)
         : '',
     ]
       .filter(Boolean)

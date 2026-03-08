@@ -1,5 +1,4 @@
 import React from 'react'
-import { Link } from '@tanstack/react-router'
 import i18n from 'i18next'
 import { ReferenceFieldValue } from '@/components/generic/ReferenceFieldValue'
 import { translateSelectOptionLabel } from './translateMetadata'

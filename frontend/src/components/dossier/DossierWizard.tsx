@@ -125,20 +125,6 @@ function computeMemberScore(role: string, anneesExperience: number | string): nu
 const CA_YEARS_3 = ['N', 'N-1', 'N-2'] as const
 const CA_YEARS_5 = ['N', 'N-1', 'N-2', 'N-3', 'N-4'] as const
 
-const SECTEUR_IMPUTATION_OPTIONS = [
-  { value: 'A', label: 'A — Construction' },
-  { value: 'B', label: 'B — Travaux routiers et voirie urbaine' },
-  { value: 'C', label: 'C — Assainissement, conduites, canaux' },
-  { value: 'D', label: "D — Construction d'ouvrages d'art" },
-  { value: 'E', label: 'E — Travaux maritimes et fluviaux' },
-  { value: 'F', label: 'F — Barrages et ouvrages hydrauliques' },
-  { value: 'G', label: 'G — Injection, drainage et parois moulées' },
-  { value: 'H', label: 'H — Sondages et forages hydrogéologiques' },
-  { value: 'I', label: 'I — Équipements hydromécaniques' },
-  { value: 'Y', label: "Y — Aménagement des cours d'eau et protection contre les inondations" },
-  { value: 'ALL', label: 'Tous (gérant base)' },
-]
-
 interface SecteurClasseDemandee {
   secteur: string
   classeDemandee: string
@@ -658,7 +644,7 @@ export function DossierWizard({
               montantSoustraite: montant || undefined,
               isGrosOeuvresSingleLot: sector === 'A' ? cell.isGrosOeuvresSingleLot : false,
               dossierId,
-              ...(orgId != null && orgId !== '' && { organizationId: Number(orgId) }),
+              ...(orgId != null && { organizationId: Number(orgId) }),
             })
           }
         }
@@ -756,7 +742,7 @@ export function DossierWizard({
         secteurImputation: addMemberForm.secteurImputation || undefined,
         scoreCalcule: score,
         dossierId,
-        ...(orgId != null && orgId !== '' && { organizationId: Number(orgId) }),
+        ...(orgId != null && { organizationId: Number(orgId) }),
       })
       const created = res.data
       setMembres((prev) => [
