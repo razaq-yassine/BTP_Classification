@@ -120,6 +120,7 @@ function FieldDisplay({
           className={error ? 'border-red-500' : ''}
           objectName={objectName}
           recordId={record?.id != null ? record.id : undefined}
+          formContext={formData}
         />
         {error && (
           <p className="text-sm text-destructive mt-1">{error}</p>

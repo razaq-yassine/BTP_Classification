@@ -72,6 +72,7 @@ function CreateFieldDisplay({
         className={error ? 'border-red-500' : ''}
         objectName={objectName}
         recordId="temp"
+        formContext={formData}
       />
       {error && (
         <p className="text-sm text-destructive mt-1">{error}</p>

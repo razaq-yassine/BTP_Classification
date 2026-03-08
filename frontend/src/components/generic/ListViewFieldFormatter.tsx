@@ -137,17 +137,29 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
     }
 
     case 'address': {
-      let addr: Record<string, string>
-      try {
-        addr = typeof value === 'string' ? JSON.parse(value) : value
-      } catch {
-        return null
+      // Support both JSON object/string (street, city, state, zip, country) and plain string addresses
+      if (typeof value === 'string' && value.trim()) {
+        try {
+          const parsed = JSON.parse(value)
+          if (parsed && typeof parsed === 'object') {
+            const parts = [parsed.street, parsed.city, parsed.state, parsed.zip, parsed.country].filter(Boolean)
+            const display = parts.length > 0 ? parts.join(', ') : ''
+            const truncated = display.length > 40 ? `${display.substring(0, 40)}...` : display
+            return truncated ? <span className="text-sm" title={display}>{truncated}</span> : null
+          }
+        } catch {
+          // Plain string address (e.g. "123 Main St, Brooklyn, NY 11201")
+          const truncated = value.length > 40 ? `${value.substring(0, 40)}...` : value
+          return <span className="text-sm" title={value}>{truncated}</span>
+        }
       }
-      if (!addr || typeof addr !== 'object') return null
-      const parts = [addr.street, addr.city, addr.state, addr.zip, addr.country].filter(Boolean)
-      const display = parts.length > 0 ? parts.join(', ') : ''
-      const truncated = display.length > 40 ? `${display.substring(0, 40)}...` : display
-      return truncated ? <span className="text-sm" title={display}>{truncated}</span> : null
+      if (value && typeof value === 'object') {
+        const parts = [value.street, value.city, value.state, value.zip, value.country].filter(Boolean)
+        const display = parts.length > 0 ? parts.join(', ') : ''
+        const truncated = display.length > 40 ? `${display.substring(0, 40)}...` : display
+        return truncated ? <span className="text-sm" title={display}>{truncated}</span> : null
+      }
+      return null
     }
 
     case 'richText': {

@@ -256,6 +256,8 @@ function buildInsertPayload(
       val = new Date(val);
     }
     if (Array.isArray(val)) val = JSON.stringify(val);
+    // Empty string for numeric/decimal columns causes MySQL errors; treat as null
+    if (val === "") val = null;
     if (val !== undefined) {
       validateStringFieldLength(val, field);
       const richTextFields = (config as { richTextFields?: string[] }).richTextFields;
@@ -314,6 +316,8 @@ function buildUpdatePayload(
     )
       val = new Date(val);
     if (Array.isArray(val)) val = JSON.stringify(val);
+    // Empty string for numeric/decimal columns causes MySQL errors; treat as null
+    if (val === "") val = null;
     if (val !== undefined) {
       validateStringFieldLength(val, field);
       const richTextFields = (config as { richTextFields?: string[] }).richTextFields;

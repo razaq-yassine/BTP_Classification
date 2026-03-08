@@ -95,6 +95,28 @@ function FileFieldInput({
   )
 }
 
+/** Extract id from value (handles both primitive id and { id } reference) */
+function extractRefId(val: unknown): string | number | undefined {
+  if (val == null) return undefined
+  if (typeof val === 'object' && val !== null && 'id' in val) return (val as { id: string | number }).id
+  if (typeof val === 'number' || typeof val === 'string') return val as string | number
+  return undefined
+}
+
+/** Build createInitialValues for RecordLookup from parent form context (org/tenant prefill) */
+function buildCreateInitialValuesFromContext(
+  formContext: Record<string, any> | undefined,
+  _refObjectName: string
+): Record<string, any> | undefined {
+  if (!formContext) return undefined
+  const initial: Record<string, any> = {}
+  const orgId = extractRefId(formContext.organization) ?? formContext.organizationId
+  const tenantId = extractRefId(formContext.tenant) ?? formContext.tenantId
+  if (orgId != null) initial.organization = orgId
+  if (tenantId != null) initial.tenant = tenantId
+  return Object.keys(initial).length > 0 ? initial : undefined
+}
+
 interface GenericDetailInputFormatterProps {
   fieldDefinition: FieldDefinition
   value: any
@@ -106,6 +128,8 @@ interface GenericDetailInputFormatterProps {
   objectName?: string
   /** For file upload: record id, or 'temp' for create flow */
   recordId?: string | number
+  /** Parent form data; used to prefill org/tenant when creating from reference lookup */
+  formContext?: Record<string, any>
 }
 
 export function GenericDetailInputFormatter({
@@ -117,6 +141,7 @@ export function GenericDetailInputFormatter({
   showLabel = true,
   objectName: objectNameProp,
   recordId,
+  formContext,
 }: GenericDetailInputFormatterProps) {
   const { t } = useTranslation('common')
   const user = useAuthStore(selectUser)
@@ -508,6 +533,7 @@ export function GenericDetailInputFormatter({
             disabled={disabled}
             className={cn('w-full', className)}
             userId={user?.id}
+            createInitialValues={buildCreateInitialValuesFromContext(formContext, objectName)}
           />
         )
       }

@@ -4,13 +4,16 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
 
-import { Check, ChevronsUpDown, Search, X } from 'lucide-react'
+import { Check, ChevronsUpDown, Plus, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import api from '@/services/api'
 import { pluralize } from '@/metadata/utils'
 import { useObjectDefinition } from '@/hooks/useObjectDefinition'
+import { usePermissions } from '@/hooks/usePermissions'
 import { getObjectIconClasses } from '@/utils/object-color'
 import { sortByRecentlyViewed } from '@/utils/recently-viewed'
+import { translateObjectLabel } from '@/utils/translateMetadata'
+import { GenericCreateDialog } from '@/components/generic/GenericCreateDialog'
 
 // Simple debounce implementation to avoid lodash dependency
 function debounce<T extends (...args: any[]) => any>(
@@ -51,6 +54,8 @@ interface RecordLookupProps {
   apiEndpoint?: string // Optional custom endpoint (base URL, no query params)
   filterParams?: Record<string, string | number> // Appended to list/search URLs (e.g. organizationId for tenants)
   userId?: number | null // Current user ID for user-specific recently viewed sorting
+  /** Pre-fill create modal (e.g. org/tenant from parent form when creating from lookup) */
+  createInitialValues?: Record<string, any>
 }
 
 export function RecordLookup({
@@ -66,16 +71,19 @@ export function RecordLookup({
   emptyMessage,
   apiEndpoint,
   filterParams,
-  userId
+  userId,
+  createInitialValues
 }: RecordLookupProps) {
   const [open, setOpen] = useState(false)
   const [records, setRecords] = useState<LookupRecord[]>([])
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRecord, setSelectedRecord] = useState<LookupRecord | null>(null)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
 
   const { t } = useTranslation('common')
   const displayEmptyMessage = emptyMessage ?? t('noRecordsFound')
+  const { canCreate } = usePermissions()
   const { definition } = useObjectDefinition(objectName)
   const ObjectIcon = definition?.icon
   const iconClasses = getObjectIconClasses(definition?.color)
@@ -235,6 +243,16 @@ export function RecordLookup({
     onValueChange(null)
   }
 
+  const handleCreateNew = () => {
+    setOpen(false)
+    setCreateDialogOpen(true)
+  }
+
+  const handleRecordCreated = (newRecord: LookupRecord) => {
+    handleSelect(newRecord)
+    setCreateDialogOpen(false)
+  }
+
   const renderRecordItem = (record: LookupRecord, showIcon = true) => {
     return (
       <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -293,31 +311,47 @@ export function RecordLookup({
               onValueChange={setSearchQuery}
             />
             <CommandList>
-              {              loading ? (
+              {loading ? (
                 <div className="p-4 text-center text-sm text-muted-foreground">
                   {t('searching')}
                 </div>
-              ) : records.length === 0 ? (
-                <CommandEmpty>{displayEmptyMessage}</CommandEmpty>
               ) : (
-                <CommandGroup>
-                  {records.map((record) => (
-                    <CommandItem
-                      key={record.id}
-                      value={getRecordDisplayName(record)}
-                      onSelect={() => handleSelect(record)}
-                      className="cursor-pointer"
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4 shrink-0",
-                          value === record.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {renderRecordItem(record)}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
+                <>
+                  {records.length === 0 ? (
+                    <CommandEmpty>{displayEmptyMessage}</CommandEmpty>
+                  ) : (
+                    <CommandGroup>
+                      {records.map((record) => (
+                        <CommandItem
+                          key={record.id}
+                          value={getRecordDisplayName(record)}
+                          onSelect={() => handleSelect(record)}
+                          className="cursor-pointer"
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4 shrink-0",
+                              value === record.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {renderRecordItem(record)}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  )}
+                  {canCreate(objectName) && definition && (
+                    <CommandGroup>
+                      <CommandItem
+                        value={`new-${objectName}`}
+                        onSelect={handleCreateNew}
+                        className="cursor-pointer"
+                      >
+                        <Plus className="mr-2 h-4 w-4 shrink-0" />
+                        {t('newObject', { label: translateObjectLabel(objectName, objectName, false) })}
+                      </CommandItem>
+                    </CommandGroup>
+                  )}
+                </>
               )}
             </CommandList>
           </Command>
@@ -333,6 +367,15 @@ export function RecordLookup({
         >
           <X className="h-4 w-4" />
         </Button>
+      )}
+      {definition && (
+        <GenericCreateDialog
+          objectDefinition={definition}
+          open={createDialogOpen}
+          onOpenChange={setCreateDialogOpen}
+          onRecordCreated={handleRecordCreated}
+          initialValues={createInitialValues}
+        />
       )}
     </div>
   )

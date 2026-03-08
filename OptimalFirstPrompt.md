@@ -3,4 +3,5 @@ If this is a back office for an existing database, also read BACK_OFFICE.md.
 Read Usage.md file to understand the architecture of the base.
 Read the questions in AGENT_BUILD_GUIDE.MD and create a plan for each point/question one by one.
 To start, only create a plan for the first point / question.
-When done we can move forward after my confirmation.
+When done we can move to the next plan after my permission.
+For now Only focus on creating plans, no implementation needed. The plan should have your own recommendations and suggestions. 

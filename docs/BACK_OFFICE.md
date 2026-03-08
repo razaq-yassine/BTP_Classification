@@ -17,7 +17,7 @@ This guide covers using generic_saas as a **back-office admin platform** when yo
 ## Flow Overview
 
 1. **Inspect** the existing database schema (tables, columns, types)
-2. **Create metadata** that describes each table (object.json, fields.json, listView, detailView)
+2. **Retrieve metadata** — run `db:retrieve` to generate initial metadata from existing tables (object.json, fields.json, listView, detailView). Optionally use `--tables=orders,customers` to limit scope, or `--overwrite` to replace existing metadata.
 3. **Add `name` column** if tables don't have one (see [Name Field](#name-field) below)
 4. **Backfill** existing rows with `name` values
 5. **Use triggers** to auto-populate `name` for new inserts (when not using autoNumber)
@@ -105,7 +105,9 @@ Adjust the fallback chain to match your table's columns. Use camelCase for field
 
 ## Metadata Creation Checklist
 
-For each existing table:
+**Tip:** Run `cd backend && pnpm run db:retrieve` first to auto-generate metadata from your database. Then refine the generated files as needed.
+
+For each existing table (or after retrieve):
 
 1. **object.json** — Use `tableName` if the table name differs from pluralized object name (e.g. `order` object → `orders` table)
 2. **fields.json** — Include all columns you want to expose. **Must include `name`**
@@ -117,10 +119,10 @@ For each existing table:
 
 ## Deploy Cautions
 
-`db:deploy` includes **sync-drops**, which removes tables/columns that are no longer in metadata. For back-office on shared DB:
+`db:deploy` does **not** run sync-drops (it is opt-in). For back-office on shared DB:
 
 - **Ensure metadata is complete** before running full deploy
-- **Avoid removing objects** from metadata for tables the main app still uses — sync-drops would drop those tables
+- Do **not** run `pnpm run db:sync-drops` — it would drop tables/columns not in metadata, including those the main app still uses
 - Consider running deploy steps selectively (e.g. validate + generate, then manual migration review) if the DB is shared and changes are risky
 
 ---

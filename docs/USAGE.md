@@ -319,6 +319,8 @@ For **master-detail** (e.g. order items under order, junction objects):
 
 **Junction object rule**: When an object appears in another object's `relatedObjects` with a `foreignKey` (e.g. `order.id`), the child object's field (e.g. `order` on orderitem) must use `type: "masterDetail"`, not `reference`.
 
+**Lookup "New" option**: In the RecordLookup dropdown (used for reference and masterDetail fields), users with create permission for the referenced object see a "New \<object name\>" button as the last option. Clicking it opens the default create modal for that object; on success, the new record is prefilled in the field. When the lookup is used within a form (create or edit), the create modal prefills organization and tenant from the current form's values, so new records inherit the parent's tenant scope.
+
 ### Profile-specific editability (editableForProfiles)
 
 Use `editableForProfiles` when a field should be read-only for most users but editable for specific profiles. Example pattern (tenant edit for org users is currently disabled; see `docs/FUTURE.md`):
@@ -669,6 +671,14 @@ Put reusable logic in `backend/triggers/helpers/` and import it in your trigger 
   cd backend && pnpm run db:deploy
   ```
 
+- **Retrieve metadata from database** (database-first / back-office):
+
+  ```bash
+  cd backend && pnpm run db:retrieve
+  ```
+
+  Introspects the MySQL database and generates metadata (object.json, fields.json, listView, detailView) for tables that are not system-managed. Use when onboarding an existing database. Options: `--overwrite` to replace existing metadata; `--tables=orders,customers` to limit scope. See [BACK_OFFICE.md](./BACK_OFFICE.md).
+
 - **Lint-staged**: Metadata JSON files trigger validation on commit.
 
 ### Deployment Flow
@@ -682,12 +692,13 @@ Put reusable logic in `backend/triggers/helpers/` and import it in your trigger 
 5. **Run migrations** — Applies `backend/drizzle/*.sql` to the MySQL database
 6. **Ensure tables** — Creates any missing tables from metadata (e.g. when migrations don't create them)
 7. **Verify schema** — Confirms DB columns match metadata expectations
-8. **Sync drops** — Removes tables/columns that no longer exist in metadata
-9. **Copy generated files** — Updates `schema.ts` and `entity-registry.generated.ts`
+8. **Copy generated files** — Updates `schema.ts` and `entity-registry.generated.ts`
+
+**Optional — Sync drops** (removes tables/columns no longer in metadata): Run `pnpm run db:sync-drops` separately when you explicitly want to clean up. It is not part of deploy to avoid accidentally dropping tables (e.g. in back-office or shared-DB setups).
 
 **Never create schema or migrations manually.** All artifacts flow from metadata. See `.cursor/rules/metadata-driven.mdc`.
 
-**Formula and computed fields** do not create DB columns—they are evaluated at runtime. `sync-drops` and `ensure-tables` skip them when building expected columns, so they are never dropped or created as columns.
+**Formula and computed fields** do not create DB columns—they are evaluated at runtime. `ensure-tables` and `sync-drops` (when run) skip them when building expected columns, so they are never dropped or created as columns.
 
 **Important**: Migrations are stored in `backend/drizzle/`. Both the schema generator and the migrate script use this folder. Do not create a separate `drizzle/` folder at the project root.
 
