@@ -428,10 +428,8 @@ export async function getObjectDefinition(objectName: string): Promise<ObjectDef
 
 export async function getAllObjectDefinitions(): Promise<ObjectDefinition[]> {
   const names = await getObjectNames()
-  const defs: ObjectDefinition[] = []
-  for (const name of names) {
-    const def = await getObjectDefinition(name)
-    if (def) defs.push(def)
-  }
+  const defs = (
+    await Promise.all(names.map((name) => getObjectDefinition(name)))
+  ).filter((d): d is ObjectDefinition => d != null)
   return defs
 }

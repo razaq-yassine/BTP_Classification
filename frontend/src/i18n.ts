@@ -11,7 +11,7 @@ void i18n
     backend: {
       loadPath: '/metadata/translations/{{lng}}/{{ns}}.json',
       requestOptions: {
-        cache: 'no-store', // Bypass cache so translation updates are picked up
+        cache: import.meta.env.DEV ? 'no-store' : 'default', // Bypass cache in dev so translation updates are picked up
       },
     },
     defaultNS: 'common',

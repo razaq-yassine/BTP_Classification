@@ -30,6 +30,7 @@ interface AppConfigState {
   isLoading: boolean;
   isLoaded: boolean;
   fetchConfig: () => Promise<void>;
+  hydrateConfig: (config: Partial<AppConfig>) => void;
   setConfig: (config: Partial<AppConfig>) => void;
 }
 
@@ -69,6 +70,18 @@ export const useAppConfigStore = create<AppConfigState>((set, get) => ({
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  hydrateConfig: (config) => {
+    set({
+      config: {
+        defaultCurrency: config.defaultCurrency ?? DEFAULT_CONFIG.defaultCurrency,
+        currencySymbol: config.currencySymbol ?? DEFAULT_CONFIG.currencySymbol,
+        timezone: config.timezone,
+        defaultPreferredLanguage: config.defaultPreferredLanguage,
+      },
+      isLoaded: true,
+    });
   },
 
   setConfig: (config) => {

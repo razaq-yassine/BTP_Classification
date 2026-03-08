@@ -32,5 +32,6 @@ export function prefetchObjectDefinitions(queryClient: QueryClient) {
   return queryClient.prefetchQuery({
     queryKey: OBJECT_DEFINITIONS_QUERY_KEY,
     queryFn: getAllObjectDefinitions,
+    staleTime: 5 * 60 * 1000, // Match useObjectDefinitionsQuery
   })
 }

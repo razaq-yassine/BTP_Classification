@@ -23,10 +23,11 @@ interface Props {
 
 export function AuthenticatedLayout({ children }: Props) {
   const fetchConfig = useAppConfigStore((s) => s.fetchConfig)
+  const isLoaded = useAppConfigStore((s) => s.isLoaded)
   useEffectiveLanguage()
   useEffect(() => {
-    fetchConfig()
-  }, [fetchConfig])
+    if (!isLoaded) fetchConfig()
+  }, [fetchConfig, isLoaded])
   useMetadataVersionPolling()
   const location = useLocation()
   const isSettings = location.pathname.startsWith('/settings')
