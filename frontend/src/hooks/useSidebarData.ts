@@ -40,10 +40,11 @@ function buildDataNavItems(
     }
   }
 
+  const toUrl = (basePath: string) => (basePath.startsWith('/') ? basePath : `/${basePath}`)
   for (const d of noParent) {
     objectNavItems.push({
       title: t(`objects:${d.name}.labelPlural`, { defaultValue: d.labelPlural }),
-      url: d.basePath!,
+      url: toUrl(d.basePath!),
       icon: d.icon,
     } as NavLink)
   }
@@ -56,7 +57,7 @@ function buildDataNavItems(
       icon: Icon,
       items: items.map((d) => ({
         title: t(`objects:${d.name}.labelPlural`, { defaultValue: d.labelPlural }),
-        url: d.basePath!,
+        url: toUrl(d.basePath!),
       })),
     } as NavCollapsible)
   }

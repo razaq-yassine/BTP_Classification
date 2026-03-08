@@ -8,7 +8,11 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const RULES_DIR = path.join(__dirname)
+// When running from dist/, JSON files live in src/ - resolve to backend root
+const backendRoot = path.resolve(__dirname, '../../..')
+const distDir = path.join(__dirname)
+const srcDir = path.join(backendRoot, 'src', 'engine', 'rules')
+const RULES_DIR = fs.existsSync(path.join(distDir, 'sectorA.json')) ? distDir : srcDir
 
 // --- Types ---
 

@@ -495,20 +495,20 @@ export interface FileRoutesByFullPath {
   '/settings/tenant': typeof AuthenticatedSettingsTenantRoute
   '/settings/translations': typeof AuthenticatedSettingsTranslationsRouteWithChildren
   '/settings/users': typeof AuthenticatedSettingsUsersRouteWithChildren
-  '/$objectName': typeof AuthenticatedObjectNameIndexRoute
-  '/apps': typeof AuthenticatedAppsIndexRoute
-  '/chats': typeof AuthenticatedChatsIndexRoute
+  '/$objectName/': typeof AuthenticatedObjectNameIndexRoute
+  '/apps/': typeof AuthenticatedAppsIndexRoute
+  '/chats/': typeof AuthenticatedChatsIndexRoute
   '/dossiers/': typeof AuthenticatedDossiersIndexRoute
-  '/help-center': typeof AuthenticatedHelpCenterIndexRoute
+  '/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
-  '/tasks': typeof AuthenticatedTasksIndexRoute
-  '/users': typeof AuthenticatedUsersIndexRoute
+  '/tasks/': typeof AuthenticatedTasksIndexRoute
+  '/users/': typeof AuthenticatedUsersIndexRoute
   '/dossiers/$dossierId/edit': typeof AuthenticatedDossiersDossierIdEditRoute
   '/settings/email-templates/$templateKey': typeof AuthenticatedSettingsEmailTemplatesTemplateKeyRoute
   '/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
   '/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameRouteWithChildren
   '/settings/users/$userId': typeof AuthenticatedSettingsUsersUserIdRoute
-  '/dossiers/$dossierId': typeof AuthenticatedDossiersDossierIdIndexRoute
+  '/dossiers/$dossierId/': typeof AuthenticatedDossiersDossierIdIndexRoute
   '/settings/email-templates/': typeof AuthenticatedSettingsEmailTemplatesIndexRoute
   '/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/settings/profiles/': typeof AuthenticatedSettingsProfilesIndexRoute
@@ -693,20 +693,20 @@ export interface FileRouteTypes {
     | '/settings/tenant'
     | '/settings/translations'
     | '/settings/users'
-    | '/$objectName'
-    | '/apps'
-    | '/chats'
+    | '/$objectName/'
+    | '/apps/'
+    | '/chats/'
     | '/dossiers/'
-    | '/help-center'
+    | '/help-center/'
     | '/settings/'
-    | '/tasks'
-    | '/users'
+    | '/tasks/'
+    | '/users/'
     | '/dossiers/$dossierId/edit'
     | '/settings/email-templates/$templateKey'
     | '/settings/object-manager/$objectName'
     | '/settings/profiles/$profileName'
     | '/settings/users/$userId'
-    | '/dossiers/$dossierId'
+    | '/dossiers/$dossierId/'
     | '/settings/email-templates/'
     | '/settings/object-manager/'
     | '/settings/profiles/'
@@ -916,7 +916,7 @@ declare module '@tanstack/react-router' {
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -1035,14 +1035,14 @@ declare module '@tanstack/react-router' {
     '/_authenticated/users/': {
       id: '/_authenticated/users/'
       path: '/users'
-      fullPath: '/users'
+      fullPath: '/users/'
       preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/tasks/': {
       id: '/_authenticated/tasks/'
       path: '/tasks'
-      fullPath: '/tasks'
+      fullPath: '/tasks/'
       preLoaderRoute: typeof AuthenticatedTasksIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
@@ -1056,7 +1056,7 @@ declare module '@tanstack/react-router' {
     '/_authenticated/help-center/': {
       id: '/_authenticated/help-center/'
       path: '/help-center'
-      fullPath: '/help-center'
+      fullPath: '/help-center/'
       preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
@@ -1070,21 +1070,21 @@ declare module '@tanstack/react-router' {
     '/_authenticated/chats/': {
       id: '/_authenticated/chats/'
       path: '/chats'
-      fullPath: '/chats'
+      fullPath: '/chats/'
       preLoaderRoute: typeof AuthenticatedChatsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/apps/': {
       id: '/_authenticated/apps/'
       path: '/apps'
-      fullPath: '/apps'
+      fullPath: '/apps/'
       preLoaderRoute: typeof AuthenticatedAppsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/$objectName/': {
       id: '/_authenticated/$objectName/'
       path: '/$objectName'
-      fullPath: '/$objectName'
+      fullPath: '/$objectName/'
       preLoaderRoute: typeof AuthenticatedObjectNameIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
@@ -1259,7 +1259,7 @@ declare module '@tanstack/react-router' {
     '/_authenticated/dossiers/$dossierId/': {
       id: '/_authenticated/dossiers/$dossierId/'
       path: '/$dossierId'
-      fullPath: '/dossiers/$dossierId'
+      fullPath: '/dossiers/$dossierId/'
       preLoaderRoute: typeof AuthenticatedDossiersDossierIdIndexRouteImport
       parentRoute: typeof AuthenticatedDossiersRouteRoute
     }

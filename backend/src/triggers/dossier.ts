@@ -3,13 +3,14 @@
  * When status changes to COMPLETED or SOUMIS: recompute totalEncadrementScore and caMax/caMaxHT,
  * fetch caEntries + membres, compute classification, insert resultatSimulation (append, no override).
  */
-import { db } from '../src/db/index.js'
+import type { ClassificationResult as EngineResult } from '../engine/classificationEngine.js'
+import { db } from '../db/index.js'
 import {
   dossiers,
   caEntries,
   membreEncadrements,
   resultatSimulations,
-} from '../src/db/schema.js'
+} from '../db/schema.js'
 import { eq } from 'drizzle-orm'
 import {
   computeClassification,
@@ -17,7 +18,7 @@ import {
   type DossierInput,
   type MembreInput,
   type CaEntryInput,
-} from '../src/engine/classificationEngine.js'
+} from '../engine/classificationEngine.js'
 import { recomputeDossierEncadrementScore } from './helpers/membreEncadrement.js'
 
 function toNum(v: string | number | null | undefined): number {
@@ -55,11 +56,11 @@ export async function afterUpdate(
   const dossierInput: DossierInput = {
     id: dossierId,
     organizationId,
-    sectorsSelected: newValue?.sectorsSelected as string | null,
-    classificationMethod: newValue?.classificationMethod as string | null,
-    capitalSocial: newValue?.capitalSocial,
-    masseSalariale: newValue?.masseSalariale,
-    totalEncadrementScore: newValue?.totalEncadrementScore,
+    sectorsSelected: (newValue?.sectorsSelected ?? null) as string | null,
+    classificationMethod: (newValue?.classificationMethod ?? null) as string | null,
+    capitalSocial: (newValue?.capitalSocial ?? null) as string | number | null | undefined,
+    masseSalariale: (newValue?.masseSalariale ?? null) as string | number | null | undefined,
+    totalEncadrementScore: (newValue?.totalEncadrementScore ?? null) as string | number | null | undefined,
   }
 
   const caEntriesList = await db
@@ -90,7 +91,7 @@ export async function afterUpdate(
 
   const results = computeClassification(dossierInput, membresInput, caEntriesInput)
 
-  const sectors = parseSectors(newValue?.sectorsSelected)
+  const sectors = parseSectors((newValue?.sectorsSelected ?? null) as string | null | undefined)
   let caMaxTTC = 0
   let caMaxHT = 0
   for (const sector of sectors) {
@@ -139,10 +140,10 @@ async function insertResultatSimulation(
   result: ClassificationResult,
   computedAt: Date
 ): Promise<void> {
-  const r = result as { encadrementScoreActual?: number; caActualMDH?: number; ratioActual?: number }
-  const caActualDH = r.caActualMDH != null ? r.caActualMDH * 1_000_000 : null
+  const r = result as EngineResult & { encadrementScoreActual?: number; caActualMDH?: number; ratioActual?: number }
+  const caActualDH = r.caActualMDH != null ? String(r.caActualMDH * 1_000_000) : null
   const name = `RES-D${dossierId}-S${result.secteur}-${computedAt.getTime()}`
-  await db.insert(resultatSimulations).values({
+  const insertRow = {
     name,
     secteur: result.secteur,
     classeObtenue: result.classeObtenue,
@@ -152,8 +153,8 @@ async function insertResultatSimulation(
     scoreMasseSalariale: result.scoreMasseSalariale,
     scoreMateriel: result.scoreMateriel,
     caActualDH,
-    encadrementScoreActual: r.encadrementScoreActual ?? null,
-    masseSalarialeRatioPercent: r.ratioActual != null ? r.ratioActual / 100 : null,
+    encadrementScoreActual: r.encadrementScoreActual != null ? String(r.encadrementScoreActual) : null,
+    masseSalarialeRatioPercent: r.ratioActual != null ? String(r.ratioActual / 100) : null,
     details: result.details,
     computedAt,
     dossierId,
@@ -163,5 +164,6 @@ async function insertResultatSimulation(
     createdById: null,
     ownerId: null,
     editedById: null,
-  })
+  }
+  await db.insert(resultatSimulations).values(insertRow)
 }

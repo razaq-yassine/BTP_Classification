@@ -2,11 +2,11 @@
  * Core scoring logic for BTP dossier classification.
  * Computes the highest attainable classe per sector based on classification rules.
  */
-import { db } from '../../src/db/index.js'
+import { db } from '../../db/index.js'
 import {
   classificationRules,
   resultatSimulations,
-} from '../../src/db/schema.js'
+} from '../../db/schema.js'
 import { eq, and, inArray } from 'drizzle-orm'
 
 export type DossierForClassification = {
@@ -196,7 +196,7 @@ export async function computeClassification(
 
       if (allPass) {
         best = {
-          secteur,
+          secteur: sector,
           classeObtenue: String(rule.classe),
           scoreCa,
           scoreCapital,

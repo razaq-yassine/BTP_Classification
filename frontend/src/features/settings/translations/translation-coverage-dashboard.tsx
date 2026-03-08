@@ -192,7 +192,7 @@ export function TranslationCoverageDashboard() {
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(value: number) => [value, '']}
+                        formatter={(value) => [value ?? 0, '']}
                         contentStyle={{
                           borderRadius: '8px',
                           border: '1px solid hsl(var(--border))',

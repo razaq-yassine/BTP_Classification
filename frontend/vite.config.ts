@@ -14,6 +14,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  preview: {
+    allowedHosts: true,
+  },
   server: {
     proxy: {
       '/api': {

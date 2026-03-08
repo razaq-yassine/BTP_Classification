@@ -2,10 +2,10 @@
  * Utilities for membre encadrement scoring and dossier total score recomputation.
  * Scoring uses encadrement.json via config.ts.
  */
-import { db } from '../../src/db/index.js'
-import { membreEncadrements, dossiers } from '../../src/db/schema.js'
+import { db } from '../../db/index.js'
+import { membreEncadrements, dossiers } from '../../db/schema.js'
 import { eq } from 'drizzle-orm'
-import { getEncadrementConfig } from '../../src/engine/rules/config.js'
+import { getEncadrementConfig } from '../../engine/rules/config.js'
 
 function toNum(v: string | number | null | undefined): number {
   if (v === null || v === undefined || v === '') return 0

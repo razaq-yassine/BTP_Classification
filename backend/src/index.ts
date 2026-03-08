@@ -21,14 +21,17 @@ import { initDb } from "./db/init.js";
 type Variables = { user?: Record<string, unknown> };
 const app = new Hono<{ Variables: Variables }>();
 
+const corsOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+  "https://btp.smarttechnologies.ma",
+  "http://btp.smarttechnologies.ma"
+];
 app.use(
   "*",
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "http://localhost:5175"
-    ],
+    origin: corsOrigins,
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
     credentials: true

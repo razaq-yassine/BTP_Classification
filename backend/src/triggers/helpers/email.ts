@@ -6,14 +6,14 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { db } from "../../src/db/index.js";
+import { db } from "../../db/index.js";
 import {
   notificationSettings,
   organizations,
   tenants,
-} from "../../src/db/schema.js";
+} from "../../db/schema.js";
 import { eq } from "drizzle-orm";
-import { enqueueEmail } from "../../src/services/email.js";
+import { enqueueEmail } from "../../services/email.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOADS_ROOT = path.join(__dirname, "..", "..", "..", "uploads");

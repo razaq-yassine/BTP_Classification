@@ -2,8 +2,8 @@
  * Membre encadrement triggers.
  * Compute scoreCalcule on insert/update, and recompute dossier totalEncadrementScore.
  */
-import { db } from '../src/db/index.js'
-import { membreEncadrements } from '../src/db/schema.js'
+import { db } from '../db/index.js'
+import { membreEncadrements } from '../db/schema.js'
 import { eq } from 'drizzle-orm'
 import {
   computeMemberScore,
