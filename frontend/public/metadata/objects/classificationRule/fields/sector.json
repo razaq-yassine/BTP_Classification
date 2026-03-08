@@ -1,0 +1,1 @@
+{"key":"sector","label":"Secteur","type":"select","required":true,"editable":true,"options":[{"value":"A","label":"Secteur A"},{"value":"B","label":"Secteur B"},{"value":"C","label":"Secteur C"}]}

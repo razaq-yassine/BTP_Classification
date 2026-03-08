@@ -62,7 +62,7 @@ async function main(): Promise<void> {
   if (!fs.existsSync(JOURNAL_PATH)) return;
 
   const connectionString =
-    process.env.DATABASE_URL || "mysql://root:root@localhost:3306/generic_saas";
+    process.env.DATABASE_URL || "mysql://root:root@localhost:3306/btp_classification_platform";
   const conn = await mysql.createConnection(connectionString);
 
   const [tables] = await conn.execute<mysql.RowDataPacket[]>(

@@ -13,6 +13,7 @@ import { fileRoutes } from "./routes/files.js";
 import { storageRoutes } from "./routes/storage.js";
 import { recordHistoryRoutes } from "./routes/record-history.js";
 import { searchRoutes } from "./routes/search.js";
+import { dossiersRoutes } from "./routes/dossiers.js";
 import { emailRoutes } from "./routes/email.js";
 import { runMigrations } from "./db/migrate.js";
 import { initDb } from "./db/init.js";
@@ -40,7 +41,7 @@ app.use(
   "*",
   rateLimiter({
     windowMs: 15 * 60 * 1000,
-    limit: 100,
+    limit: 5000,
     keyGenerator: (c) => getClientIp(c),
   })
 );
@@ -57,6 +58,7 @@ app.route("/api/config", configRoutes);
 app.route("/api/email", emailRoutes);
 app.route("/api/search", searchRoutes);
 app.route("/api", entityRoutes);
+app.route("/api/dossiers", dossiersRoutes);
 app.route("/api/upload", uploadRoutes);
 app.route("/api/files", fileRoutes);
 app.route("/api/storage", storageRoutes);

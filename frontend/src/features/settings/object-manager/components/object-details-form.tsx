@@ -31,6 +31,8 @@ const objectSchema = z.object({
     .object({
       showInSidebar: z.boolean().optional(),
       group: z.string().optional(),
+      parent: z.string().optional(),
+      showInSidebarForProfiles: z.array(z.string()).optional(),
     })
     .optional(),
 })

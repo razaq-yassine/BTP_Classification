@@ -105,7 +105,7 @@ To add a new object: create metadata folder in `frontend/public/metadata/objects
 
 ## Development Notes
 
-- Backend uses MySQL (mysql2). Set `DATABASE_URL` in `.env` (e.g. `mysql://root:root@localhost:3306/generic_saas`). Create the database before first run.
+- Backend uses MySQL (mysql2). Set `DATABASE_URL` in `.env` (e.g. `mysql://root:root@localhost:3306/btp_classification_platform`). Create the database before first run.
 - JWT tokens stored in localStorage
 - CORS configured for localhost:5173 and 5174
 - Triggers in `backend/triggers/` run before/after insert/update/delete

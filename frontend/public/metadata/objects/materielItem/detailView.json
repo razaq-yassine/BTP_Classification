@@ -1,0 +1,1 @@
+{ "layout": "two-column", "sections": [{ "title": "Matériel", "columns": 2, "defaultOpen": true, "fields": ["secteur","quantite","valeur","proprietaire","dossier"] }] }

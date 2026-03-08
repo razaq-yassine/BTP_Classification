@@ -13,7 +13,9 @@ import { translateObjectLabel } from '@/utils/translateMetadata'
  * Configure permissions at Settings → Administration → Profiles → [Profile] → Global action permissions.
  */
 // Add quick-create entries when you add objects. Example: { actionId: 'quick-create-product', objectName: 'product' }
-const QUICK_CREATE_CONFIG = [] as const
+const QUICK_CREATE_CONFIG = [
+  { actionId: 'quick-create-dossier', objectName: 'dossier', label: 'Nouveau dossier' },
+] as const
 
 export function GlobalActions() {
   const { t } = useTranslation('common')
@@ -41,13 +43,19 @@ export function GlobalActions() {
     })
     return {
       label,
-      onClick: () => setOpenObject(objectName),
+      onClick: () => {
+        if (objectName === 'dossier') {
+          navigate({ to: '/dossiers/new' })
+        } else {
+          setOpenObject(objectName)
+        }
+      },
     }
   })
 
   return (
     <GlobalActionsBar actions={actions}>
-      {QUICK_CREATE_CONFIG.map(({ objectName }) => {
+      {QUICK_CREATE_CONFIG.filter(({ objectName }) => objectName !== 'dossier').map(({ objectName }) => {
         const def = defs?.find((d) => d.name === objectName)
         if (!def || openObject !== objectName) return null
 

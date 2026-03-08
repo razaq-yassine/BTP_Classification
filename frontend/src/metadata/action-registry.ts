@@ -177,7 +177,8 @@ export function resolveCalculatedData(config: {
     label: config.label,
     calculator: (r) => (handler || calculatorHandlers.fallback)(r, config),
     format: (config.format as CalculatedDataDefinition["format"]) || "text",
-    icon: Icon
+    icon: Icon,
+    formula: config.formula as string | undefined,
   };
 }
 

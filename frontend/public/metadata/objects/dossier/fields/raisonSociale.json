@@ -1,0 +1,1 @@
+{ "key": "raisonSociale", "label": "Raison sociale", "type": "string", "required": true, "editable": true, "searchable": true }

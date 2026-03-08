@@ -10,6 +10,7 @@ import {
   users,
 } from "./schema.js";
 import { seedNotificationSettings } from "./seed-notification-settings.js";
+import { syncRulesFromConfig } from "../seeds/syncRulesFromConfig.js";
 import { eq } from "drizzle-orm";
 
 export async function seedMultiTenant() {
@@ -50,5 +51,6 @@ export async function seedMultiTenant() {
   }
 
   await seedNotificationSettings();
+  await syncRulesFromConfig();
   console.log("[seed-multi-tenant] Done.");
 }

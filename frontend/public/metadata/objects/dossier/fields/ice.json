@@ -1,0 +1,12 @@
+{
+  "key": "ice",
+  "label": "ICE",
+  "type": "string",
+  "required": false,
+  "editable": true,
+  "searchable": true,
+  "validation": {
+    "pattern": "^\\d{15}$",
+    "message": "L'ICE doit contenir exactement 15 chiffres"
+  }
+}

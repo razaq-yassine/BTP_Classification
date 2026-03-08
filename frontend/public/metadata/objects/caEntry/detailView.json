@@ -1,0 +1,20 @@
+{
+  "layout": "two-column",
+  "sections": [
+    {
+      "title": "Chiffre d'affaires",
+      "columns": 2,
+      "defaultOpen": true,
+      "fields": [
+        "secteur",
+        "annee",
+        "caTTC",
+        "caHT",
+        "montantSoustraite",
+        "isGrosOeuvresSingleLot",
+        "caNet",
+        "dossier"
+      ]
+    }
+  ]
+}

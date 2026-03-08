@@ -1,9 +1,12 @@
 {
+  "dossiers": "Dossiers",
+  "classificationRules": "Règles de classification",
+  "simulation": "Simulation",
+  "administration": "Administration",
   "dashboard": "Tableau de bord",
   "settings": "Paramètres",
   "personal": "Personnel",
   "workspace": "Espace de travail",
-  "administration": "Administration",
   "profile": "Profil",
   "account": "Compte",
   "appearance": "Apparence",

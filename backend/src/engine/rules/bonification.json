@@ -1,0 +1,13 @@
+{
+  "applicableSectors": ["A", "B", "C", "D", "E", "F", "Y", "I"],
+  "excludedSectors": ["G", "H"],
+  "note": "Bonification applies to both minEncadrementScore AND min staff counts (engineers + technicians)",
+  "coefficients": [
+    { "sectors": 1, "coefficientHighClasses": 1.00, "coefficientLowClasses": 1.00 },
+    { "sectors": 2, "coefficientHighClasses": 0.90, "coefficientLowClasses": 0.95 },
+    { "sectors": 3, "coefficientHighClasses": 0.80, "coefficientLowClasses": 0.90 },
+    { "sectors": 4, "coefficientHighClasses": 0.70, "coefficientLowClasses": 0.85 }
+  ],
+  "highClasses": ["S", "1", "2"],
+  "lowClasses": ["3", "4", "5"]
+}

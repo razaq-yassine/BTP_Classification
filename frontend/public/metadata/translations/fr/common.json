@@ -77,6 +77,9 @@
   "all": "Tout",
   "recordNotFound": "{{label}} introuvable.",
   "recordDeleted": "{{label}} supprimé avec succès.",
+  "dossierReopenTitle": "Modifier le dossier",
+  "dossierReopenDesc": "Cette action annulera la soumission du dossier. Il devra être complété et soumis à nouveau. Confirmer ?",
+  "dossierReopened": "Dossier rouvert pour modification",
   "revertFieldTitle": "Annuler les modifications de ce champ",
   "unsavedChanges": "Vous avez des modifications non enregistrées",
   "unsavedChangesDesc": "Enregistrez vos modifications ou annulez pour les abandonner",
@@ -281,5 +284,20 @@
   "searchFiles": "Rechercher des fichiers...",
   "fileExplorerRequiresOrg": "L'explorateur de fichiers nécessite une organisation ou un locataire.",
   "selectOrgOrTenant": "Sélectionnez une organisation (et éventuellement un locataire) pour afficher les fichiers.",
-  "totalPlatformStorage": "Stockage total de la plateforme"
+  "totalPlatformStorage": "Stockage total de la plateforme",
+  "wizard": {
+    "next": "Suivant",
+    "previous": "Précédent",
+    "submit": "Lancer la simulation",
+    "resume": "Reprendre la simulation",
+    "finishEdit": "Terminer la modification",
+    "step": "Étape",
+    "of": "sur",
+    "saving": "Enregistrement...",
+    "caPreview": "CA moyen estimé"
+  },
+  "banner": {
+    "incomplete": "Ce dossier est incomplet (étape {{step}}/{{total}}). Reprendre la simulation →",
+    "editing": "Modification en cours. Les résultats précédents restent visibles. Terminer la modification →"
+  }
 }

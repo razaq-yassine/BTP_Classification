@@ -1,0 +1,1 @@
+{ "key": "name", "label": "Référence", "type": "autoNumber", "required": true, "editable": false, "autoNumberPattern": "RES-{0000}", "autoNumberStart": 1 }

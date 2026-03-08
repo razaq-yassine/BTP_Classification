@@ -72,3 +72,20 @@ export async function insertRecordHistory(
     }))
   );
 }
+
+/**
+ * Insert a single custom record history entry (e.g. "Dossier rouvert pour modification").
+ */
+export async function insertRecordHistoryEntry(entry: RecordHistoryInsert): Promise<void> {
+  await db.insert(recordHistory).values({
+    objectName: entry.objectName,
+    recordId: entry.recordId,
+    fieldKey: entry.fieldKey,
+    oldValue: entry.oldValue,
+    newValue: entry.newValue,
+    changedById: entry.changedById,
+    changedAt: new Date(),
+    organizationId: entry.organizationId,
+    tenantId: entry.tenantId
+  });
+}

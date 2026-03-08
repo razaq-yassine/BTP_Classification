@@ -1,0 +1,28 @@
+{
+  "sector": "F",
+  "label": "Barrages et travaux hydrauliques",
+  "masseSalarialeRatioPercent": 9,
+  "tableau1": {
+    "classes": [
+      { "classe": "S", "minCaMDH": 130, "minEngineers": 3, "minTechnicians": 3, "minEncadrementScore": 110 },
+      { "classe": "1", "minCaMDH": 70, "minEngineers": 2, "minTechnicians": 2, "minEncadrementScore": 85 },
+      { "classe": "2", "minCaMDH": 20, "minEngineers": 2, "minTechnicians": 2, "minEncadrementScore": 70 },
+      { "classe": "3", "minCaMDH": 5, "minEngineers": 1, "minTechnicians": 1, "minEncadrementScore": 40 },
+      { "classe": "4", "minCaMDH": null, "minEngineers": 0, "minTechnicians": 0, "minEncadrementScore": 20 }
+    ],
+    "classeSBonus": {
+      "description": "18 additional points per 40 MDH above Classe S threshold, including 1 Engineer/Doctor/Master",
+      "pointsPerSlice": 18,
+      "sliceMDH": 40
+    }
+  },
+  "tableau2": {
+    "classes": [
+      { "classe": "S", "minCaMDH": 75, "minCapitalSocialMDH": 25, "minEngineers": 3, "minTechnicians": 3, "minEncadrementScore": 110 },
+      { "classe": "1", "minCaMDH": 35, "minCapitalSocialMDH": 15, "minEngineers": 2, "minTechnicians": 2, "minEncadrementScore": 85 },
+      { "classe": "2", "minCaMDH": 5, "minCapitalSocialMDH": 10, "minEngineers": 2, "minTechnicians": 2, "minEncadrementScore": 70 },
+      { "classe": "3", "minCaMDH": null, "minCapitalSocialMDH": 7, "minEngineers": 1, "minTechnicians": 1, "minEncadrementScore": 40 },
+      { "classe": "4", "minCaMDH": null, "minCapitalSocialMDH": 5, "minEngineers": 0, "minTechnicians": 0, "minEncadrementScore": 20 }
+    ]
+  }
+}

@@ -29,7 +29,7 @@ When adding or changing metadata-driven features:
 
 7. **Computed fields** → Validate `computedExpression` is one of concat|join|lookup, `sourceFields` exist, `referenceField` valid for join
 
-8. **New object.json property** → Add check in `validateObjectFile()`
+8. **New object.json property** → Add check in `validateObjectFile()`. For `detailPath`: use `$objectNameId` (not `:objectNameId`) and leading `/`. For `apiEndpoint`: must match backend entity path (`/api/${tableName}`), use camelCase not kebab-case.
 
 9. **Documentation** → Update `docs/USAGE.md` when adding new field types, metadata files, or configuration options. See `.cursor/rules/metadata-usage-docs.mdc`.
 

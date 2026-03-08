@@ -1,0 +1,1 @@
+{ "key": "masseSalariale", "label": "Masse salariale (DH)", "type": "number", "required": false, "editable": true }

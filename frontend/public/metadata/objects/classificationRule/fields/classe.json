@@ -1,0 +1,1 @@
+{"key":"classe","label":"Classe","type":"select","required":true,"editable":true,"options":[{"value":"1","label":"Classe 1"},{"value":"2","label":"Classe 2"},{"value":"3","label":"Classe 3"},{"value":"4","label":"Classe 4"},{"value":"5","label":"Classe 5"}]}

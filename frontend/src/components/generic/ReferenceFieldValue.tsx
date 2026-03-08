@@ -19,18 +19,31 @@ interface ReferenceFieldValueProps {
  */
 export function ReferenceFieldValue({ field, value }: ReferenceFieldValueProps) {
   const objectName = field.objectName
-  const basePath = (field as { basePath?: string }).basePath
+  const fieldBasePath = (field as { basePath?: string }).basePath
 
   const refId = typeof value === 'object' ? (value as { id?: string | number })?.id : value
   const displayName = getReferenceDisplayName(value)
 
-  const toPath = basePath ? `${basePath}/${refId}` : `/${objectName}/${refId}`
-
   const { definition } = useObjectDefinition(objectName || 'none')
+
+  const toPath = ((): string => {
+    if (fieldBasePath) {
+      return fieldBasePath.startsWith('/') ? `${fieldBasePath}/${refId}` : `/${fieldBasePath}/${refId}`
+    }
+    if (definition?.detailPath) {
+      const idPlaceholder = `$${definition.name}Id`
+      return definition.detailPath.replace(idPlaceholder, String(refId))
+    }
+    if (definition?.basePath) {
+      const bp = definition.basePath
+      return bp.startsWith('/') ? `${bp}/${refId}` : `/${bp}/${refId}`
+    }
+    return `/${objectName}/${refId}`
+  })()
   const ObjectIcon = definition?.icon
   const iconClasses = getObjectIconClasses(definition?.color)
 
-  if (!(objectName || basePath) || refId == null) {
+  if (!objectName || refId == null) {
     return <span>{displayName}</span>
   }
 

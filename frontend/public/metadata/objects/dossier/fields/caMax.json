@@ -1,0 +1,7 @@
+{
+  "key": "caMax",
+  "label": "CA max retenu TTC (DH)",
+  "type": "number",
+  "required": false,
+  "editable": false
+}

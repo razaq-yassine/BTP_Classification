@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link } from '@tanstack/react-router'
 import i18n from 'i18next'
+import { ReferenceFieldValue } from '@/components/generic/ReferenceFieldValue'
 import { translateSelectOptionLabel } from './translateMetadata'
 import { toLocaleDateString, toLocaleDateTimeString } from '@/utils/formatDateLocale'
 import { RichTextView } from '@/components/rich-text-view'
@@ -51,23 +52,7 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
     return i18n.t('common:empty')
   }
   if (field.type === 'reference' || field.type === 'masterDetail') {
-    const refId = typeof val === 'object' ? (val as { id?: string | number })?.id : val
-    const displayName = getReferenceDisplayName(val)
-    const objectName = field.objectName
-    const basePath = (field as { basePath?: string }).basePath
-    const toPath = basePath ? `${basePath}/${refId}` : `/${objectName}/${refId}`
-    if ((objectName || basePath) && refId != null) {
-      return (
-        <Link
-          to={toPath}
-          className={linkClass}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {displayName}
-        </Link>
-      )
-    }
-    return displayName
+    return <ReferenceFieldValue field={field} value={val} />
   }
   switch (field.type) {
     case 'boolean':
@@ -246,6 +231,24 @@ export function formatDetailValue(field: FieldDefinition, val: any, record?: Gen
         </a>
       )
     }
+    case 'secteur-classe-list': {
+      let arr: Array<{ secteur?: string; classeDemandee?: string }> = []
+      try {
+        const parsed = typeof val === 'string' ? JSON.parse(val) : val
+        arr = Array.isArray(parsed) ? parsed : []
+      } catch {
+        return val ? String(val) : i18n.t('common:empty')
+      }
+      if (arr.length === 0) return i18n.t('common:empty')
+      const text = arr
+        .map((s) => `Secteur ${s.secteur} — Classe ${s.classeDemandee}`)
+        .join('\n')
+      return (
+        <div className="whitespace-pre-wrap break-words">{text}</div>
+      )
+    }
+    case 'json':
+      return typeof val === 'object' ? JSON.stringify(val) : String(val ?? '')
     case 'select':
       if (field.options?.length) {
         const opt = field.options.find((o) => o.value === val)

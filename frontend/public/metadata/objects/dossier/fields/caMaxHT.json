@@ -1,0 +1,7 @@
+{
+  "key": "caMaxHT",
+  "label": "CA max retenu HT (DH)",
+  "type": "number",
+  "required": false,
+  "editable": true
+}

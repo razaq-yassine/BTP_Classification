@@ -1,0 +1,7 @@
+{
+  "key": "caHT",
+  "label": "CA HT (DH)",
+  "type": "number",
+  "required": true,
+  "editable": true
+}

@@ -1,0 +1,19 @@
+{
+  "key": "sectorsSelected",
+  "label": "Secteurs ciblés",
+  "type": "multiselect",
+  "required": false,
+  "editable": true,
+  "options": [
+    { "value": "A", "label": "A — Construction" },
+    { "value": "B", "label": "B — Travaux routiers et voirie urbaine" },
+    { "value": "C", "label": "C — Assainissement, conduites, canaux" },
+    { "value": "D", "label": "D — Construction d'ouvrages d'art" },
+    { "value": "E", "label": "E — Travaux maritimes et fluviaux" },
+    { "value": "F", "label": "F — Barrages et ouvrages hydrauliques" },
+    { "value": "G", "label": "G — Injection, drainage et parois moulées" },
+    { "value": "H", "label": "H — Sondages et forages hydrogéologiques" },
+    { "value": "I", "label": "I — Équipements hydromécaniques" },
+    { "value": "Y", "label": "Y — Aménagement des cours d'eau et protection contre les inondations" }
+  ]
+}

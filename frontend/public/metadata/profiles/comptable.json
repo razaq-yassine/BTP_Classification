@@ -1,0 +1,41 @@
+{
+  "name": "comptable",
+  "label": "Comptable",
+  "sidebar": "comptable",
+  "objectPermissions": {
+    "dossier": {
+      "create": true,
+      "read": true,
+      "update": true,
+      "delete": true
+    },
+    "membreEncadrement": {
+      "create": true,
+      "read": true,
+      "update": true,
+      "delete": true
+    },
+    "materielItem": {
+      "create": true,
+      "read": true,
+      "update": true,
+      "delete": true
+    },
+    "resultatSimulation": {
+      "create": true,
+      "read": true,
+      "update": true,
+      "delete": true
+    },
+    "classificationRule": {
+      "create": false,
+      "read": true,
+      "update": false,
+      "delete": false
+    }
+  },
+  "globalActionPermissions": {
+    "quick-create-dossier": true,
+    "export-data": true
+  }
+}

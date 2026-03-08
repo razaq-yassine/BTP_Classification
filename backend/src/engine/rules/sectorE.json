@@ -1,0 +1,28 @@
+{
+  "sector": "E",
+  "label": "Travaux maritimes et fluviaux",
+  "masseSalarialeRatioPercent": 9,
+  "tableau1": {
+    "classes": [
+      { "classe": "1", "minCaMDH": 70, "minEngineers": 3, "minTechnicians": 3, "minEncadrementScore": 100 },
+      { "classe": "2", "minCaMDH": 35, "minEngineers": 2, "minTechnicians": 2, "minEncadrementScore": 75 },
+      { "classe": "3", "minCaMDH": 15, "minEngineers": 1, "minTechnicians": 1, "minEncadrementScore": 50 },
+      { "classe": "4", "minCaMDH": 4, "minEngineers": 0, "minTechnicians": 1, "minEncadrementScore": 40 },
+      { "classe": "5", "minCaMDH": null, "minEngineers": 0, "minTechnicians": 0, "minEncadrementScore": 25 }
+    ],
+    "classeBonus": {
+      "appliesToClasse": "1",
+      "pointsPerSlice": 20,
+      "sliceMDH": 40,
+      "requiresEngineerPerSlice": true
+    }
+  },
+  "tableau2": {
+    "classes": [
+      { "classe": "1", "minCaMDH": 45, "minCapitalSocialMDH": 15, "minEngineers": 3, "minTechnicians": 3, "minEncadrementScore": 100 },
+      { "classe": "2", "minCaMDH": 20, "minCapitalSocialMDH": 10, "minEngineers": 2, "minTechnicians": 2, "minEncadrementScore": 75 },
+      { "classe": "3", "minCaMDH": null, "minCapitalSocialMDH": 4, "minEngineers": 1, "minTechnicians": 1, "minEncadrementScore": 50 },
+      { "classe": "4", "minCaMDH": null, "minCapitalSocialMDH": 1, "minEngineers": 0, "minTechnicians": 1, "minEncadrementScore": 40 }
+    ]
+  }
+}

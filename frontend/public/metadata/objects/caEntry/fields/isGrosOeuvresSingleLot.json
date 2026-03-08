@@ -1,0 +1,8 @@
+{
+  "key": "isGrosOeuvresSingleLot",
+  "label": "Gros œuvres lot unique sans BDPU (Secteur A uniquement)",
+  "type": "boolean",
+  "required": false,
+  "editable": true,
+  "defaultValue": false
+}

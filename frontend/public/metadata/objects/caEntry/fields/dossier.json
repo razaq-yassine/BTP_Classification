@@ -1,0 +1,7 @@
+{
+  "key": "dossier",
+  "label": "Dossier",
+  "type": "masterDetail",
+  "objectName": "dossier",
+  "required": true
+}

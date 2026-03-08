@@ -1,0 +1,12 @@
+{
+  "name": "membreEncadrement",
+  "label": "Membre d'encadrement",
+  "labelPlural": "Membres d'encadrement",
+  "apiEndpoint": "/api/membreEncadrements",
+  "basePath": "membres-encadrement",
+  "detailPath": "/membres-encadrement/$membreEncadrementId",
+  "icon": "IconUser",
+  "color": "purple",
+  "tenantScope": "tenant",
+  "sidebar": { "showInSidebar": true }
+}

@@ -1,0 +1,105 @@
+{
+  "sectors": {
+    "A": [
+      "Bétonnière",
+      "Vibrateur à béton",
+      "Échafaudage (jeux complets)",
+      "Groupe électrogène",
+      "Nivelle / Théodolite",
+      "Camion benne",
+      "Grue ou engin de levage",
+      "Compacteur / Dame vibrante",
+      "Coffrage métallique",
+      "Pompe à eau"
+    ],
+    "B": [
+      "Nivelle / Théodolite",
+      "Compacteur monocylindre",
+      "Compacteur tandem",
+      "Finisseur d'enrobés",
+      "Camion benne",
+      "Chargeuse",
+      "Répandeur de granulats",
+      "Groupe électrogène",
+      "Camion citerne à eau"
+    ],
+    "C": [
+      "Pelle hydraulique",
+      "Camion benne",
+      "Compacteur",
+      "Pompe à eau",
+      "Groupe électrogène",
+      "Nivelle / Théodolite",
+      "Tuyaux et accessoires de pose",
+      "Vibrateur à béton",
+      "Bétonnière"
+    ],
+    "D": [
+      "Centrale à béton ou bétonnière",
+      "Vibrateur à béton",
+      "Coffrages spéciaux",
+      "Grue ou engin de levage",
+      "Nivelle / Théodolite",
+      "Camion benne",
+      "Pompe à béton",
+      "Groupe électrogène"
+    ],
+    "E": [
+      "Engins nautiques (bateau ou ponton)",
+      "Groupe électrogène",
+      "Plongeurs équipés",
+      "Grue flottante ou engin de levage",
+      "Pompe immergée",
+      "Nivelle / Théodolite",
+      "Camion benne",
+      "Compacteur"
+    ],
+    "F": [
+      "Centrale à béton",
+      "Vibrateur à béton",
+      "Pompe à béton",
+      "Grue ou engin de levage",
+      "Pelle hydraulique",
+      "Compacteur",
+      "Camion benne",
+      "Groupe électrogène",
+      "Nivelle / Théodolite",
+      "Coffrage glissant ou grimpant"
+    ],
+    "G": [
+      "Foreuse ou tarière",
+      "Centrale de malaxage",
+      "Pompe à injection",
+      "Groupe électrogène",
+      "Camion-citerne",
+      "Nivelle / Théodolite",
+      "Matériel de mesure inclinométrique"
+    ],
+    "H": [
+      "Foreuse de sondage",
+      "Compresseur",
+      "Groupe électrogène",
+      "Matériel de prélèvement",
+      "Matériel de mesure hydrogéologique",
+      "Camion de chantier"
+    ],
+    "I": [
+      "Matériel de soudure",
+      "Groupe électrogène",
+      "Engins de levage",
+      "Matériel de métrologie",
+      "Outillage électromécanique spécialisé",
+      "Camion benne"
+    ],
+    "Y": [
+      "Pelle hydraulique",
+      "Compacteur",
+      "Camion benne",
+      "Pompe à eau",
+      "Groupe électrogène",
+      "Nivelle / Théodolite",
+      "Bétonnière",
+      "Enrochements / gabions (matériaux)"
+    ]
+  }
+}

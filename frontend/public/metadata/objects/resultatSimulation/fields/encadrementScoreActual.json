@@ -1,0 +1,7 @@
+{
+  "key": "encadrementScoreActual",
+  "label": "Score encadrement",
+  "type": "number",
+  "required": false,
+  "editable": false
+}

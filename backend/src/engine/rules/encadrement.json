@@ -1,0 +1,21 @@
+{
+  "roles": [
+    { "role": "gerant",     "label": "Gérant / Directeur Général",                    "scoreLt5": 20, "scoreGte5": 25, "baseScoreAppliesToAllSectors": true, "diplomaScoreMaxSectors": 1 },
+    { "role": "ingenieur",  "label": "Ingénieur / Docteur",                            "score": 13, "baseScoreAppliesToAllSectors": false },
+    { "role": "master",     "label": "Master scientifique (Bac+5)",                    "score": 10, "baseScoreAppliesToAllSectors": false },
+    { "role": "licence",    "label": "Licence en sciences ou Maîtrise",                "score": 8,  "baseScoreAppliesToAllSectors": false },
+    { "role": "technicien", "label": "Technicien spécialisé",                          "score": 6,  "baseScoreAppliesToAllSectors": false },
+    { "role": "cadre",      "label": "Cadre administratif",                            "score": 5,  "baseScoreAppliesToAllSectors": false },
+    { "role": "techbac2",   "label": "Technicien (Bac+2 sciences)",                    "score": 4,  "baseScoreAppliesToAllSectors": false },
+    { "role": "deug",       "label": "Deug en sciences (Bac+2)",                       "score": 3,  "baseScoreAppliesToAllSectors": false },
+    { "role": "autrebac2",  "label": "Autre diplôme niveau Bac+2",                     "score": 2,  "baseScoreAppliesToAllSectors": false },
+    { "role": "ofppt",      "label": "Diplôme qualification professionnelle (OFPPT)",  "score": 1,  "baseScoreAppliesToAllSectors": false }
+  ],
+  "rules": {
+    "gerantBaseScoreAppliesToAllSectors": true,
+    "gerantDiplomaScoreMaxSectors": 1,
+    "experienceDifferentiationAppliesToGerantOnly": true,
+    "staffMemberCountedForOneSectorOnly": true,
+    "staffDeclaredByTwoCompaniesSamePeriod": "points counted for one company only"
+  }
+}

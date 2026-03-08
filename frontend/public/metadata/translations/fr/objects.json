@@ -1,4 +1,106 @@
 {
+  "dossier": {
+    "label": "Dossier",
+    "labelPlural": "Dossiers",
+    "fields": {
+      "name": "N° Dossier",
+      "raisonSociale": "Raison sociale",
+      "formeJuridique": "Forme juridique",
+      "dateCreation": "Date de création",
+      "ice": "ICE",
+      "status": "Statut",
+      "currentStep": "Étape actuelle",
+      "classificationMethod": "Méthode de classification",
+      "sectorsSelected": "Secteurs ciblés",
+      "caYears": "Période CA",
+      "caMax": "CA max retenu TTC (DH)",
+      "caMaxHT": "CA max retenu HT (DH)",
+      "capitalSocial": "Capital social",
+      "masseSalariale": "Masse salariale",
+      "totalEncadrementScore": "Score encadrement total",
+      "notes": "Notes"
+    }
+  },
+  "membreEncadrement": {
+    "label": "Membre d'encadrement",
+    "labelPlural": "Membres d'encadrement",
+    "sections": { "informations": "Informations" },
+    "fields": {
+      "name": "Nom complet",
+      "role": "Rôle",
+      "diplome": "Diplôme",
+      "anneesExperience": "Années d'expérience",
+      "secteurImputation": "Secteur d'imputation",
+      "scoreCalcule": "Score calculé",
+      "dossier": "Dossier"
+    }
+  },
+  "caEntry": {
+    "label": "Entrée CA",
+    "labelPlural": "Entrées CA",
+    "fields": {
+      "name": "Référence",
+      "dossier": "Dossier",
+      "secteur": "Secteur",
+      "annee": "Année",
+      "caTTC": "CA TTC (DH)",
+      "caHT": "CA HT (DH)",
+      "montantSoustraite": "Montant sous-traité TTC (DH)",
+      "isGrosOeuvresSingleLot": "Gros œuvres lot unique sans BDPU (Secteur A uniquement)",
+      "caNet": "CA net retenu TTC (DH)"
+    }
+  },
+  "materielItem": {
+    "label": "Matériel",
+    "labelPlural": "Matériels",
+    "sections": { "materiel": "Matériel" },
+    "fields": {
+      "name": "Désignation",
+      "secteur": "Secteur",
+      "quantite": "Quantité",
+      "valeur": "Valeur (DH)",
+      "proprietaire": "Propriétaire",
+      "dossier": "Dossier"
+    }
+  },
+  "resultatSimulation": {
+    "label": "Résultat de simulation",
+    "labelPlural": "Résultats de simulation",
+    "sections": { "resultat": "Résultat" },
+    "fields": {
+      "name": "Référence",
+      "dossier": "Dossier",
+      "secteur": "Secteur",
+      "classeObtenue": "Classe obtenue",
+      "scoreCa": "CA",
+      "scoreCapital": "Capital social",
+      "scoreEncadrement": "Encadrement",
+      "scoreMasseSalariale": "Masse salariale",
+      "scoreMateriel": "Matériel",
+      "details": "Détail du calcul",
+      "computedAt": "Calculé le"
+    }
+  },
+  "classificationRule": {
+    "label": "Règle de classification",
+    "labelPlural": "Règles de classification",
+    "sections": {
+      "paramètresDeClassification": "Paramètres de classification"
+    },
+    "fields": {
+      "name": "Référence",
+      "sector": "Secteur",
+      "classe": "Classe",
+      "method": "Méthode",
+      "minCa": "CA minimum (MDH)",
+      "minCapitalSocial": "Capital social minimum (MDH)",
+      "minEngineers": "Ingénieurs minimum",
+      "minTechnicians": "Techniciens minimum",
+      "minEncadrementScore": "Score encadrement minimum",
+      "masseSalarialeRatio": "Ratio masse salariale (%)",
+      "isActive": "Actif"
+    }
+  },
   "organization": {
     "label": "Organisation",
     "labelPlural": "Organisations",

@@ -389,7 +389,11 @@ export function GenericListView({ objectDefinition, basePath, initialViewKey }: 
   )
 
   const handleAddRecord = () => {
-    setShowCreateDialog(true)
+    if (objectDefinition.name === 'dossier') {
+      navigate({ to: '/dossiers/new' })
+    } else {
+      setShowCreateDialog(true)
+    }
   }
 
   const handleRecordCreated = (newRecord: GenericRecord) => {

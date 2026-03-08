@@ -1,0 +1,9 @@
+{
+  "key": "name",
+  "label": "Référence",
+  "type": "autoNumber",
+  "required": true,
+  "editable": false,
+  "autoNumberPattern": "CA-{0000}",
+  "autoNumberStart": 1
+}

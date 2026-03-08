@@ -3,6 +3,26 @@
   "label": "Administrator",
   "description": "Full access to all objects and fields",
   "sidebar": "admin",
+  "navItems": [
+    {
+      "label": "Dossiers",
+      "icon": "IconFolder",
+      "path": "/dossiers",
+      "objectName": "dossier"
+    },
+    {
+      "label": "Membres Encadrement",
+      "icon": "IconUsers",
+      "path": "/membre-encadrements",
+      "objectName": "membreEncadrement"
+    },
+    {
+      "label": "Classification Rules",
+      "icon": "IconShield",
+      "path": "/classification-rules",
+      "objectName": "classificationRule"
+    }
+  ],
   "objectPermissions": {
     "organization": {
       "create": true,
@@ -10,11 +30,36 @@
       "update": true,
       "delete": true
     },
-    "tenant": {
+    "dossier": {
       "create": true,
       "read": true,
       "update": true,
       "delete": true
+    },
+    "membreEncadrement": {
+      "create": true,
+      "read": true,
+      "update": true,
+      "delete": true
+    },
+    "materielItem": {
+      "create": true,
+      "read": true,
+      "update": true,
+      "delete": true
+    },
+    "resultatSimulation": {
+      "create": true,
+      "read": true,
+      "update": true,
+      "delete": true
+    },
+    "classificationRule": {
+      "create": false,
+      "update": false,
+      "delete": false,
+      "read": true,
+      "list": true
     }
   }
 }

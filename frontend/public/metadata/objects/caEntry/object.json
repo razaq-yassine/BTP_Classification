@@ -1,0 +1,12 @@
+{
+  "name": "caEntry",
+  "label": "Entrée CA",
+  "labelPlural": "Entrées CA",
+  "apiEndpoint": "/api/caEntries",
+  "basePath": "/ca-entries",
+  "detailPath": "/ca-entries/$caEntryId",
+  "icon": "IconTrendingUp",
+  "color": "blue",
+  "tenantScope": "tenant",
+  "sidebar": { "showInSidebar": false }
+}

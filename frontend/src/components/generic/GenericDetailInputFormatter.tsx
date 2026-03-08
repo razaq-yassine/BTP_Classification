@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
-import { CalendarIcon, X } from 'lucide-react'
+import { CalendarIcon, Check, X } from 'lucide-react'
 import { formatDateLocale } from '@/utils/formatDateLocale'
 import { cn } from '@/lib/utils'
 import { countries, defaultCountry, Country } from '@/data/countries'
@@ -158,6 +158,8 @@ export function GenericDetailInputFormatter({
   })
   const [emailError, setEmailError] = useState('')
   const [phoneError, setPhoneError] = useState('')
+  const [patternError, setPatternError] = useState('')
+  const [patternTouched, setPatternTouched] = useState(false)
 
   const isAutoNumber = type === 'autoNumber'
   const isNameField = fieldDefinition.key === 'name'
@@ -235,17 +237,66 @@ export function GenericDetailInputFormatter({
           />
         )
 
-      case 'string':
+      case 'string': {
+        const validation = fieldDefinition.validation
+        const pattern = validation?.pattern
+        const patternMsg = validation?.message
+        const hasPatternValidation = pattern && patternMsg
+        const validatePattern = (val: string) => {
+          if (!hasPatternValidation) return
+          if (!val.trim()) {
+            setPatternError('')
+            return
+          }
+          try {
+            const re = new RegExp(pattern)
+            setPatternError(re.test(val.trim()) ? '' : patternMsg)
+          } catch {
+            setPatternError('')
+          }
+        }
+        const isValid = !hasPatternValidation || !(value || '').toString().trim() || (() => {
+          try {
+            return new RegExp(pattern!).test((value || '').toString().trim())
+          } catch {
+            return true
+          }
+        })()
+
         return (
-          <Input
-            type="text"
-            value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={disabled}
-            placeholder={t('enterField', { label: displayLabel })}
-            className={className}
-          />
+          <div className="space-y-1">
+            <div className="relative">
+              <Input
+                type="text"
+                value={value || ''}
+                onChange={(e) => {
+                  onChange(e.target.value)
+                  if (hasPatternValidation) setPatternError('')
+                }}
+                onBlur={(e) => {
+                  if (hasPatternValidation) {
+                    setPatternTouched(true)
+                    validatePattern(e.target.value)
+                  }
+                }}
+                disabled={disabled}
+                placeholder={t('enterField', { label: displayLabel })}
+                className={cn(
+                  className,
+                  patternTouched && patternError && 'border-destructive',
+                  hasPatternValidation && (value || '').toString().trim() && isValid && 'border-green-600 dark:border-green-500'
+                )}
+              />
+              {hasPatternValidation && (value || '').toString().trim() && isValid && (
+                <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-600 dark:text-green-500 pointer-events-none" />
+              )}
+            </div>
+            {patternTouched && patternError && (
+              <p className="text-sm text-destructive">{patternError}</p>
+            )}
+          </div>
         )
+      }
       case 'text':
         return (
           <Textarea
@@ -716,6 +767,30 @@ export function GenericDetailInputFormatter({
             className={className}
             accept={fieldDefinition.accept}
           />
+        )
+
+      case 'secteur-classe-list': {
+        if (value == null) return <span className="text-muted-foreground">—</span>
+        let arr: Array<{ secteur?: string; classeDemandee?: string }> = []
+        try {
+          const parsed = typeof value === 'string' ? JSON.parse(value) : value
+          arr = Array.isArray(parsed) ? parsed : []
+        } catch {
+          return <span className="text-muted-foreground">—</span>
+        }
+        if (arr.length === 0) return <span className="text-muted-foreground">—</span>
+        const text = arr
+          .map((s) => `Secteur ${s.secteur} — Classe ${s.classeDemandee}`)
+          .join('\n')
+        return <div className="text-sm whitespace-pre-wrap">{text}</div>
+      }
+
+      case 'json':
+        if (value == null) return <span className="text-muted-foreground">—</span>
+        return (
+          <pre className="text-xs overflow-auto max-h-32 p-2 rounded bg-muted">
+            {typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
+          </pre>
         )
 
       default:

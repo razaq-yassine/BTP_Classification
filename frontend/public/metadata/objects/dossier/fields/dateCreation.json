@@ -1,0 +1,1 @@
+{ "key": "dateCreation", "label": "Date de création", "type": "date", "required": false, "editable": true }

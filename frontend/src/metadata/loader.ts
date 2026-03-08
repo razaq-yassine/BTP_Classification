@@ -108,13 +108,39 @@ export async function loadObjectDefinition(objectName: string): Promise<ObjectDe
     resolvedStatistics = resolveStatistics(statisticsData)
   }
 
-  const detailSections = (detailViewData.sections as Array<{ title: string; titleKey?: string; columns?: number; defaultOpen?: boolean; fields: string[] }>) || []
-  const resolvedDetailSections = detailSections.map((section) => ({
+  // Flatten sections: tabs layout has top-level sections with nested "sections" (each with fields)
+  type SectionInput = { title?: string; titleKey?: string; tab?: string; columns?: number; defaultOpen?: boolean; fields?: string[]; sections?: SectionInput[] }
+  const detailSectionsRaw = (detailViewData.sections as SectionInput[]) || []
+  const flatSections: Array<{ title: string; titleKey?: string; columns?: number; defaultOpen?: boolean; fields: string[] }> = []
+  for (const section of detailSectionsRaw) {
+    if (section.sections && Array.isArray(section.sections)) {
+      // Tabs layout: nested sections have the actual fields
+      for (const sub of section.sections) {
+        const fields = (sub.fields as string[] | undefined) ?? []
+        flatSections.push({
+          title: (sub.title as string) ?? section.title ?? 'Section',
+          titleKey: sub.titleKey as string | undefined,
+          columns: sub.columns ?? section.columns ?? 1,
+          defaultOpen: sub.defaultOpen ?? section.defaultOpen ?? true,
+          fields,
+        })
+      }
+    } else {
+      flatSections.push({
+        title: (section.title as string) ?? 'Section',
+        titleKey: section.titleKey as string | undefined,
+        columns: section.columns ?? 1,
+        defaultOpen: section.defaultOpen ?? true,
+        fields: (section.fields as string[] | undefined) ?? [],
+      })
+    }
+  }
+  const resolvedDetailSections = flatSections.map((section) => ({
     title: section.title,
     titleKey: section.titleKey,
     columns: section.columns ?? 1,
     defaultOpen: section.defaultOpen ?? true,
-    fields: (section.fields as string[]).map((key) => {
+    fields: section.fields.map((key) => {
       const field = fieldsMap.get(key)
       if (field) return field
       const label = getSystemFieldLabel(key)

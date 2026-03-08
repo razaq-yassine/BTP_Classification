@@ -11,9 +11,9 @@ import mysql from "mysql2/promise";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const backendRoot = path.join(__dirname, "..");
 
-const url = process.env.DATABASE_URL || "mysql://root:root@localhost:3306/generic_saas";
+const url = process.env.DATABASE_URL || "mysql://root:root@localhost:3306/btp_classification_platform";
 const match = url.match(/\/([^/?]+)(?:\?|$)/);
-const dbName = match ? match[1] : "generic_saas";
+const dbName = match ? match[1] : "btp_classification_platform";
 
 console.log("[db:fresh] Dropping and recreating database:", dbName);
 const conn = await mysql.createConnection(url.replace(/\/[^/]+\/?(\?.*)?$/, "/"));

@@ -1,0 +1,1 @@
+{ "layout": "two-column", "sections": [{ "title": "Informations", "columns": 2, "defaultOpen": true, "fields": ["role","diplome","anneesExperience","secteurImputation","scoreCalcule","dossier"] }] }

@@ -1,0 +1,6 @@
+{
+  "fields": ["secteur", "annee", "caTTC", "caHT", "montantSoustraite", "caNet"],
+  "defaultSort": "annee",
+  "defaultSortOrder": "asc",
+  "pageSize": 25
+}

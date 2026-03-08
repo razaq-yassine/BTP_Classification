@@ -69,6 +69,22 @@ const queryClient = new QueryClient({
         }
         if (error.response?.status === 500) {
           toast.error('Internal Server Error!')
+          if (import.meta.env.DEV) {
+            try {
+              const errDetails = {
+                message: error.message,
+                status: error.response?.status,
+                data: error.response?.data,
+                stack: error.stack,
+              }
+              sessionStorage.setItem(
+                '__dev_last_server_error',
+                JSON.stringify(errDetails, null, 2)
+              )
+            } catch {
+              /* ignore serialize errors */
+            }
+          }
           router.navigate({ to: '/500' })
         }
         if (error.response?.status === 403) {

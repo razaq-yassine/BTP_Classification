@@ -1,0 +1,24 @@
+{
+  "sector": "B",
+  "label": "Travaux routiers et voirie urbaine",
+  "masseSalarialeRatioPercent": 9,
+  "tableau1": {
+    "classes": [
+      { "classe": "S", "minCaMDH": 130, "minEngineers": 3, "minTechnicians": 3, "minEncadrementScore": 110 },
+      { "classe": "1", "minCaMDH": 70, "minEngineers": 2, "minTechnicians": 2, "minEncadrementScore": 80 },
+      { "classe": "2", "minCaMDH": 30, "minEngineers": 1, "minTechnicians": 1, "minEncadrementScore": 60 },
+      { "classe": "3", "minCaMDH": 10, "minEngineers": 0, "minTechnicians": 1, "minEncadrementScore": 40 },
+      { "classe": "4", "minCaMDH": 3, "minEngineers": 0, "minTechnicians": 0, "minEncadrementScore": 28 },
+      { "classe": "5", "minCaMDH": null, "minEngineers": 0, "minTechnicians": 0, "minEncadrementScore": 20 }
+    ]
+  },
+  "tableau2": {
+    "classes": [
+      { "classe": "S", "minCaMDH": 90, "minCapitalSocialMDH": 15, "minEngineers": 3, "minTechnicians": 3, "minEncadrementScore": 110 },
+      { "classe": "1", "minCaMDH": 45, "minCapitalSocialMDH": 10, "minEngineers": 2, "minTechnicians": 2, "minEncadrementScore": 80 },
+      { "classe": "2", "minCaMDH": 15, "minCapitalSocialMDH": 5, "minEngineers": 1, "minTechnicians": 1, "minEncadrementScore": 60 },
+      { "classe": "3", "minCaMDH": 5, "minCapitalSocialMDH": 2, "minEngineers": 0, "minTechnicians": 1, "minEncadrementScore": 40 },
+      { "classe": "4", "minCaMDH": null, "minCapitalSocialMDH": 1, "minEngineers": 0, "minTechnicians": 0, "minEncadrementScore": 28 }
+    ]
+  }
+}

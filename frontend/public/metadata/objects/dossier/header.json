@@ -1,0 +1,11 @@
+{
+  "primaryActions": [
+    { "key": "edit", "label": "Modifier", "type": "edit", "icon": "IconPencil", "variant": "outline" }
+  ],
+  "secondaryActions": [
+    { "key": "delete", "label": "Supprimer", "type": "delete", "icon": "IconTrash", "variant": "ghost" }
+  ],
+  "calculatedData": [
+    { "key": "latestClassification", "label": "Résultat classification", "formula": "latestClassification", "icon": "IconChartBar", "format": "text" }
+  ]
+}

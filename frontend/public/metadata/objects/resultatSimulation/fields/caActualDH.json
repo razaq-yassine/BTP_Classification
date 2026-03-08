@@ -1,0 +1,8 @@
+{
+  "key": "caActualDH",
+  "label": "CA (DH)",
+  "type": "number",
+  "required": false,
+  "editable": false,
+  "columnName": "ca_actual_dh"
+}

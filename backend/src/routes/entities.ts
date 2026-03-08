@@ -106,6 +106,16 @@ async function generateNextAutoNumber(
   return `${prefix}${padded}${suffix}`;
 }
 
+/** Convert snake_case to camelCase so frontend can access row[key] consistently. */
+function normalizeRowKeys(row: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(row)) {
+    const camel = k.replace(/_([a-z])/g, (_, c) => (c as string).toUpperCase());
+    out[camel] = v;
+  }
+  return out;
+}
+
 function toRecord(
   row: Record<string, unknown>,
   joinedRow: Record<string, unknown> | null,
@@ -113,28 +123,30 @@ function toRecord(
   requestedFields: string[] | null,
   profile: Awaited<ReturnType<typeof getUserProfile>> = null
 ): Record<string, unknown> {
-  const base = { ...row } as Record<string, unknown>;
+  const base = normalizeRowKeys(row) as Record<string, unknown>;
   const objectName = config.objectName;
   const computedFields = config.computedFields;
-  if (computedFields) {
-    for (const cf of computedFields) {
-      if (cf.expression === "concat") {
-        const parts = (cf.sourceFields || []).map((f) => String(row[f] ?? ""));
-        base[cf.key] = parts.join(cf.separator || " ").trim();
-      }
-      if (cf.expression === "join" && joinedRow) {
-        const parts = (cf.sourceFields || []).map((f) =>
-          String(joinedRow[f] ?? "")
-        );
-        base[cf.key] = parts.join(cf.separator || " ").trim() || null;
-      }
+  const computedFieldsList = (computedFields ?? []) as Array<{ expression?: string; sourceFields?: string[]; key?: string; separator?: string }>;
+  for (const cf of computedFieldsList) {
+    if (!cf.key) continue;
+    if (cf.expression === "concat") {
+      const parts = (cf.sourceFields || []).map((f) => String(base[f] ?? row[f] ?? ""));
+      base[cf.key] = parts.join(cf.separator || " ").trim();
+    }
+    if (cf.expression === "join" && joinedRow) {
+      const joinedNorm = normalizeRowKeys(joinedRow as Record<string, unknown>);
+      const parts = (cf.sourceFields || []).map((f) =>
+        String(joinedNorm[f] ?? joinedRow[f] ?? "")
+      );
+      base[cf.key] = parts.join(cf.separator || " ").trim() || null;
     }
   }
   if ("join" in config && config.join && joinedRow) {
     const refKey = config.referenceFields?.[0]?.key;
     if (refKey) {
+      const joinedNorm = normalizeRowKeys(joinedRow as Record<string, unknown>);
       base[refKey] =
-        joinedRow.id != null ? { id: joinedRow.id, ...joinedRow } : null;
+        joinedRow.id != null ? { id: joinedRow.id, ...joinedNorm } : null;
     }
   }
 
@@ -331,11 +343,12 @@ function buildUpdatePayload(
 }
 
 function getOrderColumn(table: {
+  computedAt?: unknown;
   orderDate?: unknown;
   createdAt?: unknown;
   id?: unknown;
 }) {
-  return table.orderDate ?? table.createdAt ?? table.id;
+  return (table as any).computedAt ?? table.orderDate ?? table.createdAt ?? table.id;
 }
 
 /** Build AND conditions for tenant filter when applicable. */
@@ -542,7 +555,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       }
       // Org users listing tenants: filter to their org only
       if (
-        entityPath === "tenants" &&
+        (entityPath as string) === "tenants" &&
         user?.organizationId != null &&
         user?.tenantId == null
       ) {
@@ -552,7 +565,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
         ];
       }
       // Tenant users: can only list their tenant
-      if (entityPath === "tenants" && !isAdmin && user?.tenantId != null) {
+      if ((entityPath as string) === "tenants" && !isAdmin && user?.tenantId != null) {
         tenantConds = [
           ...tenantConds,
           eq((table as any).id, user.tenantId)
@@ -700,7 +713,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
       }
       // Org users fetching tenant by id: must belong to their org
       if (
-        entityPath === "tenants" &&
+        (entityPath as string) === "tenants" &&
         user?.organizationId != null &&
         user?.tenantId == null
       ) {
@@ -710,7 +723,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
         ];
       }
       // Tenant users fetching tenant by id: must be their tenant
-      if (entityPath === "tenants" && !isAdmin && user?.tenantId != null) {
+      if ((entityPath as string) === "tenants" && !isAdmin && user?.tenantId != null) {
         tenantConds = [
           ...tenantConds,
           eq((table as any).id, user.tenantId)
@@ -845,7 +858,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     }
     // Org user creating tenant: must create in their own org only
     if (
-      entityPath === "tenants" &&
+      (entityPath as string) === "tenants" &&
       !isAdmin &&
       user?.organizationId != null &&
       user?.tenantId == null
@@ -902,7 +915,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     }
 
     // Tenant create: inherit org config for empty fields
-    if (entityPath === "tenants") {
+    if ((entityPath as string) === "tenants") {
       const orgId =
         insertBody.organizationId ??
         body.organizationId ??
@@ -1055,11 +1068,11 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     ) {
       tenantConds = [...tenantConds, eq((table as any).id, user.organizationId)];
     }
-    if (entityPath === "tenants" && !isAdmin && user?.tenantId != null) {
+    if ((entityPath as string) === "tenants" && !isAdmin && user?.tenantId != null) {
       tenantConds = [...tenantConds, eq((table as any).id, user.tenantId)];
     }
     if (
-      entityPath === "tenants" &&
+      (entityPath as string) === "tenants" &&
       user?.organizationId != null &&
       user?.tenantId == null
     ) {
@@ -1076,7 +1089,7 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     let body = (await c.req.json()) as Record<string, unknown>;
     // maxStorageBytes is admin-only: non-admins cannot change storage limits
     if (
-      (entityPath === "organizations" || entityPath === "tenants") &&
+      (entityPath === "organizations" || (entityPath as string) === "tenants") &&
       !isAdmin &&
       "maxStorageBytes" in body
     ) {
@@ -1241,11 +1254,11 @@ for (const entityPath of Object.keys(entityRegistry) as EntityPath[]) {
     ) {
       tenantConds = [...tenantConds, eq((table as any).id, user.organizationId)];
     }
-    if (entityPath === "tenants" && !isAdmin && user?.tenantId != null) {
+    if ((entityPath as string) === "tenants" && !isAdmin && user?.tenantId != null) {
       tenantConds = [...tenantConds, eq((table as any).id, user.tenantId)];
     }
     if (
-      entityPath === "tenants" &&
+      (entityPath as string) === "tenants" &&
       user?.organizationId != null &&
       user?.tenantId == null
     ) {

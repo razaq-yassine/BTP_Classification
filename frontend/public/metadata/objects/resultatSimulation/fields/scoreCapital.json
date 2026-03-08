@@ -1,0 +1,1 @@
+{ "key": "scoreCapital", "label": "Capital social ✓/✗", "type": "boolean", "editable": false, "render": "booleanBadge" }

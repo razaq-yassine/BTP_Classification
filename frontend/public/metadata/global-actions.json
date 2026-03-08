@@ -1,9 +1,14 @@
 {
   "actions": [
     {
+      "id": "quick-create-dossier",
+      "label": "Nouveau dossier",
+      "description": "Créer un nouveau dossier de simulation BTP"
+    },
+    {
       "id": "export-data",
-      "label": "Export data",
-      "description": "Export list view data to CSV or Excel"
+      "label": "Exporter",
+      "description": "Exporter la liste courante en CSV"
     }
   ]
 }

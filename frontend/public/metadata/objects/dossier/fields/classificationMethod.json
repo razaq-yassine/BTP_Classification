@@ -1,0 +1,11 @@
+{
+  "key": "classificationMethod",
+  "label": "Méthode de classification",
+  "type": "select",
+  "required": true,
+  "editable": true,
+  "options": [
+    { "value": "T1", "label": "Tableau 1 — Chiffre d'affaires uniquement" },
+    { "value": "T2", "label": "Tableau 2 — Chiffre d'affaires + Capital social" }
+  ]
+}

@@ -1,1 +1,3 @@
-{"mode":"org_and_tenant"}
+{
+  "mode": "multi_tenant"
+}

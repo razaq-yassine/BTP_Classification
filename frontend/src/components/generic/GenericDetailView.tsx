@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { ObjectDefinition, GenericRecord } from '@/types/object-definition'
@@ -37,6 +37,60 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
   const [isConnectionError, setIsConnectionError] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [showReopenDialog, setShowReopenDialog] = useState(false)
+  const [reopening, setReopening] = useState(false)
+
+  const handleDossierEdit = useCallback(
+    async (r: GenericRecord) => {
+      if (objectDefinition.name !== 'dossier') return
+      const status = r.status as string
+      if (status === 'COMPLETED') {
+        try {
+          const endpoint = objectDefinition.apiEndpoint.endsWith('/')
+            ? objectDefinition.apiEndpoint.slice(0, -1)
+            : objectDefinition.apiEndpoint
+          const res = await api.put(`${endpoint}/${r.id}`, { ...r, status: 'EDITING' })
+          setRecord(res.data)
+          navigate({ to: '/dossiers/$dossierId/edit', params: { dossierId: String(res.data.id) } })
+        } catch (err: any) {
+          toast.error(err.response?.data?.message || 'Erreur')
+        }
+      } else {
+        navigate({ to: '/dossiers/$dossierId/edit', params: { dossierId: String(r.id) } })
+      }
+    },
+    [objectDefinition, navigate]
+  )
+
+  const handleDossierResume = useCallback(
+    () => {
+      if (objectDefinition.name !== 'dossier' || !record) return
+      navigate({ to: '/dossiers/$dossierId/edit', params: { dossierId: String(record.id) } })
+    },
+    [objectDefinition, record, navigate]
+  )
+
+  const handleDossierReopenRequest = useCallback(() => {
+    setShowReopenDialog(true)
+  }, [])
+
+  const handleDossierReopenConfirm = useCallback(async () => {
+    if (objectDefinition.name !== 'dossier' || !record) return
+    try {
+      setReopening(true)
+      const endpoint = objectDefinition.apiEndpoint.endsWith('/')
+        ? objectDefinition.apiEndpoint.slice(0, -1)
+        : objectDefinition.apiEndpoint
+      const res = await api.post(`${endpoint}/${record.id}/reopen`)
+      setRecord(res.data)
+      setShowReopenDialog(false)
+      toast.success(t('dossierReopened', { defaultValue: 'Dossier rouvert pour modification' }))
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Erreur')
+    } finally {
+      setReopening(false)
+    }
+  }, [objectDefinition, record, t])
 
   useEffect(() => {
     fetchRecord()
@@ -151,16 +205,44 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
   // const displayName = getDisplayName(record)
 
   const path = objectDefinition.path
-  const pathSteps: SalesforcePathStep[] | undefined =
+  const rawPathSteps: SalesforcePathStep[] | undefined =
     path?.enabled && path?.steps
-      ? path.steps.map((s) => ({
-        value: s.value,
-        label: translateSelectOptionLabel(objectDefinition.name, path.field, s.value, s.label),
-        color: s.color,
-        colorHover: s.colorHover,
-      }))
+      ? path.steps.map((s) => {
+        const hex = s.color?.replace?.(/^#/, '').trim()
+        const isValidHex = hex && /^[a-f\d]{6}$/i.test(hex)
+        let color: string | undefined
+        if (isValidHex) {
+          const r = parseInt(hex!.slice(0, 2), 16)
+          const g = parseInt(hex!.slice(2, 4), 16)
+          const b = parseInt(hex!.slice(4, 6), 16)
+          const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+          color = luminance > 0.9 ? undefined : `#${hex}` // Reject white/very light
+        } else {
+          color = undefined
+        }
+        const hexHover = s.colorHover?.replace?.(/^#/, '').trim()
+        const colorHover = color && hexHover && /^[a-f\d]{6}$/i.test(hexHover)
+          ? `#${hexHover}`
+          : color
+        return {
+          value: s.value,
+          label: translateSelectOptionLabel(objectDefinition.name, path.field, s.value, s.label),
+          color: color ?? undefined,
+          colorHover,
+        }
+      })
       : undefined
-  const pathFieldValue = path?.enabled ? String(record[path.field] ?? '') : ''
+  // Dossier: hide "En modification" (EDITING) from pipeline; show Brouillon → En cours → Complété → Soumis
+  const pathSteps =
+    objectDefinition.name === 'dossier' && rawPathSteps
+      ? rawPathSteps.filter((s) => s.value !== 'EDITING')
+      : rawPathSteps
+  const pathFieldValueRaw = path?.enabled ? String(record[path.field] ?? '') : ''
+  // Map EDITING to COMPLETED for path display so breadcrumb shows correct position
+  const pathFieldValue =
+    objectDefinition.name === 'dossier' && pathFieldValueRaw === 'EDITING'
+      ? 'COMPLETED'
+      : pathFieldValueRaw
   const showPath = path?.enabled && pathSteps && pathSteps.length > 0
 
   return (
@@ -170,6 +252,21 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
         objectDefinition={objectDefinition}
         record={record}
         onDelete={canDelete(objectDefinition.name) ? handleDeleteRequest : undefined}
+        actionOverrides={
+          objectDefinition.name === 'dossier'
+            ? { edit: handleDossierEdit }
+            : undefined
+        }
+        extraPrimaryActions={
+          objectDefinition.name === 'dossier' && record.status === 'SOUMIS'
+            ? [{ key: 'reopen', label: '✏ Modifier le dossier', variant: 'outline', onClick: handleDossierReopenRequest }]
+            : []
+        }
+        primaryActionsFilter={
+          objectDefinition.name === 'dossier' && record.status === 'SOUMIS'
+            ? (action) => action.key !== 'edit'
+            : undefined
+        }
       />
 
       {/* Path (Salesforce-style) - between header and content */}
@@ -203,7 +300,13 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
 
         {/* Side Section - 2 columns on large screens (Activity, History, Communication, Files) */}
         <div className="lg:col-span-2">
-          <GenericObjectDetailViewSideSection objectDefinition={objectDefinition} record={record} />
+          <GenericObjectDetailViewSideSection
+            objectDefinition={objectDefinition}
+            record={record}
+            onOpenDossierWizard={
+              objectDefinition.name === 'dossier' ? handleDossierResume : undefined
+            }
+          />
         </div>
       </div>
 
@@ -217,6 +320,17 @@ export function GenericDetailView({ objectDefinition, recordId, basePath }: Gene
         destructive
         isLoading={deleting}
         handleConfirm={handleDeleteConfirm}
+      />
+
+      {/* Dossier Reopen Confirmation Dialog */}
+      <ConfirmDialog
+        open={showReopenDialog}
+        onOpenChange={setShowReopenDialog}
+        title={t('dossierReopenTitle', { defaultValue: 'Modifier le dossier' })}
+        desc={t('dossierReopenDesc', { defaultValue: "Cette action annulera la soumission du dossier. Il devra être complété et soumis à nouveau. Confirmer ?" })}
+        confirmText={t('common:confirm', { defaultValue: 'Confirmer' })}
+        isLoading={reopening}
+        handleConfirm={handleDossierReopenConfirm}
       />
     </main>
   )

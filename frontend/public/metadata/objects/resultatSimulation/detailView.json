@@ -1,0 +1,1 @@
+{ "layout": "two-column", "sections": [{ "title": "Résultat", "columns": 2, "defaultOpen": true, "fields": ["dossier","secteur","classeObtenue","scoreCa","scoreCapital","scoreEncadrement","scoreMasseSalariale","scoreMateriel","caActualDH","encadrementScoreActual","masseSalarialeRatioPercent","details","computedAt"] }] }

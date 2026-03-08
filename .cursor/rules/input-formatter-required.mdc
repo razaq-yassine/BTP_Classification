@@ -1,0 +1,68 @@
+---
+description: All views must use GenericDetailInputFormatter for metadata-backed field inputs
+globs: frontend/src/**/*.tsx
+alwaysApply: true
+---
+
+# Input Formatter: Use for All Views
+
+**All views** — including generic detail, custom forms, wizards, create dialogs, and any custom UI — **must use `GenericDetailInputFormatter`** for metadata-backed field inputs instead of raw `Input`, `Select`, or `MultiSelect` components.
+
+## Why
+
+- **Consistency**: Same UX, styling, validation, and behavior as the generic detail view and create dialog
+- **Metadata-driven**: Uses field definitions (options, validation, labels) from metadata automatically
+- **Validation**: Supports `validation.pattern` and `validation.message` for string fields (e.g. ICE format)
+- **Accessibility**: Labels, placeholders, and error handling are handled uniformly
+
+## Rule
+
+**Do not** use raw `Input`, `Select`, or `MultiSelect` for metadata-backed fields in any view.
+
+**Do** use `GenericDetailInputFormatter` with:
+
+- `fieldDefinition`: From object metadata (`getFieldDef(key)` or `objectDefinition.fields.find(f => f.key === key)`)
+- `value` / `onChange`: Controlled by form state
+- `objectName`: For translations and select option labels
+
+## Example
+
+```tsx
+const { definition } = useObjectDefinition('dossier')
+const getFieldDef = (key: string) => definition?.fields?.find((f) => f.key === key)
+
+// In render:
+<GenericDetailInputFormatter
+  fieldDefinition={getFieldDef('raisonSociale') ?? fallbackDef}
+  value={raisonSociale}
+  onChange={setRaisonSociale}
+  objectName="dossier"
+  className="w-full"
+/>
+```
+
+## When to use fallbacks
+
+If metadata is still loading or a field has no definition, provide a minimal fallback so the form renders:
+
+```tsx
+const fieldDef = getFieldDef('email') ?? {
+  key: 'email',
+  label: 'Email',
+  type: 'string',
+  required: true,
+}
+```
+
+## Exceptions
+
+- **Repeatable row sections** (e.g. line items with Add/Remove): May use raw `Input`/`Select` for child object fields that are not in the parent's metadata
+- **Non-metadata fields**: One-off UI fields with no corresponding object field (e.g. "Confirm password") may use raw components
+
+## References
+
+- [GenericDetailInputFormatter](frontend/src/components/generic/GenericDetailInputFormatter.tsx) — the formatter component
+- [DossierWizard](frontend/src/components/dossier/DossierWizard.tsx) — example of custom form using the formatter
+- [GenericObjectDetailViewMainSection](frontend/src/components/generic/GenericObjectDetailViewMainSection.tsx) — generic detail uses it
+- [GenericCreateDialog](frontend/src/components/generic/GenericCreateDialog.tsx) — create dialog uses it
+- [docs/USAGE.md](docs/USAGE.md#custom-forms-and-input-formatter) — usage documentation

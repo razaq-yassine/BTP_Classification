@@ -1,0 +1,1 @@
+{ "key": "secteurImputation", "label": "Secteur d'imputation diplôme", "type": "select", "required": false, "editable": true, "options": [{"value":"A","label":"Secteur A"},{"value":"B","label":"Secteur B"},{"value":"C","label":"Secteur C"},{"value":"I","label":"Secteur I"},{"value":"ALL","label":"Tous (gérant base)"}] }

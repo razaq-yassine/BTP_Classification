@@ -1,0 +1,1 @@
+{ "fields": ["name","role","anneesExperience","secteurImputation","scoreCalcule"], "defaultSort": "name", "defaultSortOrder": "asc", "pageSize": 25 }

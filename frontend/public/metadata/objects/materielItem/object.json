@@ -1,0 +1,12 @@
+{
+  "name": "materielItem",
+  "label": "Matériel",
+  "labelPlural": "Matériels",
+  "apiEndpoint": "/api/materielItems",
+  "basePath": "materiel-items",
+  "detailPath": "/materiel-items/$materielItemId",
+  "icon": "IconTruck",
+  "color": "orange",
+  "tenantScope": "tenant",
+  "sidebar": { "showInSidebar": false }
+}

@@ -10,6 +10,7 @@ import {
   users,
 } from "./schema.js";
 import { seedNotificationSettings } from "./seed-notification-settings.js";
+import { syncRulesFromConfig } from "../seeds/syncRulesFromConfig.js";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
@@ -66,5 +67,6 @@ export async function seedSingleTenant() {
   }
 
   await seedNotificationSettings();
+  await syncRulesFromConfig();
   console.log("[seed-single-tenant] Done.");
 }

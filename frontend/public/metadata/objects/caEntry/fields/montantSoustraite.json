@@ -1,0 +1,8 @@
+{
+  "key": "montantSoustraite",
+  "label": "Montant sous-traité TTC (DH)",
+  "type": "number",
+  "required": false,
+  "editable": true,
+  "defaultValue": 0
+}

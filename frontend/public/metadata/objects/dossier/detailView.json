@@ -1,0 +1,21 @@
+{
+  "layout": "tabs",
+  "sections": [
+    {
+      "tab": "Informations",
+      "title": "Informations",
+      "sections": [
+        { "title": "Entreprise", "columns": 2, "defaultOpen": true, "fields": ["raisonSociale","formeJuridique","dateCreation","ice"] },
+        { "title": "Classification", "columns": 2, "defaultOpen": true, "fields": ["classificationMethod","sectorsSelected","secteurClasseDemandee","caYears","caMax","caMaxHT","capitalSocial","masseSalariale","totalEncadrementScore"] },
+        { "title": "Notes", "columns": 1, "defaultOpen": false, "fields": ["notes"] }
+      ]
+    },
+    {
+      "tab": "Résultats",
+      "title": "Résultats",
+      "sections": [
+        { "title": "Résultats de simulation", "columns": 1, "defaultOpen": true, "fields": [] }
+      ]
+    }
+  ]
+}

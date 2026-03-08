@@ -1,0 +1,18 @@
+{
+  "ratiosBySector": [
+    { "sector": "A", "minRatioPercent": 15 },
+    { "sector": "B", "minRatioPercent": 9 },
+    { "sector": "C", "minRatioPercent": 9 },
+    { "sector": "D", "minRatioPercent": 11 },
+    { "sector": "E", "minRatioPercent": 10 },
+    { "sector": "F", "minRatioPercent": 10 },
+    { "sector": "G", "minRatioPercent": 7 },
+    { "sector": "Y", "minRatioPercent": 10 },
+    { "sector": "I", "minRatioPercent": 7 }
+  ],
+  "rules": {
+    "caBase": "sector-specific CA HT only, not total company CA",
+    "subcontractingDeducted": true,
+    "multiSectorAllocation": "salary mass must be allocated across all sectors where CA was realized, even non-classified ones"
+  }
+}

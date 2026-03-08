@@ -1,0 +1,7 @@
+{
+  "key": "caTTC",
+  "label": "CA TTC (DH)",
+  "type": "number",
+  "required": true,
+  "editable": true
+}

@@ -1,0 +1,1 @@
+{"key":"method","label":"Méthode","type":"select","required":true,"editable":true,"options":[{"value":"tableau1","label":"Tableau 1 — CA seul"},{"value":"tableau2","label":"Tableau 2 — CA + Capital social"}]}

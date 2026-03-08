@@ -100,6 +100,7 @@ export function GenericDataTable<TData extends GenericRecord>({
         format: typeof field === 'object' ? field.format : undefined,
         render: typeof field === 'object' ? (field.renderType ?? (typeof field.render === 'string' ? field.render : undefined)) : undefined,
         objectName: typeof field === 'object' ? field.objectName : undefined,
+        formulaExpression: typeof field === 'object' ? field.formulaExpression : undefined,
       }
     })
   }, [objectDefinition.listView?.fields, objectName, i18n.language])

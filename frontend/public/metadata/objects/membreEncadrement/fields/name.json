@@ -1,0 +1,1 @@
+{ "key": "name", "label": "Nom complet", "type": "string", "required": true, "editable": true }

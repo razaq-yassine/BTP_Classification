@@ -1,0 +1,1 @@
+{ "key": "proprietaire", "label": "Propriétaire (vs loué)", "type": "boolean", "required": false, "editable": true, "defaultValue": true }

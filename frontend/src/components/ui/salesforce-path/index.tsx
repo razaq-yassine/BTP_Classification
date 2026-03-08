@@ -38,6 +38,8 @@ interface SalesforcePathProps {
   currentOutlineColorHover?: string
   /** Default border when current is in outline mode. Default: #0a1612 */
   currentOutlineBorderColor?: string
+  /** Color when step is achieved (done). When step has no color, this green is used. Default: #047857 */
+  doneColor?: string
 }
 
 export function SalesforcePath({
@@ -53,6 +55,7 @@ export function SalesforcePath({
   currentOutlineColor = '#ecfdf5',
   currentOutlineColorHover = '#d1fae5',
   currentOutlineBorderColor = '#0a1612',
+  doneColor = '#047857',
 }: SalesforcePathProps) {
   const { t } = useTranslation('common')
   const [hoveredStage, setHoveredStage] = useState<string | null>(null)
@@ -186,6 +189,7 @@ export function SalesforcePath({
                 const stageColor = isCurrent && step.color ? step.color : currentColor
                 const stageColorHover = isCurrent && step.color ? (step.colorHover ?? step.color) : currentColorHover
                 const stageOutlineBorder = isCurrent && step.color ? step.color : currentOutlineBorderColor
+                const stageDoneColor = step.color ?? doneColor
                 return (
                 <PathStage
                   key={step.value}
@@ -196,6 +200,7 @@ export function SalesforcePath({
                   isClickable={!isUpdating && (!!onStepClick || !!onStageChange)}
                   isHovered={hoveredStage === step.value}
                   hasError={hasError && step.value === currentStep}
+                  doneColor={stageDoneColor}
                   currentColor={stageColor}
                   currentColorHover={stageColorHover}
                   currentOutlineColor={currentOutlineColor}

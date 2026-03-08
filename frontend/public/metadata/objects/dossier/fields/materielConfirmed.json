@@ -1,0 +1,8 @@
+{
+  "key": "materielConfirmed",
+  "label": "Matériel minimum confirmé",
+  "type": "boolean",
+  "required": false,
+  "editable": true,
+  "defaultValue": false
+}

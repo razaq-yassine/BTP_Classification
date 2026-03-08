@@ -1,0 +1,7 @@
+{
+  "key": "masseSalarialeRatioPercent",
+  "label": "Ratio masse salariale (%)",
+  "type": "number",
+  "required": false,
+  "editable": false
+}

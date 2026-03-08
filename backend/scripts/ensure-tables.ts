@@ -62,7 +62,7 @@ function mapTypeToMySQL(field: FieldDef): string {
   if (t === "number") return "DECIMAL(10,2)";
   if (t === "boolean") return "TINYINT(1) DEFAULT 1";
   if (t === "date" || t === "datetime") return "DATETIME";
-  if (t === "text") return "TEXT";
+  if (t === "text" || t === "json" || t === "richtext") return "TEXT";
   return "VARCHAR(255)";
 }
 
@@ -98,7 +98,7 @@ function generateCreateTableSql(tableName: string, fields: FieldDef[]): string {
     const colName = toSnakeCase(field.key);
     const sqlType = mapTypeToMySQL(field);
 
-    if (field.type === "reference") {
+    if (field.type === "reference" || field.type === "masterDetail") {
       const refNotNull = field.required ? " NOT NULL" : "";
       cols.push(`\`${colName}_id\` INT${refNotNull}`);
     } else {
@@ -159,7 +159,7 @@ async function main() {
   const allObjectNames = [...systemObjects, ...objectDirs];
 
   const connectionString =
-    process.env.DATABASE_URL || "mysql://root:root@localhost:3306/generic_saas";
+    process.env.DATABASE_URL || "mysql://root:root@localhost:3306/btp_classification_platform";
   let conn: mysql.Connection;
   try {
     conn = await mysql.createConnection(connectionString);
@@ -189,6 +189,60 @@ async function main() {
       existingTables.add(tableName);
     } catch (err) {
       console.error(`[ensure-tables] Failed to create ${tableName}:`, err);
+    }
+  }
+
+  // Add tenant-scoped columns (organization_id, tenant_id) to objects that need them
+  if (hasOrgs) {
+    const [colRows] = await conn.execute<mysql.RowDataPacket[]>(
+      "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name IN (SELECT table_name FROM information_schema.tables WHERE table_schema = DATABASE())"
+    );
+    const colsByTable = new Map<string, Set<string>>();
+    for (const r of colRows || []) {
+      const t = (r.table_name ?? r.TABLE_NAME) as string;
+      const c = (r.column_name ?? r.COLUMN_NAME) as string;
+      if (!colsByTable.has(t)) colsByTable.set(t, new Set());
+      colsByTable.get(t)!.add(c);
+    }
+
+    let tenantColsAdded = 0;
+    for (const objectName of objectDirs) {
+      try {
+        const object = JSON.parse(
+          fs.readFileSync(path.join(OBJECTS_PATH, objectName, "object.json"), "utf-8")
+        ) as Record<string, unknown>;
+        const tableName = (object.tableName as string) || pluralize(objectName);
+        const tenantScope = object.tenantScope as string | undefined;
+        if (!tenantScope || !existingTables.has(tableName)) continue;
+
+        const cols = colsByTable.get(tableName) ?? new Set();
+        if (tenantScope === "tenant" || tenantScope === "org_and_tenant") {
+          if (!cols.has("organization_id")) {
+            try {
+              await conn.execute(
+                `ALTER TABLE \`${tableName}\` ADD COLUMN \`organization_id\` INT NULL`
+              );
+              console.log(`[ensure-tables] Added organization_id to ${tableName}`);
+              tenantColsAdded++;
+              cols.add("organization_id");
+            } catch (err) {
+              console.error(`[ensure-tables] Failed to add organization_id to ${tableName}:`, err);
+            }
+          }
+        }
+        if (tenantScope === "org_and_tenant" && hasTenants && !cols.has("tenant_id")) {
+          await conn.execute(
+            `ALTER TABLE \`${tableName}\` ADD COLUMN \`tenant_id\` INT NULL`
+          ).catch(() => {});
+          console.log(`[ensure-tables] Added tenant_id to ${tableName}`);
+          tenantColsAdded++;
+        }
+      } catch {
+        // Skip invalid objects
+      }
+    }
+    if (tenantColsAdded > 0) {
+      console.log(`[ensure-tables] Added ${tenantColsAdded} tenant column(s)`);
     }
   }
 

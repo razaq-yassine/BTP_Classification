@@ -13,11 +13,17 @@ import { sidebarData as staticSidebarData, settingsNavGroups } from '@/component
 function buildDataNavItems(
   defs: ObjectDefinition[],
   canRead: (objectName: string) => boolean,
+  profileName: string,
   t: (key: string, opts?: { defaultValue?: string }) => string
 ): NavItem[] {
-  const withSidebar = defs.filter(
-    (d) => d.basePath && (d.sidebar?.showInSidebar !== false) && canRead(d.name)
-  )
+  const withSidebar = defs.filter((d) => {
+    if (!d.basePath || d.sidebar?.showInSidebar === false || !canRead(d.name)) return false
+    const profiles = d.sidebar?.showInSidebarForProfiles
+    if (profiles && profiles.length > 0) {
+      if (!profiles.includes(profileName)) return false
+    }
+    return true
+  })
   if (withSidebar.length === 0) return []
 
   const objectNavItems: NavItem[] = []
@@ -100,6 +106,7 @@ export function useSidebarData(): SidebarData {
   const { canRead } = usePermissions()
   const isSettings = location.pathname.startsWith('/settings')
   const isAdmin = (user?.profile ?? '').toLowerCase() === 'admin'
+  const profileName = (user?.profile ?? 'standard-user').toLowerCase()
 
   const tenantContextData = useMemo(() => {
     if (!tenantContext) return null
@@ -131,7 +138,7 @@ export function useSidebarData(): SidebarData {
       icon: IconSettings,
       external: true
     }
-    const dataItems = defs ? buildDataNavItems(defs, canRead, t) : []
+    const dataItems = defs ? buildDataNavItems(defs, canRead, profileName, t) : []
 
     const fileExplorerItem: NavLink = {
       title: t('navigation:fileExplorer', { defaultValue: 'File Explorer' }),
@@ -148,7 +155,7 @@ export function useSidebarData(): SidebarData {
     ]
 
     return [{ title: '', items: allItems }]
-  }, [defs, isSettings, canRead, isAdmin, hasOrgId, hasTenantId, t])
+  }, [defs, isSettings, canRead, profileName, isAdmin, hasOrgId, hasTenantId, t])
 
   return {
     ...staticSidebarData,

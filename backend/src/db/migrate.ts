@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export async function runMigrations() {
   const connectionString =
-    process.env.DATABASE_URL || "mysql://root:root@localhost:3306/generic_saas";
+    process.env.DATABASE_URL || "mysql://root:root@localhost:3306/btp_classification_platform";
   const connection = await mysql.createConnection(connectionString);
   const db = drizzle(connection);
   const migrationsFolder = path.join(process.cwd(), "drizzle");

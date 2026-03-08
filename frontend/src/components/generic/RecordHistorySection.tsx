@@ -64,6 +64,8 @@ function truncateForDisplay(text: string): { display: string; isTruncated: boole
 }
 
 function getFieldLabel(objectDefinition: ObjectDefinition, fieldKey: string): string {
+  // Custom event entries (e.g. "Dossier rouvert pour modification") use _event
+  if (fieldKey === '_event') return ''
   const field = objectDefinition.fields?.find((f) => f.key === fieldKey)
   const fallback = field?.label ?? fieldKey
   return translateFieldLabel(objectDefinition.name, fieldKey, fallback)
@@ -154,6 +156,7 @@ export function RecordHistorySection({
       )}
       <div className="space-y-1.5">
         {entries.map((entry) => {
+          const isEvent = entry.fieldKey === '_event'
           const fieldLabel = getFieldLabel(objectDefinition, entry.fieldKey)
           const oldFormatted = formatHistoryValue(entry.oldValue)
           const newFormatted = formatHistoryValue(entry.newValue)
@@ -169,12 +172,18 @@ export function RecordHistorySection({
               className="rounded border border-border/50 bg-muted/20 px-2 py-1.5 text-xs hover:bg-muted/30"
             >
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <span className="font-medium text-foreground shrink-0">{fieldLabel}</span>
-                <span className="flex items-baseline gap-1.5 min-w-0 flex-1">
-                  <span className="text-muted-foreground break-words line-clamp-2">{oldDisplay}</span>
-                  <span className="shrink-0 text-muted-foreground">→</span>
-                  <span className="text-foreground break-words line-clamp-2">{newDisplay}</span>
-                </span>
+                {isEvent ? (
+                  <span className="font-medium text-foreground shrink-0">{newDisplay}</span>
+                ) : (
+                  <>
+                    <span className="font-medium text-foreground shrink-0">{fieldLabel}</span>
+                    <span className="flex items-baseline gap-1.5 min-w-0 flex-1">
+                      <span className="text-muted-foreground break-words line-clamp-2">{oldDisplay}</span>
+                      <span className="shrink-0 text-muted-foreground">→</span>
+                      <span className="text-foreground break-words line-clamp-2">{newDisplay}</span>
+                    </span>
+                  </>
+                )}
                 <span className="flex items-center gap-1 shrink-0">
                   {metaParts.length > 0 && (
                     <span className="text-muted-foreground text-[11px]">
@@ -211,28 +220,41 @@ export function RecordHistorySection({
           {detailEntry && (
             <div className="overflow-y-auto space-y-4 py-2 -mx-1 px-1">
               <div className="space-y-2 text-sm">
-                <div>
-                  <span className="font-medium text-muted-foreground block text-xs mb-0.5">
-                    {t('field', { defaultValue: 'Field' })}
-                  </span>
-                  <span>{getFieldLabel(objectDefinition, detailEntry.fieldKey)}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-muted-foreground block text-xs mb-0.5">
-                    {t('previousValue', { defaultValue: 'Previous value' })}
-                  </span>
-                  <pre className="whitespace-pre-wrap break-words text-xs bg-muted/30 rounded p-2 max-h-32 overflow-y-auto font-sans">
-                    {formatHistoryValue(detailEntry.oldValue) || '—'}
-                  </pre>
-                </div>
-                <div>
-                  <span className="font-medium text-muted-foreground block text-xs mb-0.5">
-                    {t('newValue', { defaultValue: 'New value' })}
-                  </span>
-                  <pre className="whitespace-pre-wrap break-words text-xs bg-muted/30 rounded p-2 max-h-32 overflow-y-auto font-sans">
-                    {formatHistoryValue(detailEntry.newValue) || '—'}
-                  </pre>
-                </div>
+                {detailEntry.fieldKey === '_event' ? (
+                  <div>
+                    <span className="font-medium text-muted-foreground block text-xs mb-0.5">
+                      {t('event', { defaultValue: 'Événement' })}
+                    </span>
+                    <p className="text-foreground">
+                      {formatHistoryValue(detailEntry.newValue) || '—'}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <span className="font-medium text-muted-foreground block text-xs mb-0.5">
+                        {t('field', { defaultValue: 'Field' })}
+                      </span>
+                      <span>{getFieldLabel(objectDefinition, detailEntry.fieldKey)}</span>
+                    </div>
+                    <div>
+                      <span className="font-medium text-muted-foreground block text-xs mb-0.5">
+                        {t('previousValue', { defaultValue: 'Previous value' })}
+                      </span>
+                      <pre className="whitespace-pre-wrap break-words text-xs bg-muted/30 rounded p-2 max-h-32 overflow-y-auto font-sans">
+                        {formatHistoryValue(detailEntry.oldValue) || '—'}
+                      </pre>
+                    </div>
+                    <div>
+                      <span className="font-medium text-muted-foreground block text-xs mb-0.5">
+                        {t('newValue', { defaultValue: 'New value' })}
+                      </span>
+                      <pre className="whitespace-pre-wrap break-words text-xs bg-muted/30 rounded p-2 max-h-32 overflow-y-auto font-sans">
+                        {formatHistoryValue(detailEntry.newValue) || '—'}
+                      </pre>
+                    </div>
+                  </>
+                )}
                 {(detailEntry.changedBy || detailEntry.changedAt) && (
                   <div className="text-muted-foreground text-xs pt-1 border-t">
                     {detailEntry.changedBy && <span>{detailEntry.changedBy}</span>}

@@ -1,0 +1,1 @@
+{ "key": "scoreEncadrement", "label": "Encadrement ✓/✗", "type": "boolean", "editable": false, "render": "booleanBadge" }

@@ -14,7 +14,7 @@ export interface SelectOption {
 }
 
 export interface FieldFormatterProps {
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'masterDetail' | 'formula' | 'password' | 'geolocation' | 'address' | 'richText' | 'file' | 'color'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'masterDetail' | 'formula' | 'password' | 'geolocation' | 'address' | 'richText' | 'file' | 'color' | 'secteur-classe-list'
   value: any
   format?: string
   options?: SelectOption[]
@@ -200,7 +200,7 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
         <div className="flex flex-wrap gap-1">
           {arr.slice(0, 3).map((val, index) => {
             const opt = options?.find((o) => o.value === val)
-            const color = opt?.color
+            const color = toReadableColor(opt?.color)
             const label = (sourceObjectName && fieldKey)
               ? translateSelectOptionLabel(sourceObjectName, fieldKey, val, opt?.label || val)
               : (opt?.label || val)
@@ -257,6 +257,21 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
       return <span className="text-sm">{displayName ?? value}</span>
     }
 
+    case 'secteur-classe-list': {
+      let arr: Array<{ secteur?: string; classeDemandee?: string }> = []
+      try {
+        const parsed = typeof value === 'string' ? JSON.parse(value) : value
+        arr = Array.isArray(parsed) ? parsed : []
+      } catch {
+        return null
+      }
+      if (arr.length === 0) return null
+      const text = arr
+        .map((s) => `Secteur ${s.secteur} — Classe ${s.classeDemandee}`)
+        .join('\n')
+      return <span className="text-sm whitespace-pre-wrap">{text}</span>
+    }
+
     case 'number':
       const numValue = typeof value === 'number' ? value : parseFloat(value)
       if (isNaN(numValue)) return <span className="text-sm text-muted-foreground">{value}</span>
@@ -284,12 +299,26 @@ export function ListViewFieldFormatter({ type, value, format: dateFormat, option
   }
 }
 
+/** Normalize hex color (add #) and reject white/very-light colors that make text unreadable */
+function toReadableColor(color: string | undefined): string | undefined {
+  if (!color || typeof color !== 'string') return undefined
+  const hex = color.replace(/^#/, '').trim()
+  if (!/^[a-f\d]{6}$/i.test(hex)) return undefined
+  // Reject white and very light colors (e.g. fff, ffffff, fafafa, f5f5f5, etc.)
+  const r = parseInt(hex.slice(0, 2), 16)
+  const g = parseInt(hex.slice(2, 4), 16)
+  const b = parseInt(hex.slice(4, 6), 16)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  if (luminance > 0.9) return undefined // Too light, use default styling
+  return `#${hex}`
+}
+
 function SelectColoredDiv({ value, options, sourceObjectName, fieldKey }: { value: string; options: SelectOption[]; sourceObjectName?: string; fieldKey?: string }) {
   const option = options.find((o) => o.value === value)
   const label = (sourceObjectName && fieldKey)
     ? translateSelectOptionLabel(sourceObjectName, fieldKey, value, option?.label ?? value)
     : (option?.label ?? value)
-  const color = option?.color
+  const color = toReadableColor(option?.color)
 
   return (
     <div

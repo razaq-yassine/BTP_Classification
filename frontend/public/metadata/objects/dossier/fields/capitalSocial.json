@@ -1,0 +1,1 @@
+{ "key": "capitalSocial", "label": "Capital social (DH)", "type": "number", "required": false, "editable": true }

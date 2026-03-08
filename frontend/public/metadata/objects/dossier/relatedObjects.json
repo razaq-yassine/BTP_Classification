@@ -1,0 +1,94 @@
+[
+  {
+    "name": "membres",
+    "label": "Membre d'encadrement",
+    "labelPlural": "Membres d'encadrement",
+    "objectDefinition": "membreEncadrement",
+    "relationshipType": "one-to-many",
+    "foreignKey": "dossier.id",
+    "apiEndpoint": "/api/membreEncadrements/dossier",
+    "fields": [
+      { "key": "name", "label": "Nom", "type": "string" },
+      { "key": "role", "label": "Rôle", "type": "select", "options": [
+        { "value": "gerant", "label": "Gérant / Directeur Général" },
+        { "value": "ingenieur", "label": "Ingénieur / Docteur" },
+        { "value": "master", "label": "Master scientifique (Bac+5)" },
+        { "value": "licence", "label": "Licence en sciences ou Maîtrise" },
+        { "value": "technicien", "label": "Technicien spécialisé" },
+        { "value": "cadre", "label": "Cadre administratif" },
+        { "value": "techbac2", "label": "Technicien (Bac+2 sciences)" },
+        { "value": "deug", "label": "Deug en sciences (Bac+2)" },
+        { "value": "autrebac2", "label": "Autre diplôme niveau Bac+2" },
+        { "value": "ofppt", "label": "Diplôme qualification professionnelle (OFPPT)" },
+        { "value": "geologue", "label": "Géologue" },
+        { "value": "electromecanicien", "label": "Ingénieur électromécanicien" }
+      ] },
+      { "key": "anneesExperience", "label": "Expérience", "type": "number" },
+      { "key": "scoreCalcule", "label": "Score", "type": "number" }
+    ],
+    "defaultSort": "name",
+    "defaultSortOrder": "asc",
+    "pageSize": 10,
+    "permissions": { "create": true, "read": true, "update": true, "delete": true }
+  },
+  {
+    "name": "materiels",
+    "label": "Matériel",
+    "labelPlural": "Matériels",
+    "objectDefinition": "materielItem",
+    "relationshipType": "one-to-many",
+    "foreignKey": "dossier.id",
+    "apiEndpoint": "/api/materielItems/dossier",
+    "fields": [
+      { "key": "name", "label": "Désignation", "type": "string" },
+      { "key": "secteur", "label": "Secteur", "type": "string" },
+      { "key": "quantite", "label": "Qté", "type": "number" },
+      { "key": "valeur", "label": "Valeur", "type": "number", "render": "currency" }
+    ],
+    "defaultSort": "secteur",
+    "defaultSortOrder": "asc",
+    "pageSize": 10,
+    "permissions": { "create": true, "read": true, "update": true, "delete": true }
+  },
+  {
+    "name": "resultats",
+    "label": "Résultat de simulation",
+    "labelPlural": "Résultats de simulation",
+    "objectDefinition": "resultatSimulation",
+    "relationshipType": "one-to-many",
+    "foreignKey": "dossier.id",
+    "apiEndpoint": "/api/resultatSimulations/dossier",
+    "fields": [
+      { "key": "secteur", "label": "Secteur", "type": "string" },
+      { "key": "classeObtenue", "label": "Classe", "type": "string", "render": "statusBadge" },
+      { "key": "caActualDH", "label": "CA", "type": "number", "render": "currency" },
+      { "key": "encadrementScoreActual", "label": "Encadrement", "type": "number" },
+      { "key": "masseSalarialeRatioPercent", "label": "Masse sal.", "type": "number", "render": "percent" },
+      { "key": "computedAt", "label": "Calculé le", "type": "datetime" }
+    ],
+    "defaultSort": "computedAt",
+    "defaultSortOrder": "desc",
+    "pageSize": 10,
+    "permissions": { "create": false, "read": true, "update": false, "delete": false }
+  },
+  {
+    "name": "caEntries",
+    "label": "Entrée CA",
+    "labelPlural": "Entrées CA",
+    "objectDefinition": "caEntry",
+    "relationshipType": "one-to-many",
+    "foreignKey": "dossier.id",
+    "apiEndpoint": "/api/caEntries/dossier",
+    "fields": [
+      { "key": "secteur", "label": "Secteur", "type": "string" },
+      { "key": "annee", "label": "Année", "type": "string" },
+      { "key": "caTTC", "label": "CA TTC", "type": "number", "render": "currency" },
+      { "key": "montantSoustraite", "label": "Sous-traité", "type": "number", "render": "currency" },
+      { "key": "caNet", "label": "CA Net", "type": "formula", "formulaExpression": "caTTC - montantSoustraite", "render": "currency" }
+    ],
+    "defaultSort": "secteur",
+    "defaultSortOrder": "asc",
+    "pageSize": 25,
+    "permissions": { "create": true, "read": true, "update": true, "delete": true }
+  }
+]

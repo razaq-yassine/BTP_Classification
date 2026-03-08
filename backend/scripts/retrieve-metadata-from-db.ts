@@ -187,7 +187,7 @@ async function main(): Promise<void> {
   }
 
   const connectionString =
-    process.env.DATABASE_URL || "mysql://root:root@localhost:3306/generic_saas";
+    process.env.DATABASE_URL || "mysql://root:root@localhost:3306/btp_classification_platform";
   let conn: mysql.Connection;
   try {
     conn = await mysql.createConnection(connectionString);

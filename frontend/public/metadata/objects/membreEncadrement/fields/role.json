@@ -1,0 +1,21 @@
+{
+  "key": "role",
+  "label": "Rôle",
+  "type": "select",
+  "required": true,
+  "editable": true,
+  "options": [
+    { "value": "gerant", "label": "Gérant / Directeur Général" },
+    { "value": "ingenieur", "label": "Ingénieur / Docteur" },
+    { "value": "master", "label": "Master scientifique (Bac+5)" },
+    { "value": "licence", "label": "Licence en sciences ou Maîtrise" },
+    { "value": "technicien", "label": "Technicien spécialisé" },
+    { "value": "cadre", "label": "Cadre administratif" },
+    { "value": "techbac2", "label": "Technicien (Bac+2 sciences)" },
+    { "value": "deug", "label": "Deug en sciences (Bac+2)" },
+    { "value": "autrebac2", "label": "Autre diplôme niveau Bac+2" },
+    { "value": "ofppt", "label": "Diplôme qualification professionnelle (OFPPT)" },
+    { "value": "geologue", "label": "Géologue" },
+    { "value": "electromecanicien", "label": "Ingénieur électromécanicien" }
+  ]
+}

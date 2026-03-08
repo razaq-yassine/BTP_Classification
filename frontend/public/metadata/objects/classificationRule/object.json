@@ -1,0 +1,16 @@
+{
+  "name": "classificationRule",
+  "label": "Règle de classification",
+  "labelPlural": "Règles de classification",
+  "apiEndpoint": "/api/classificationRules",
+  "basePath": "/classification-rules",
+  "detailPath": "/classification-rules/$classificationRuleId",
+  "icon": "Ruler",
+  "color": "blue",
+  "tenantScope": null,
+  "sidebar": {
+    "showInSidebar": true,
+    "parent": "Administration",
+    "showInSidebarForProfiles": ["admin"]
+  }
+}

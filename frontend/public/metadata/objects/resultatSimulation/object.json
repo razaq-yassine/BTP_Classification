@@ -1,0 +1,12 @@
+{
+  "name": "resultatSimulation",
+  "label": "Résultat de simulation",
+  "labelPlural": "Résultats de simulation",
+  "apiEndpoint": "/api/resultatSimulations",
+  "basePath": "resultats-simulation",
+  "detailPath": "/resultats-simulation/$resultatSimulationId",
+  "icon": "IconChartBar",
+  "color": "teal",
+  "tenantScope": "tenant",
+  "sidebar": { "showInSidebar": false }
+}

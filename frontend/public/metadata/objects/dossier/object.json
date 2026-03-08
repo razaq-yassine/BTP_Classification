@@ -1,0 +1,12 @@
+{
+  "name": "dossier",
+  "label": "Dossier",
+  "labelPlural": "Dossiers",
+  "apiEndpoint": "/api/dossiers",
+  "basePath": "dossiers",
+  "detailPath": "/dossiers/$dossierId",
+  "icon": "IconFolder",
+  "color": "green",
+  "tenantScope": "tenant",
+  "sidebar": { "showInSidebar": true }
+}

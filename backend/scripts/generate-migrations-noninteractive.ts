@@ -15,9 +15,11 @@ const backendRoot = path.join(__dirname, '..')
 
 const configPath = path.join(backendRoot, 'drizzle-temp', 'drizzle.config.ts')
 
+// Quote config path when it contains spaces (e.g. "BTP Classification Platform")
+const configArg = configPath.includes(' ') ? `"${configPath}"` : configPath
 const proc = spawn(
-  'pnpm',
-  ['exec', 'drizzle-kit', 'generate', '--config', configPath],
+  `pnpm exec drizzle-kit generate --config ${configArg}`,
+  [],
   {
     cwd: backendRoot,
     stdio: ['pipe', 'inherit', 'inherit'],

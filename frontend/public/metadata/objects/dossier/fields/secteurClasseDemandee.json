@@ -1,0 +1,7 @@
+{
+  "key": "secteurClasseDemandee",
+  "label": "Classes demandées par secteur",
+  "type": "secteur-classe-list",
+  "required": false,
+  "editable": true
+}

@@ -1,0 +1,32 @@
+{
+  "sector": "G",
+  "label": "Injection, drainage et parois moulées",
+  "masseSalarialeRatioPercent": 9,
+  "specialStaffRequirement": {
+    "role": "geologue",
+    "label": "Géologue",
+    "note": "Géologue counted separately from standard engineers in staff count. Marked as 'g' in official tables."
+  },
+  "tableau1": {
+    "classes": [
+      { "classe": "1", "minCaMDH": 40, "minEngineers": 1, "minTechnicians": 1, "minGeologues": 1, "minEncadrementScore": 65 },
+      { "classe": "2", "minCaMDH": 20, "minEngineers": 0, "minTechnicians": 1, "minGeologues": 1, "minEncadrementScore": 50 },
+      { "classe": "3", "minCaMDH": 10, "minEngineers": 1, "minTechnicians": 0, "minGeologues": 0, "minEncadrementScore": 40 },
+      { "classe": "4", "minCaMDH": 5, "minEngineers": 0, "minTechnicians": 1, "minGeologues": 0, "minEncadrementScore": 30 }
+    ],
+    "classeBonus": {
+      "appliesToClasse": "1",
+      "pointsPerSlice": 18,
+      "sliceMDH": 25,
+      "requiresEngineerPerSlice": true
+    }
+  },
+  "tableau2": {
+    "classes": [
+      { "classe": "1", "minCaMDH": 15, "minCapitalSocialMDH": 8, "minEngineers": 1, "minGeologues": 1, "minTechnicians": 1, "minEncadrementScore": 65 },
+      { "classe": "2", "minCaMDH": 6, "minCapitalSocialMDH": 4, "minEngineers": 0, "minGeologues": 1, "minTechnicians": 1, "minEncadrementScore": 50 },
+      { "classe": "3", "minCaMDH": null, "minCapitalSocialMDH": 3, "minEngineers": 1, "minGeologues": 0, "minTechnicians": 0, "minEncadrementScore": 40 },
+      { "classe": "4", "minCaMDH": null, "minCapitalSocialMDH": 2, "minEngineers": 0, "minGeologues": 0, "minTechnicians": 1, "minEncadrementScore": 30 }
+    ]
+  }
+}

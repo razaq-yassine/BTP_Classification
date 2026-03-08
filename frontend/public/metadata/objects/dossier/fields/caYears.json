@@ -1,0 +1,12 @@
+{
+  "key": "caYears",
+  "label": "Période CA",
+  "type": "select",
+  "required": false,
+  "editable": true,
+  "defaultValue": "3",
+  "options": [
+    { "value": "3", "label": "3 ans" },
+    { "value": "5", "label": "5 ans" }
+  ]
+}

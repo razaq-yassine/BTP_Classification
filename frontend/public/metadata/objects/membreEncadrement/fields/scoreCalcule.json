@@ -1,0 +1,1 @@
+{ "key": "scoreCalcule", "label": "Score calculé", "type": "number", "required": false, "editable": false, "defaultValue": 0 }

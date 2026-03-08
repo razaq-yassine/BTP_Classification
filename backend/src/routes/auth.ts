@@ -14,27 +14,27 @@ import { loadEmailConfig, enqueueEmail } from '../services/email.js'
 
 const rateLimiterLogin = rateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 5,
+  limit: 100,
   keyGenerator: (c) => getClientIp(c),
 })
 const rateLimiterVerify2FA = rateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 5,
+  limit: 100,
   keyGenerator: (c) => getClientIp(c),
 })
 const rateLimiterRegister = rateLimiter({
   windowMs: 60 * 60 * 1000,
-  limit: 3,
+  limit: 50,
   keyGenerator: (c) => getClientIp(c),
 })
 const rateLimiterChangePasswordRequired = rateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 5,
+  limit: 50,
   keyGenerator: (c) => getClientIp(c),
 })
 const rateLimiterInviteValidate = rateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 20,
+  limit: 200,
   keyGenerator: (c) => getClientIp(c),
 })
 

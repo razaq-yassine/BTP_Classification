@@ -58,6 +58,10 @@ function toSnakeCase(str: string): string {
   return str.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`).replace(/^_/, "");
 }
 
+function getColumnName(field: FieldDef): string {
+  return field.columnName ?? toSnakeCase(field.key);
+}
+
 function pluralize(name: string): string {
   if (name.endsWith("y")) return name.slice(0, -1) + "ies";
   if (name.endsWith("s")) return name + "es";
@@ -85,6 +89,8 @@ type FieldDef = {
   /** 'masterDetail' = required + cascade delete. Implies deleteOnCascade. */
   relationshipType?: string;
   deleteOnCascade?: boolean;
+  /** Override DB column name when toSnakeCase(key) is wrong (e.g. caActualDH -> ca_actual_dh not ca_actual_d_h). */
+  columnName?: string;
 };
 
 function mapTypeToSql(field: FieldDef): string {
@@ -245,7 +251,7 @@ function generateExtensionColumnLines(
   if (fields.length === 0) return "";
   const lines: string[] = [];
   for (const field of fields) {
-    const colName = toSnakeCase(field.key);
+    const colName = getColumnName(field);
     const notNull = field.required ? ".notNull()" : "";
     if (field.type === "reference" || field.type === "masterDetail") {
       const refTable = pluralize(field.objectName || field.key);
@@ -341,7 +347,7 @@ function generateTable(
   }
 
   for (const field of fields) {
-    const colName = toSnakeCase(field.key);
+    const colName = getColumnName(field);
     const refTable = references.get(field.key) || pluralize(field.key);
     const cascade =
       field.type === "masterDetail" ||
@@ -383,6 +389,7 @@ function generateTable(
         );
       } else if (
         field.type === "text" ||
+        field.type === "json" ||
         field.type === "geolocation" ||
         field.type === "address" ||
         field.type === "richText" ||
@@ -585,8 +592,8 @@ function main() {
     tableNames.push("organizations");
   }
 
-  // Emit tenants table when tenant mode has tenants (single_tenant or org_and_tenant)
-  if (hasTenants) {
+  // Emit tenants table (always, for compatibility; entity registry excludes it in multi_tenant)
+  if (hasOrgs) {
     const tenantExtCols = generateExtensionColumnLines(
       loadExtensionFields("tenant"),
       dialect
@@ -736,13 +743,21 @@ function main() {
   tableNames.push("notificationSettings");
 
   // Internal invite_tokens table (invite-based signup)
+  const inviteTokensTenantRef =
+    hasOrgs && dialect === "mysql"
+      ? "int('tenant_id').references(() => tenants.id, { onDelete: 'cascade' })"
+      : hasOrgs && dialect === "sqlite"
+        ? "integer('tenant_id').references(() => tenants.id, { onDelete: 'cascade' })"
+        : dialect === "mysql"
+          ? "int('tenant_id')"
+          : "integer('tenant_id')";
   const inviteTokensTable =
     dialect === "mysql"
       ? `export const inviteTokens = mysqlTable('invite_tokens', {
   id: int('id').autoincrement().primaryKey(),
   token: varchar('token', { length: 64 }).notNull().unique(),
   organizationId: int('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
-  tenantId: int('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
+  tenantId: ${inviteTokensTenantRef},
   email: varchar('email', { length: 255 }),
   profile: varchar('profile', { length: 255 }).default('standard-user'),
   invitedById: int('invited_by_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
@@ -753,7 +768,7 @@ function main() {
   id: integer('id').primaryKey({ autoIncrement: true }),
   token: text('token').notNull().unique(),
   organizationId: integer('organization_id').references(() => organizations.id, { onDelete: 'cascade' }),
-  tenantId: integer('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
+  tenantId: ${inviteTokensTenantRef},
   email: text('email'),
   profile: text('profile').default('standard-user'),
   invitedById: integer('invited_by_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
@@ -1103,7 +1118,12 @@ function generateEntityRegistry(objectDirs: string[], tenantMode: TenantMode) {
     tenantMode === "org_and_tenant"
   )
     systemObjectsToAdd.push("organization");
-  if (tenantMode === "single_tenant" || tenantMode === "org_and_tenant")
+  // Add tenant when we emit tenants table (hasOrgs - always for multi_tenant/single/org_and_tenant)
+  if (
+    tenantMode === "single_tenant" ||
+    tenantMode === "multi_tenant" ||
+    tenantMode === "org_and_tenant"
+  )
     systemObjectsToAdd.push("tenant");
 
   for (const objectName of systemObjectsToAdd) {

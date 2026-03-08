@@ -7,10 +7,13 @@ import { Construction } from 'lucide-react'
 import { AttachmentsSection } from './AttachmentsSection'
 import { RecordHistorySection } from './RecordHistorySection'
 import { usePermissions } from '@/hooks/usePermissions'
+import { DossierResumeBanner } from '@/components/dossier/DossierResumeBanner'
 
 interface GenericObjectDetailViewSideSectionProps {
   objectDefinition: ObjectDefinition
   record: GenericRecord | null
+  /** When provided and object is dossier, enables the resume banner and passes this callback */
+  onOpenDossierWizard?: () => void
 }
 
 // Component for tab content that is under development
@@ -25,7 +28,11 @@ function UnderDevelopmentTabContent({ name, underDevelopmentText }: { name: stri
   );
 }
 
-export function GenericObjectDetailViewSideSection({ objectDefinition, record }: GenericObjectDetailViewSideSectionProps) {
+export function GenericObjectDetailViewSideSection({
+  objectDefinition,
+  record,
+  onOpenDossierWizard,
+}: GenericObjectDetailViewSideSectionProps) {
   const { t } = useTranslation('common')
   const [activeTab, setActiveTab] = useState('history');
   const { canUpdate } = usePermissions();
@@ -33,6 +40,14 @@ export function GenericObjectDetailViewSideSection({ objectDefinition, record }:
 
   return (
     <div className="space-y-4">
+      {/* Dossier resume banner - at the very top of the detail view side section */}
+      {onOpenDossierWizard && (
+        <DossierResumeBanner
+          objectDefinition={objectDefinition}
+          record={record}
+          onResumeClick={onOpenDossierWizard}
+        />
+      )}
       <Card className="py-1">
         <CardContent className="p-0">
           <Tabs defaultValue="history" value={activeTab} onValueChange={setActiveTab} className="w-full">

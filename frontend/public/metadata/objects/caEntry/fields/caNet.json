@@ -1,0 +1,8 @@
+{
+  "key": "caNet",
+  "label": "CA net retenu TTC (DH)",
+  "type": "formula",
+  "editable": false,
+  "formulaExpression": "caTTC - montantSoustraite",
+  "render": "currency"
+}

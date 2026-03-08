@@ -169,6 +169,57 @@ function maskEmailConfig(data: Record<string, unknown>): Record<string, unknown>
   return { ...data, emailConfig: masked };
 }
 
+const BTP_RULES_PATH = path.join(backendRoot, "src", "engine", "rules");
+const SECTOR_FILES = ["sectorA", "sectorB", "sectorC", "sectorD", "sectorE", "sectorF", "sectorG", "sectorH", "sectorI", "sectorY"] as const;
+
+configRoutes.get("/btp-materiel-minimum", (c) => {
+  try {
+    const fpath = path.join(BTP_RULES_PATH, "materielMinimum.json");
+    if (!fs.existsSync(fpath)) return c.json({ sectors: {} });
+    const data = JSON.parse(fs.readFileSync(fpath, "utf-8")) as { sectors?: Record<string, string[]> };
+    return c.json({ sectors: data.sectors ?? {} });
+  } catch (err) {
+    console.error("[config] btp-materiel-minimum error:", err);
+    return c.json({ sectors: {} });
+  }
+});
+
+configRoutes.get("/btp-encadrement", (c) => {
+  try {
+    const encPath = path.join(BTP_RULES_PATH, "encadrement.json");
+    if (!fs.existsSync(encPath)) return c.json({ roles: [], minScoresBySectorClasse: {} });
+    const enc = JSON.parse(fs.readFileSync(encPath, "utf-8")) as { roles: Array<{ role: string; label: string; score?: number; scoreLt5?: number; scoreGte5?: number }> };
+    const minScores: Record<string, Record<string, { t1: number; t2?: number }>> = {};
+    for (const sf of SECTOR_FILES) {
+      const sector = sf.replace("sector", "");
+      const fpath = path.join(BTP_RULES_PATH, `${sf}.json`);
+      if (!fs.existsSync(fpath)) continue;
+      const sectorCfg = JSON.parse(fs.readFileSync(fpath, "utf-8")) as {
+        tableau1?: { classes?: Array<{ classe: string; minEncadrementScore: number }> };
+        tableau2?: { classes?: Array<{ classe: string; minEncadrementScore: number }> };
+      };
+      const t1: Record<string, number> = {};
+      const t2: Record<string, number> = {};
+      for (const cls of sectorCfg.tableau1?.classes ?? []) {
+        t1[cls.classe] = cls.minEncadrementScore;
+      }
+      for (const cls of sectorCfg.tableau2?.classes ?? []) {
+        t2[cls.classe] = cls.minEncadrementScore;
+      }
+      minScores[sector] = Object.fromEntries(
+        [...new Set([...Object.keys(t1), ...Object.keys(t2)])].map((cl) => [
+          cl,
+          { t1: t1[cl] ?? 0, ...(t2[cl] != null && { t2: t2[cl] }) },
+        ])
+      );
+    }
+    return c.json({ roles: enc.roles ?? [], minScoresBySectorClasse: minScores });
+  } catch (err) {
+    console.error("[config] btp-encadrement error:", err);
+    return c.json({ roles: [], minScoresBySectorClasse: {} });
+  }
+});
+
 configRoutes.get("/app-config", (c) => {
   let data: Record<string, unknown> = { defaultCurrency: "USD", currencySymbol: "$", defaultPreferredLanguage: "en" };
   if (fs.existsSync(APP_CONFIG_PATH)) {

@@ -1,0 +1,14 @@
+{
+  "key": "annee",
+  "label": "Année",
+  "type": "select",
+  "required": true,
+  "editable": true,
+  "options": [
+    { "value": "N", "label": "Année N" },
+    { "value": "N-1", "label": "Année N-1" },
+    { "value": "N-2", "label": "Année N-2" },
+    { "value": "N-3", "label": "Année N-3" },
+    { "value": "N-4", "label": "Année N-4" }
+  ]
+}

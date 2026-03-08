@@ -1,15 +1,6 @@
 {
+  "appName": "BTP Classifier",
   "defaultCurrency": "MAD",
-  "currencySymbol": "Dh",
-  "defaultPreferredLanguage": null,
-  "emailConfig": {
-    "enabled": true,
-    "fromEmail": "noreply@genericsaas.com",
-    "fromName": "Generic Saas",
-    "smtpHost": "smtp.gmail.com",
-    "smtpPort": 587,
-    "smtpSecure": false,
-    "smtpUser": "opticnoreply@gmail.com",
-    "smtpPassword": ""
-  }
+  "currencySymbol": "DH",
+  "defaultPreferredLanguage": "fr"
 }

@@ -1,4 +1,84 @@
 {
+  "caEntry": {
+    "label": "إدخال رقم الأعمال",
+    "labelPlural": "إدخالات رقم الأعمال",
+    "fields": {
+      "name": "المرجع",
+      "dossier": "الملف",
+      "secteur": "القطاع",
+      "annee": "السنة",
+      "caTTC": "رقم الأعمال ش.ض.م.م (د.م)",
+      "caHT": "رقم الأعمال ش.ض.م (د.م)",
+      "montantSoustraite": "المبلغ الفرعي ش.ض.م.م (د.م)",
+      "isGrosOeuvresSingleLot": "الأشغال الكبرى لوت واحد بدون BDPU (قطاع أ فقط)",
+      "caNet": "صافي رقم الأعمال المحتفظ به ش.ض.م.م (د.م)"
+    }
+  },
+  "membreEncadrement": {
+    "label": "عضو الإشراف",
+    "labelPlural": "أعضاء الإشراف",
+    "sections": { "informations": "المعلومات" },
+    "fields": {
+      "name": "الاسم الكامل",
+      "role": "الدور",
+      "diplome": "الشهادة",
+      "anneesExperience": "سنوات الخبرة",
+      "secteurImputation": "قطاع الشهادة",
+      "scoreCalcule": "الدرجة المحسوبة",
+      "dossier": "الملف"
+    }
+  },
+  "materielItem": {
+    "label": "المعدات",
+    "labelPlural": "المعدات",
+    "sections": { "materiel": "المعدات" },
+    "fields": {
+      "name": "التوصيف",
+      "secteur": "القطاع",
+      "quantite": "الكمية",
+      "valeur": "القيمة (د.م)",
+      "proprietaire": "المالك (مقابل المستأجر)",
+      "dossier": "الملف"
+    }
+  },
+  "resultatSimulation": {
+    "label": "نتيجة المحاكاة",
+    "labelPlural": "نتائج المحاكاة",
+    "sections": { "resultat": "النتيجة" },
+    "fields": {
+      "name": "المرجع",
+      "dossier": "الملف",
+      "secteur": "القطاع",
+      "classeObtenue": "الفئة المحصلة",
+      "scoreCa": "رقم الأعمال ✓/✗",
+      "scoreCapital": "رأس المال ✓/✗",
+      "scoreEncadrement": "الإشراف ✓/✗",
+      "scoreMasseSalariale": "الكتلة الأجرية ✓/✗",
+      "scoreMateriel": "المعدات ✓/✗",
+      "details": "تفاصيل الحساب",
+      "computedAt": "تاريخ الحساب"
+    }
+  },
+  "classificationRule": {
+    "label": "قاعدة التصنيف",
+    "labelPlural": "قواعد التصنيف",
+    "sections": {
+      "paramètresDeClassification": "معايير التصنيف"
+    },
+    "fields": {
+      "name": "المرجع",
+      "sector": "القطاع",
+      "classe": "الفئة",
+      "method": "الطريقة",
+      "minCa": "الحد الأدنى للرقم (م.د.ح)",
+      "minCapitalSocial": "الحد الأدنى لرأس المال (م.د.ح)",
+      "minEngineers": "الحد الأدنى للمهندسين",
+      "minTechnicians": "الحد الأدنى للفنيين",
+      "minEncadrementScore": "الحد الأدنى لدرجة الإشراف",
+      "masseSalarialeRatio": "الحد الأدنى لنسبة الكتلة الأجرية (%)",
+      "isActive": "نشط"
+    }
+  },
   "organization": {
     "label": "منظمة",
     "labelPlural": "المنظمات",

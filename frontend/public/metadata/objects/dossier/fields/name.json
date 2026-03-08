@@ -1,0 +1,1 @@
+{ "key": "name", "label": "N° Dossier", "type": "autoNumber", "required": true, "editable": false, "autoNumberPattern": "DOS-{0000}", "autoNumberStart": 1 }

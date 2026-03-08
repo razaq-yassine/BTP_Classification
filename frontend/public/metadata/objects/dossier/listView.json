@@ -1,0 +1,37 @@
+{
+  "defaultView": "all",
+  "views": [
+    {
+      "key": "all",
+      "label": "Tous les dossiers",
+      "fields": ["name","raisonSociale","sectorsSelected","status","caMaxHT","createdAt"],
+      "defaultSort": "createdAt",
+      "defaultSortOrder": "desc",
+      "pageSize": 20,
+      "statistics": [
+        { "key": "totalDossiers", "label": "Total dossiers", "type": "count", "icon": "IconFolder" }
+      ]
+    },
+    {
+      "key": "inProgress",
+      "label": "En cours",
+      "fields": ["name","raisonSociale","sectorsSelected","status","currentStep"],
+      "filters": [{ "field": "status", "operator": "in", "value": ["DRAFT","IN_PROGRESS","EDITING"] }],
+      "defaultSort": "updatedAt",
+      "defaultSortOrder": "desc",
+      "pageSize": 20
+    },
+    {
+      "key": "completed",
+      "label": "Complétés",
+      "fields": ["name","raisonSociale","sectorsSelected","caMaxHT","updatedAt"],
+      "filters": [{ "field": "status", "operator": "eq", "value": "COMPLETED" }],
+      "defaultSort": "updatedAt",
+      "defaultSortOrder": "desc",
+      "pageSize": 20,
+      "statistics": [
+        { "key": "completedCount", "label": "Complétés", "type": "count", "icon": "IconCheckCircle" }
+      ]
+    }
+  ]
+}

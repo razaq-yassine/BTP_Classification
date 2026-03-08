@@ -7,6 +7,6 @@ export default defineConfig({
   dbCredentials: {
     url:
       process.env.DATABASE_URL ||
-      "mysql://root:root@localhost:3306/generic_saas"
+      "mysql://root:root@localhost:3306/btp_classification_platform"
   }
 });

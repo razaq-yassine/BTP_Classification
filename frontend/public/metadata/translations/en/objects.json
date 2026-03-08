@@ -1,4 +1,84 @@
 {
+  "caEntry": {
+    "label": "CA Entry",
+    "labelPlural": "CA Entries",
+    "fields": {
+      "name": "Reference",
+      "dossier": "Dossier",
+      "secteur": "Sector",
+      "annee": "Year",
+      "caTTC": "CA incl. VAT (DH)",
+      "caHT": "CA excl. VAT (DH)",
+      "montantSoustraite": "Subcontracted amount incl. VAT (DH)",
+      "isGrosOeuvresSingleLot": "Main works single lot without BDPU (Sector A only)",
+      "caNet": "Net CA retained incl. VAT (DH)"
+    }
+  },
+  "membreEncadrement": {
+    "label": "Supervision member",
+    "labelPlural": "Supervision members",
+    "sections": { "informations": "Information" },
+    "fields": {
+      "name": "Full name",
+      "role": "Role",
+      "diplome": "Diploma",
+      "anneesExperience": "Years of experience",
+      "secteurImputation": "Sector (diploma)",
+      "scoreCalcule": "Calculated score",
+      "dossier": "Dossier"
+    }
+  },
+  "materielItem": {
+    "label": "Equipment",
+    "labelPlural": "Equipment",
+    "sections": { "materiel": "Equipment" },
+    "fields": {
+      "name": "Designation",
+      "secteur": "Sector",
+      "quantite": "Quantity",
+      "valeur": "Value (DH)",
+      "proprietaire": "Owner (vs rented)",
+      "dossier": "Dossier"
+    }
+  },
+  "resultatSimulation": {
+    "label": "Simulation result",
+    "labelPlural": "Simulation results",
+    "sections": { "resultat": "Result" },
+    "fields": {
+      "name": "Reference",
+      "dossier": "Dossier",
+      "secteur": "Sector",
+      "classeObtenue": "Class obtained",
+      "scoreCa": "CA ✓/✗",
+      "scoreCapital": "Capital social ✓/✗",
+      "scoreEncadrement": "Supervision ✓/✗",
+      "scoreMasseSalariale": "Wage mass ✓/✗",
+      "scoreMateriel": "Equipment ✓/✗",
+      "details": "Calculation details",
+      "computedAt": "Computed on"
+    }
+  },
+  "classificationRule": {
+    "label": "Classification Rule",
+    "labelPlural": "Classification Rules",
+    "sections": {
+      "paramètresDeClassification": "Classification Parameters"
+    },
+    "fields": {
+      "name": "Reference",
+      "sector": "Sector",
+      "classe": "Class",
+      "method": "Method",
+      "minCa": "Min. CA (MDH)",
+      "minCapitalSocial": "Min. Capital (MDH)",
+      "minEngineers": "Min. Engineers",
+      "minTechnicians": "Min. Technicians",
+      "minEncadrementScore": "Min. Supervision Score",
+      "masseSalarialeRatio": "Min. Wage Mass Ratio (%)",
+      "isActive": "Active"
+    }
+  },
   "organization": {
     "label": "Organization",
     "labelPlural": "Organizations",

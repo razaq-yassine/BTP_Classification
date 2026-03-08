@@ -331,11 +331,11 @@ fileRoutes.get("/serve", authMiddleware, async (c) => {
   if (entityPath === "organizations" && !isAdmin && user?.organizationId != null) {
     tenantConds = [...tenantConds, eq((table as any).id, user.organizationId)];
   }
-  if (entityPath === "tenants" && !isAdmin && user?.tenantId != null) {
+  if ((entityPath as string) === "tenants" && !isAdmin && user?.tenantId != null) {
     tenantConds = [...tenantConds, eq((table as any).id, user.tenantId)];
   }
   if (
-    entityPath === "tenants" &&
+    (entityPath as string) === "tenants" &&
     user?.organizationId != null &&
     user?.tenantId == null
   ) {

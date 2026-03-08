@@ -1,0 +1,11 @@
+{
+  "layout": "two-column",
+  "sections": [
+    {
+      "title": "Paramètres de classification",
+      "columns": 2,
+      "defaultOpen": true,
+      "fields": ["sector","classe","method","minCa","minCapitalSocial","minEngineers","minTechnicians","minEncadrementScore","masseSalarialeRatio","isActive"]
+    }
+  ]
+}

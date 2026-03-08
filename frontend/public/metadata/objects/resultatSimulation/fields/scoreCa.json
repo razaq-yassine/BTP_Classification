@@ -1,0 +1,1 @@
+{ "key": "scoreCa", "label": "CA ✓/✗", "type": "boolean", "editable": false, "render": "booleanBadge" }

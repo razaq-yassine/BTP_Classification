@@ -31,10 +31,12 @@ import { Route as authSignInRouteImport } from './routes/(auth)/sign-in'
 import { Route as authOtpRouteImport } from './routes/(auth)/otp'
 import { Route as authForgotPasswordRouteImport } from './routes/(auth)/forgot-password'
 import { Route as AuthenticatedSettingsRouteRouteImport } from './routes/_authenticated/settings/route'
+import { Route as AuthenticatedDossiersRouteRouteImport } from './routes/_authenticated/dossiers/route'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTasksIndexRouteImport } from './routes/_authenticated/tasks/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedHelpCenterIndexRouteImport } from './routes/_authenticated/help-center/index'
+import { Route as AuthenticatedDossiersIndexRouteImport } from './routes/_authenticated/dossiers/index'
 import { Route as AuthenticatedChatsIndexRouteImport } from './routes/_authenticated/chats/index'
 import { Route as AuthenticatedAppsIndexRouteImport } from './routes/_authenticated/apps/index'
 import { Route as AuthenticatedObjectNameIndexRouteImport } from './routes/_authenticated/$objectName/index'
@@ -51,6 +53,7 @@ import { Route as AuthenticatedSettingsEmailTemplatesRouteImport } from './route
 import { Route as AuthenticatedSettingsEmailRouteImport } from './routes/_authenticated/settings/email'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings/appearance'
 import { Route as AuthenticatedSettingsAccountRouteImport } from './routes/_authenticated/settings/account'
+import { Route as AuthenticatedDossiersNewRouteImport } from './routes/_authenticated/dossiers/new'
 import { Route as AuthenticatedDevComponentsSalesforcePathRouteImport } from './routes/_authenticated/dev-components/salesforce-path'
 import { Route as AuthenticatedDevComponentsOrderDetailPathRouteImport } from './routes/_authenticated/dev-components/order-detail-path'
 import { Route as AuthenticatedDevComponentsDetailViewFormatterRouteImport } from './routes/_authenticated/dev-components/detail-view-formatter'
@@ -61,10 +64,12 @@ import { Route as AuthenticatedSettingsSidebarAssignmentIndexRouteImport } from 
 import { Route as AuthenticatedSettingsProfilesIndexRouteImport } from './routes/_authenticated/settings/profiles/index'
 import { Route as AuthenticatedSettingsObjectManagerIndexRouteImport } from './routes/_authenticated/settings/object-manager/index'
 import { Route as AuthenticatedSettingsEmailTemplatesIndexRouteImport } from './routes/_authenticated/settings/email-templates/index'
+import { Route as AuthenticatedDossiersDossierIdIndexRouteImport } from './routes/_authenticated/dossiers/$dossierId/index'
 import { Route as AuthenticatedSettingsUsersUserIdRouteImport } from './routes/_authenticated/settings/users/$userId'
 import { Route as AuthenticatedSettingsProfilesProfileNameRouteImport } from './routes/_authenticated/settings/profiles/$profileName'
 import { Route as AuthenticatedSettingsObjectManagerObjectNameRouteImport } from './routes/_authenticated/settings/object-manager/$objectName'
 import { Route as AuthenticatedSettingsEmailTemplatesTemplateKeyRouteImport } from './routes/_authenticated/settings/email-templates/$templateKey'
+import { Route as AuthenticatedDossiersDossierIdEditRouteImport } from './routes/_authenticated/dossiers/$dossierId/edit'
 import { Route as AuthenticatedSettingsProfilesProfileNameIndexRouteImport } from './routes/_authenticated/settings/profiles/$profileName/index'
 import { Route as AuthenticatedSettingsProfilesProfileNameObjectsRouteImport } from './routes/_authenticated/settings/profiles/$profileName/objects'
 import { Route as AuthenticatedSettingsProfilesProfileNameListViewsRouteImport } from './routes/_authenticated/settings/profiles/$profileName/list-views'
@@ -182,6 +187,12 @@ const AuthenticatedSettingsRouteRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDossiersRouteRoute =
+  AuthenticatedDossiersRouteRouteImport.update({
+    id: '/dossiers',
+    path: '/dossiers',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -203,6 +214,12 @@ const AuthenticatedHelpCenterIndexRoute =
     id: '/help-center/',
     path: '/help-center/',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDossiersIndexRoute =
+  AuthenticatedDossiersIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedDossiersRouteRoute,
   } as any)
 const AuthenticatedChatsIndexRoute = AuthenticatedChatsIndexRouteImport.update({
   id: '/chats/',
@@ -298,6 +315,12 @@ const AuthenticatedSettingsAccountRoute =
     path: '/account',
     getParentRoute: () => AuthenticatedSettingsRouteRoute,
   } as any)
+const AuthenticatedDossiersNewRoute =
+  AuthenticatedDossiersNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedDossiersRouteRoute,
+  } as any)
 const AuthenticatedDevComponentsSalesforcePathRoute =
   AuthenticatedDevComponentsSalesforcePathRouteImport.update({
     id: '/dev-components/salesforce-path',
@@ -358,6 +381,12 @@ const AuthenticatedSettingsEmailTemplatesIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedSettingsEmailTemplatesRoute,
   } as any)
+const AuthenticatedDossiersDossierIdIndexRoute =
+  AuthenticatedDossiersDossierIdIndexRouteImport.update({
+    id: '/$dossierId/',
+    path: '/$dossierId/',
+    getParentRoute: () => AuthenticatedDossiersRouteRoute,
+  } as any)
 const AuthenticatedSettingsUsersUserIdRoute =
   AuthenticatedSettingsUsersUserIdRouteImport.update({
     id: '/$userId',
@@ -381,6 +410,12 @@ const AuthenticatedSettingsEmailTemplatesTemplateKeyRoute =
     id: '/$templateKey',
     path: '/$templateKey',
     getParentRoute: () => AuthenticatedSettingsEmailTemplatesRoute,
+  } as any)
+const AuthenticatedDossiersDossierIdEditRoute =
+  AuthenticatedDossiersDossierIdEditRouteImport.update({
+    id: '/$dossierId/edit',
+    path: '/$dossierId/edit',
+    getParentRoute: () => AuthenticatedDossiersRouteRoute,
   } as any)
 const AuthenticatedSettingsProfilesProfileNameIndexRoute =
   AuthenticatedSettingsProfilesProfileNameIndexRouteImport.update({
@@ -427,6 +462,7 @@ export interface FileRoutesByFullPath {
   '/login-verify-2fa': typeof LoginVerify2faRoute
   '/secure-access': typeof SecureAccessRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/dossiers': typeof AuthenticatedDossiersRouteRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/otp': typeof authOtpRoute
@@ -445,6 +481,7 @@ export interface FileRoutesByFullPath {
   '/dev-components/detail-view-formatter': typeof AuthenticatedDevComponentsDetailViewFormatterRoute
   '/dev-components/order-detail-path': typeof AuthenticatedDevComponentsOrderDetailPathRoute
   '/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
+  '/dossiers/new': typeof AuthenticatedDossiersNewRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/email': typeof AuthenticatedSettingsEmailRoute
@@ -461,14 +498,17 @@ export interface FileRoutesByFullPath {
   '/$objectName': typeof AuthenticatedObjectNameIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
+  '/dossiers/': typeof AuthenticatedDossiersIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/dossiers/$dossierId/edit': typeof AuthenticatedDossiersDossierIdEditRoute
   '/settings/email-templates/$templateKey': typeof AuthenticatedSettingsEmailTemplatesTemplateKeyRoute
   '/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
   '/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameRouteWithChildren
   '/settings/users/$userId': typeof AuthenticatedSettingsUsersUserIdRoute
+  '/dossiers/$dossierId': typeof AuthenticatedDossiersDossierIdIndexRoute
   '/settings/email-templates/': typeof AuthenticatedSettingsEmailTemplatesIndexRoute
   '/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/settings/profiles/': typeof AuthenticatedSettingsProfilesIndexRoute
@@ -507,6 +547,7 @@ export interface FileRoutesByTo {
   '/dev-components/detail-view-formatter': typeof AuthenticatedDevComponentsDetailViewFormatterRoute
   '/dev-components/order-detail-path': typeof AuthenticatedDevComponentsOrderDetailPathRoute
   '/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
+  '/dossiers/new': typeof AuthenticatedDossiersNewRoute
   '/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/settings/email': typeof AuthenticatedSettingsEmailRoute
@@ -517,13 +558,16 @@ export interface FileRoutesByTo {
   '/$objectName': typeof AuthenticatedObjectNameIndexRoute
   '/apps': typeof AuthenticatedAppsIndexRoute
   '/chats': typeof AuthenticatedChatsIndexRoute
+  '/dossiers': typeof AuthenticatedDossiersIndexRoute
   '/help-center': typeof AuthenticatedHelpCenterIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/tasks': typeof AuthenticatedTasksIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
+  '/dossiers/$dossierId/edit': typeof AuthenticatedDossiersDossierIdEditRoute
   '/settings/email-templates/$templateKey': typeof AuthenticatedSettingsEmailTemplatesTemplateKeyRoute
   '/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
   '/settings/users/$userId': typeof AuthenticatedSettingsUsersUserIdRoute
+  '/dossiers/$dossierId': typeof AuthenticatedDossiersDossierIdIndexRoute
   '/settings/email-templates': typeof AuthenticatedSettingsEmailTemplatesIndexRoute
   '/settings/object-manager': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/settings/profiles': typeof AuthenticatedSettingsProfilesIndexRoute
@@ -546,6 +590,7 @@ export interface FileRoutesById {
   '/login-verify-2fa': typeof LoginVerify2faRoute
   '/secure-access': typeof SecureAccessRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/_authenticated/dossiers': typeof AuthenticatedDossiersRouteRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteRouteWithChildren
   '/(auth)/forgot-password': typeof authForgotPasswordRoute
   '/(auth)/otp': typeof authOtpRoute
@@ -564,6 +609,7 @@ export interface FileRoutesById {
   '/_authenticated/dev-components/detail-view-formatter': typeof AuthenticatedDevComponentsDetailViewFormatterRoute
   '/_authenticated/dev-components/order-detail-path': typeof AuthenticatedDevComponentsOrderDetailPathRoute
   '/_authenticated/dev-components/salesforce-path': typeof AuthenticatedDevComponentsSalesforcePathRoute
+  '/_authenticated/dossiers/new': typeof AuthenticatedDossiersNewRoute
   '/_authenticated/settings/account': typeof AuthenticatedSettingsAccountRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
   '/_authenticated/settings/email': typeof AuthenticatedSettingsEmailRoute
@@ -580,14 +626,17 @@ export interface FileRoutesById {
   '/_authenticated/$objectName/': typeof AuthenticatedObjectNameIndexRoute
   '/_authenticated/apps/': typeof AuthenticatedAppsIndexRoute
   '/_authenticated/chats/': typeof AuthenticatedChatsIndexRoute
+  '/_authenticated/dossiers/': typeof AuthenticatedDossiersIndexRoute
   '/_authenticated/help-center/': typeof AuthenticatedHelpCenterIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/tasks/': typeof AuthenticatedTasksIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
+  '/_authenticated/dossiers/$dossierId/edit': typeof AuthenticatedDossiersDossierIdEditRoute
   '/_authenticated/settings/email-templates/$templateKey': typeof AuthenticatedSettingsEmailTemplatesTemplateKeyRoute
   '/_authenticated/settings/object-manager/$objectName': typeof AuthenticatedSettingsObjectManagerObjectNameRoute
   '/_authenticated/settings/profiles/$profileName': typeof AuthenticatedSettingsProfilesProfileNameRouteWithChildren
   '/_authenticated/settings/users/$userId': typeof AuthenticatedSettingsUsersUserIdRoute
+  '/_authenticated/dossiers/$dossierId/': typeof AuthenticatedDossiersDossierIdIndexRoute
   '/_authenticated/settings/email-templates/': typeof AuthenticatedSettingsEmailTemplatesIndexRoute
   '/_authenticated/settings/object-manager/': typeof AuthenticatedSettingsObjectManagerIndexRoute
   '/_authenticated/settings/profiles/': typeof AuthenticatedSettingsProfilesIndexRoute
@@ -611,6 +660,7 @@ export interface FileRouteTypes {
     | '/login-verify-2fa'
     | '/secure-access'
     | '/verify-email'
+    | '/dossiers'
     | '/settings'
     | '/forgot-password'
     | '/otp'
@@ -629,6 +679,7 @@ export interface FileRouteTypes {
     | '/dev-components/detail-view-formatter'
     | '/dev-components/order-detail-path'
     | '/dev-components/salesforce-path'
+    | '/dossiers/new'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/email'
@@ -645,14 +696,17 @@ export interface FileRouteTypes {
     | '/$objectName'
     | '/apps'
     | '/chats'
+    | '/dossiers/'
     | '/help-center'
     | '/settings/'
     | '/tasks'
     | '/users'
+    | '/dossiers/$dossierId/edit'
     | '/settings/email-templates/$templateKey'
     | '/settings/object-manager/$objectName'
     | '/settings/profiles/$profileName'
     | '/settings/users/$userId'
+    | '/dossiers/$dossierId'
     | '/settings/email-templates/'
     | '/settings/object-manager/'
     | '/settings/profiles/'
@@ -691,6 +745,7 @@ export interface FileRouteTypes {
     | '/dev-components/detail-view-formatter'
     | '/dev-components/order-detail-path'
     | '/dev-components/salesforce-path'
+    | '/dossiers/new'
     | '/settings/account'
     | '/settings/appearance'
     | '/settings/email'
@@ -701,13 +756,16 @@ export interface FileRouteTypes {
     | '/$objectName'
     | '/apps'
     | '/chats'
+    | '/dossiers'
     | '/help-center'
     | '/settings'
     | '/tasks'
     | '/users'
+    | '/dossiers/$dossierId/edit'
     | '/settings/email-templates/$templateKey'
     | '/settings/object-manager/$objectName'
     | '/settings/users/$userId'
+    | '/dossiers/$dossierId'
     | '/settings/email-templates'
     | '/settings/object-manager'
     | '/settings/profiles'
@@ -729,6 +787,7 @@ export interface FileRouteTypes {
     | '/login-verify-2fa'
     | '/secure-access'
     | '/verify-email'
+    | '/_authenticated/dossiers'
     | '/_authenticated/settings'
     | '/(auth)/forgot-password'
     | '/(auth)/otp'
@@ -747,6 +806,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dev-components/detail-view-formatter'
     | '/_authenticated/dev-components/order-detail-path'
     | '/_authenticated/dev-components/salesforce-path'
+    | '/_authenticated/dossiers/new'
     | '/_authenticated/settings/account'
     | '/_authenticated/settings/appearance'
     | '/_authenticated/settings/email'
@@ -763,14 +823,17 @@ export interface FileRouteTypes {
     | '/_authenticated/$objectName/'
     | '/_authenticated/apps/'
     | '/_authenticated/chats/'
+    | '/_authenticated/dossiers/'
     | '/_authenticated/help-center/'
     | '/_authenticated/settings/'
     | '/_authenticated/tasks/'
     | '/_authenticated/users/'
+    | '/_authenticated/dossiers/$dossierId/edit'
     | '/_authenticated/settings/email-templates/$templateKey'
     | '/_authenticated/settings/object-manager/$objectName'
     | '/_authenticated/settings/profiles/$profileName'
     | '/_authenticated/settings/users/$userId'
+    | '/_authenticated/dossiers/$dossierId/'
     | '/_authenticated/settings/email-templates/'
     | '/_authenticated/settings/object-manager/'
     | '/_authenticated/settings/profiles/'
@@ -962,6 +1025,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/dossiers': {
+      id: '/_authenticated/dossiers'
+      path: '/dossiers'
+      fullPath: '/dossiers'
+      preLoaderRoute: typeof AuthenticatedDossiersRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/users/': {
       id: '/_authenticated/users/'
       path: '/users'
@@ -989,6 +1059,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/help-center'
       preLoaderRoute: typeof AuthenticatedHelpCenterIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dossiers/': {
+      id: '/_authenticated/dossiers/'
+      path: '/'
+      fullPath: '/dossiers/'
+      preLoaderRoute: typeof AuthenticatedDossiersIndexRouteImport
+      parentRoute: typeof AuthenticatedDossiersRouteRoute
     }
     '/_authenticated/chats/': {
       id: '/_authenticated/chats/'
@@ -1102,6 +1179,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsAccountRouteImport
       parentRoute: typeof AuthenticatedSettingsRouteRoute
     }
+    '/_authenticated/dossiers/new': {
+      id: '/_authenticated/dossiers/new'
+      path: '/new'
+      fullPath: '/dossiers/new'
+      preLoaderRoute: typeof AuthenticatedDossiersNewRouteImport
+      parentRoute: typeof AuthenticatedDossiersRouteRoute
+    }
     '/_authenticated/dev-components/salesforce-path': {
       id: '/_authenticated/dev-components/salesforce-path'
       path: '/dev-components/salesforce-path'
@@ -1172,6 +1256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsEmailTemplatesIndexRouteImport
       parentRoute: typeof AuthenticatedSettingsEmailTemplatesRoute
     }
+    '/_authenticated/dossiers/$dossierId/': {
+      id: '/_authenticated/dossiers/$dossierId/'
+      path: '/$dossierId'
+      fullPath: '/dossiers/$dossierId'
+      preLoaderRoute: typeof AuthenticatedDossiersDossierIdIndexRouteImport
+      parentRoute: typeof AuthenticatedDossiersRouteRoute
+    }
     '/_authenticated/settings/users/$userId': {
       id: '/_authenticated/settings/users/$userId'
       path: '/$userId'
@@ -1199,6 +1290,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings/email-templates/$templateKey'
       preLoaderRoute: typeof AuthenticatedSettingsEmailTemplatesTemplateKeyRouteImport
       parentRoute: typeof AuthenticatedSettingsEmailTemplatesRoute
+    }
+    '/_authenticated/dossiers/$dossierId/edit': {
+      id: '/_authenticated/dossiers/$dossierId/edit'
+      path: '/$dossierId/edit'
+      fullPath: '/dossiers/$dossierId/edit'
+      preLoaderRoute: typeof AuthenticatedDossiersDossierIdEditRouteImport
+      parentRoute: typeof AuthenticatedDossiersRouteRoute
     }
     '/_authenticated/settings/profiles/$profileName/': {
       id: '/_authenticated/settings/profiles/$profileName/'
@@ -1244,6 +1342,28 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedDossiersRouteRouteChildren {
+  AuthenticatedDossiersNewRoute: typeof AuthenticatedDossiersNewRoute
+  AuthenticatedDossiersIndexRoute: typeof AuthenticatedDossiersIndexRoute
+  AuthenticatedDossiersDossierIdEditRoute: typeof AuthenticatedDossiersDossierIdEditRoute
+  AuthenticatedDossiersDossierIdIndexRoute: typeof AuthenticatedDossiersDossierIdIndexRoute
+}
+
+const AuthenticatedDossiersRouteRouteChildren: AuthenticatedDossiersRouteRouteChildren =
+  {
+    AuthenticatedDossiersNewRoute: AuthenticatedDossiersNewRoute,
+    AuthenticatedDossiersIndexRoute: AuthenticatedDossiersIndexRoute,
+    AuthenticatedDossiersDossierIdEditRoute:
+      AuthenticatedDossiersDossierIdEditRoute,
+    AuthenticatedDossiersDossierIdIndexRoute:
+      AuthenticatedDossiersDossierIdIndexRoute,
+  }
+
+const AuthenticatedDossiersRouteRouteWithChildren =
+  AuthenticatedDossiersRouteRoute._addFileChildren(
+    AuthenticatedDossiersRouteRouteChildren,
+  )
 
 interface AuthenticatedSettingsEmailTemplatesRouteChildren {
   AuthenticatedSettingsEmailTemplatesTemplateKeyRoute: typeof AuthenticatedSettingsEmailTemplatesTemplateKeyRoute
@@ -1437,6 +1557,7 @@ const AuthenticatedSettingsRouteRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDossiersRouteRoute: typeof AuthenticatedDossiersRouteRouteWithChildren
   AuthenticatedSettingsRouteRoute: typeof AuthenticatedSettingsRouteRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFilesRoute: typeof AuthenticatedFilesRoute
@@ -1454,6 +1575,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDossiersRouteRoute: AuthenticatedDossiersRouteRouteWithChildren,
   AuthenticatedSettingsRouteRoute: AuthenticatedSettingsRouteRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFilesRoute: AuthenticatedFilesRoute,

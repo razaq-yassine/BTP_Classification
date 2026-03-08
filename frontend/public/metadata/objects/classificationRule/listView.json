@@ -1,0 +1,6 @@
+{
+  "fields": ["name","sector","classe","method","minCa","minEncadrementScore","isActive"],
+  "defaultSort": "sector",
+  "defaultSortOrder": "asc",
+  "pageSize": 25
+}

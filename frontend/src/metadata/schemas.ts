@@ -4,6 +4,7 @@ export const sidebarConfigSchema = z.object({
   showInSidebar: z.boolean().optional().default(true),
   group: z.string().optional(), // Nav group title (e.g. "Data", "General")
   parent: z.string().optional(), // Parent item title - puts this under a collapsible parent
+  showInSidebarForProfiles: z.array(z.string()).optional(), // Only show for these profiles (e.g. ["admin"])
 })
 
 export const objectSchema = z.object({
@@ -26,7 +27,7 @@ export const fieldSchema = z.object({
   type: z.enum([
     'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text', 'url',
     'select', 'multiselect', 'reference', 'lookup', 'masterDetail', 'autoNumber', 'formula', // lookup maps to reference
-    'password', 'geolocation', 'address', 'richText', 'file', 'color'
+    'password', 'geolocation', 'address', 'richText', 'file', 'color', 'secteur-classe-list'
   ]),
   required: z.boolean().optional(),
   editable: z.boolean().optional(),
@@ -64,6 +65,8 @@ export const fieldSchema = z.object({
   accept: z.string().optional(),
   /** For color fields: suggested hex values as quick-pick options (e.g. light theme presets) */
   suggestedColors: z.array(z.string()).optional(),
+  /** Validation for string inputs (e.g. ICE: pattern, message) */
+  validation: z.object({ pattern: z.string().optional(), message: z.string().optional() }).optional(),
 })
 
 export const statisticsCardSchema = z.object({

@@ -1,0 +1,28 @@
+{
+  "sector": "D",
+  "label": "Ouvrages d'art",
+  "masseSalarialeRatioPercent": 9,
+  "tableau1": {
+    "classes": [
+      { "classe": "1", "minCaMDH": 35, "minEngineers": 2, "minTechnicians": 2, "minEncadrementScore": 70 },
+      { "classe": "2", "minCaMDH": 15, "minEngineers": 1, "minTechnicians": 2, "minEncadrementScore": 55 },
+      { "classe": "3", "minCaMDH": 5, "minEngineers": 1, "minTechnicians": 0, "minEncadrementScore": 40 },
+      { "classe": "4", "minCaMDH": 2, "minEngineers": 0, "minTechnicians": 1, "minEncadrementScore": 28 },
+      { "classe": "5", "minCaMDH": null, "minEngineers": 0, "minTechnicians": 0, "minEncadrementScore": 20 }
+    ],
+    "classeBonus": {
+      "appliesToClasse": "1",
+      "pointsPerSlice": 18,
+      "sliceMDH": 30,
+      "requiresEngineerPerSlice": true
+    }
+  },
+  "tableau2": {
+    "classes": [
+      { "classe": "1", "minCaMDH": 25, "minCapitalSocialMDH": 5, "minEngineers": 2, "minTechnicians": 2, "minEncadrementScore": 70 },
+      { "classe": "2", "minCaMDH": 10, "minCapitalSocialMDH": 2.5, "minEngineers": 1, "minTechnicians": 2, "minEncadrementScore": 55 },
+      { "classe": "3", "minCaMDH": 3, "minCapitalSocialMDH": 1, "minEngineers": 1, "minTechnicians": 0, "minEncadrementScore": 40 },
+      { "classe": "4", "minCaMDH": null, "minCapitalSocialMDH": 0.75, "minEngineers": 0, "minTechnicians": 1, "minEncadrementScore": 28 }
+    ]
+  }
+}

@@ -1,4 +1,9 @@
 [
-  "organization",
-  "tenant"
+  "caEntry",
+  "classificationRule",
+  "dossier",
+  "materielItem",
+  "membreEncadrement",
+  "resultatSimulation",
+  "organization"
 ]

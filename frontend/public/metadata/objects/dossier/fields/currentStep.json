@@ -1,0 +1,1 @@
+{ "key": "currentStep", "label": "Étape actuelle", "type": "number", "required": false, "editable": false, "defaultValue": 1 }

@@ -1,0 +1,1 @@
+{ "key": "formeJuridique", "label": "Forme juridique", "type": "select", "required": false, "editable": true, "options": [{"value":"SARL","label":"SARL"},{"value":"SA","label":"SA"},{"value":"SUARL","label":"SUARL"},{"value":"EI","label":"EI"},{"value":"SNC","label":"SNC"}] }

@@ -1,0 +1,1 @@
+{ "fields": ["name","secteur","classeObtenue","scoreCa","scoreEncadrement","scoreMasseSalariale","computedAt"], "defaultSort": "computedAt", "defaultSortOrder": "desc", "pageSize": 25 }

@@ -28,21 +28,22 @@ This project is **metadata-driven**. For AI-assisted builds, see [AGENT_BUILD_GU
 7. [Field Properties](#field-properties)
 8. [List View Configuration](#list-view-configuration)
 9. [Detail View Configuration](#detail-view-configuration)
-10. [Header Configuration](#header-configuration)
-11. [Related Objects](#related-objects)
-12. [Triggers](#triggers)
-13. [Validation & Deployment](#validation--deployment)
-14. [System Objects](#system-objects)
-15. [Multi-Tenancy (Org/Tenant)](#multi-tenancy-orgtenant)
-16. [File Attachments](#file-attachments)
-17. [Default Currency](#default-currency)
-18. [Record History](#record-history)
-19. [Detail View Side Section](#detail-view-side-section)
-20. [Global Actions Bar](#global-actions-bar)
-21. [Sidebars](#sidebars)
-22. [Dashboard](#dashboard)
-23. [Email and Notifications](#email-and-notifications)
-24. [Translations and Localization](#translations-and-localization)
+10. [Custom Forms and Input Formatter](#custom-forms-and-input-formatter)
+11. [Header Configuration](#header-configuration)
+12. [Related Objects](#related-objects)
+13. [Triggers](#triggers)
+14. [Validation & Deployment](#validation--deployment)
+15. [System Objects](#system-objects)
+16. [Multi-Tenancy (Org/Tenant)](#multi-tenancy-orgtenant)
+17. [File Attachments](#file-attachments)
+18. [Default Currency](#default-currency)
+19. [Record History](#record-history)
+20. [Detail View Side Section](#detail-view-side-section)
+21. [Global Actions Bar](#global-actions-bar)
+22. [Sidebars](#sidebars)
+23. [Dashboard](#dashboard)
+24. [Email and Notifications](#email-and-notifications)
+25. [Translations and Localization](#translations-and-localization)
 
 ---
 
@@ -125,14 +126,18 @@ Each object has its own folder with these files:
    | `name`        | Yes      | Must match folder name                               |
    | `label`       | Yes      | Singular display name                                |
    | `labelPlural` | Yes      | Plural display name                                  |
-   | `apiEndpoint` | Yes      | Base API path (e.g. `/api/products`)                 |
+   | `apiEndpoint` | Yes      | Base API path; must match backend entity route (e.g. `/api/products`). Use camelCase (`/api/resultatSimulations`), not kebab-case (`/api/resultats-simulation`). |
    | `basePath`    | No       | List URL path (defaults from name)                   |
-   | `detailPath`  | No       | Detail URL template                                  |
+   | `detailPath`  | No       | Detail URL template (`$objectNameId`, leading `/`)                |
    | `icon`        | No       | Lucide icon name (PascalCase, e.g. `IconPackage`)    |
    | `color`       | No       | Theme color                                          |
    | `trigger`     | No       | Object name for triggers (see [Triggers](#triggers)) |
    | `sidebar`     | No       | `showInSidebar`, `group`, `parent`                   |
    | `tenantScope` | No       | `null` (platform-wide), `"tenant"`, or `"org_and_tenant"`. Must match `tenant-config.json` mode. Omit = platform-wide. |
+
+   **detailPath format**: Use `$objectNameId` (dollar prefix), not `:objectNameId`. Path must start with `/`. Example: `/products/$productId`. Wrong: `products/:productId`.
+
+   **apiEndpoint format**: Must match the backend entity route exactly. Use camelCase table/entity name: `/api/resultatSimulations` (not `/api/resultats-simulation`). Validation fails if it mismatches.
 
 3. **Add `fields.json`** (must include `name`):
 
@@ -292,6 +297,7 @@ Every object must have a `name` field. It serves as the primary identifier for r
 | `computed`            | boolean                        | Not stored; computed from `sourceFields`                                                                                                                                      |
 | `computedExpression`  | string                         | `concat`, `join`, `lookup`                                                                                                                                                    |
 | `sourceFields`        | string[]                       | For computed fields                                                                                                                                                           |
+| `validation`          | object                         | For string fields: `{ pattern: string, message: string }` — validates on blur, shows error and checkmark. Use for formats (e.g. ICE: `^\\d{15}$`).                          |
 
 ### Reference fields
 
@@ -485,6 +491,76 @@ Views with no `profiles` (e.g. `recentlyViewed` above) are visible to everyone. 
 ```
 
 **Layout**: `single-column`, `two-column`, `tabs`.
+
+---
+
+## Custom Forms and Input Formatter
+
+When creating **custom forms** (multi-step wizards, specialized create/edit flows, or any form that collects user input for metadata-backed objects), **always use `GenericDetailInputFormatter`** for field inputs instead of raw `Input`, `Select`, or `MultiSelect`.
+
+### Why
+
+- **Consistency**: Same UX, styling, validation, and behavior as the generic detail view and create dialog
+- **Metadata-driven**: Uses field definitions (options, validation, labels) from metadata
+- **Validation**: Supports `validation.pattern` and `validation.message` for string fields
+- **Accessibility**: Labels, placeholders, and error handling are uniform
+
+### Usage
+
+1. Load the object definition: `useObjectDefinition('objectName')` or `getObjectDefinition('objectName')`
+2. Resolve field definitions: `definition?.fields?.find((f) => f.key === fieldKey)`
+3. Render each field with `GenericDetailInputFormatter`:
+
+```tsx
+<GenericDetailInputFormatter
+  fieldDefinition={getFieldDef('email') ?? fallbackDef}
+  value={email}
+  onChange={setEmail}
+  objectName="customer"
+  className="w-full"
+/>
+```
+
+### Field definition fallback
+
+When metadata is still loading or a field has no definition, provide a minimal fallback:
+
+```tsx
+const fieldDef = getFieldDef('email') ?? {
+  key: 'email',
+  label: 'Email',
+  type: 'string',
+  required: true,
+}
+```
+
+### String validation (pattern)
+
+For string fields that need format validation (e.g. ICE: exactly 15 digits), add `validation` to the field metadata:
+
+```json
+{
+  "key": "ice",
+  "label": "ICE",
+  "type": "string",
+  "validation": {
+    "pattern": "^\\d{15}$",
+    "message": "L'ICE doit contenir exactement 15 chiffres"
+  }
+}
+```
+
+The formatter validates on blur, shows the error message, and displays a green checkmark when valid.
+
+### Exceptions
+
+- **Repeatable row sections** (line items, child records): May use raw `Input`/`Select` for fields from child object metadata
+- **Non-metadata fields**: One-off UI fields (e.g. "Confirm password") may use raw components
+
+### Reference
+
+- [GenericDetailInputFormatter](frontend/src/components/generic/GenericDetailInputFormatter.tsx)
+- [DossierWizard](frontend/src/components/dossier/DossierWizard.tsx) — example implementation
 
 ---
 

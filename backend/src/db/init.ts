@@ -6,6 +6,7 @@ import { tenantConfig } from '../routes/entity-registry.generated.js'
 import { seedMultiTenant } from './seed-multi-tenant.js'
 import { seedSingleTenant } from './seed-single-tenant.js'
 import { seedNotificationSettings } from './seed-notification-settings.js'
+import { syncRulesFromConfig } from '../seeds/syncRulesFromConfig.js'
 
 /** Seed minimal data - tables are created by Drizzle migrations. Admin user is mandatory. */
 export async function initDb() {
@@ -43,6 +44,8 @@ export async function initDb() {
   }
 
   await seedNotificationSettings()
+
+  await syncRulesFromConfig()
 }
 
 async function initDbMultiTenant() {

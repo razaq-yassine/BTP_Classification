@@ -8,19 +8,37 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent } from '@/components/ui/card'
-import { MoreHorizontal, Trash2 } from 'lucide-react'
+import { MoreHorizontal, Trash2, Pencil } from 'lucide-react'
 import { usePermissions } from '@/hooks/usePermissions'
+import { DossierHeaderClassificationValue } from '@/components/dossier/DossierHeaderClassificationValue'
+
+export interface ExtraPrimaryAction {
+  key: string
+  label: string
+  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+  icon?: React.ComponentType<{ className?: string }>
+  onClick: (record: GenericRecord) => void
+}
 
 interface GenericObjectDetailViewHeaderProps {
   objectDefinition: ObjectDefinition
   record: GenericRecord
   onDelete?: (record: GenericRecord) => void
+  /** Override action handlers by key (e.g. { edit: (record) => openWizard(record) }) */
+  actionOverrides?: Partial<Record<string, (record: GenericRecord) => void>>
+  /** Extra primary actions to render (e.g. "Modifier le dossier" when status=SOUMIS) */
+  extraPrimaryActions?: ExtraPrimaryAction[]
+  /** Filter primary actions by record state (return false to hide) */
+  primaryActionsFilter?: (action: { key: string }, record: GenericRecord) => boolean
 }
 
 export function GenericObjectDetailViewHeader({
   objectDefinition,
   record,
-  onDelete
+  onDelete,
+  actionOverrides,
+  extraPrimaryActions = [],
+  primaryActionsFilter,
 }: GenericObjectDetailViewHeaderProps) {
   const { t } = useTranslation('common')
   const { canUpdate, canDelete } = usePermissions()
@@ -67,10 +85,27 @@ export function GenericObjectDetailViewHeader({
             
             {/* Right side - On mobile/tablet: only ... dropdown. On lg+: primary buttons + ... dropdown */}
             <div className="flex items-center gap-1.5 shrink-0">
+              {/* Extra Primary Actions (e.g. Modifier le dossier when SOUMIS) */}
+              {extraPrimaryActions.map((action) => {
+                const ActionIcon = action.icon ?? Pencil
+                return (
+                  <Button
+                    key={action.key}
+                    variant={action.variant ?? 'outline'}
+                    size="sm"
+                    onClick={() => action.onClick(record)}
+                    className="hidden lg:flex items-center gap-2"
+                  >
+                    {ActionIcon && <ActionIcon className="h-4 w-4 shrink-0" />}
+                    {action.label}
+                  </Button>
+                )
+              })}
               {/* Primary Actions - visible only on lg+ */}
               {headerConfig?.primaryActions?.filter((action) => {
                 const actionKey = action.key
                 if (actionKey === 'edit') return canUpdate(objectDefinition.name)
+                if (primaryActionsFilter && !primaryActionsFilter(action, record)) return false
                 return true
               }).map((action) => {
                 const ActionIcon = action.icon
@@ -80,7 +115,7 @@ export function GenericObjectDetailViewHeader({
                     key={action.key}
                     variant={action.variant || 'default'}
                     size="sm"
-                    onClick={() => action.onClick(record)}
+                    onClick={() => (actionOverrides?.[action.key] ?? action.onClick)(record)}
                     className={cn("hidden lg:flex items-center gap-2", isPrimary && getObjectButtonClasses(objectDefinition.color))}
                   >
                     {ActionIcon && <ActionIcon className="h-4 w-4 shrink-0" />}
@@ -94,6 +129,7 @@ export function GenericObjectDetailViewHeader({
                 const filteredPrimary = (headerConfig?.primaryActions || []).filter((action) => {
                   const actionKey = action.key
                   if (actionKey === 'edit') return canUpdate(objectDefinition.name)
+                  if (primaryActionsFilter && !primaryActionsFilter(action, record)) return false
                   return true
                 })
                 const filteredSecondary = (headerConfig?.secondaryActions || []).filter((action) => {
@@ -102,7 +138,7 @@ export function GenericObjectDetailViewHeader({
                   if (actionKey === 'edit') return canUpdate(objectDefinition.name)
                   return true
                 })
-                const hasAnyActions = filteredPrimary.length > 0 || filteredSecondary.length > 0
+                const hasAnyActions = extraPrimaryActions.length > 0 || filteredPrimary.length > 0 || filteredSecondary.length > 0
                 if (!hasAnyActions) return null
                 return (
                   <DropdownMenu>
@@ -112,13 +148,30 @@ export function GenericObjectDetailViewHeader({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      {/* Extra primary actions - shown only on mobile/tablet (hidden on lg+) */}
+                      {extraPrimaryActions.map((action) => {
+                        const ActionIcon = action.icon ?? Pencil
+                        return (
+                          <DropdownMenuItem
+                            key={action.key}
+                            onClick={() => action.onClick(record)}
+                            className="flex items-center gap-2 lg:hidden"
+                          >
+                            {ActionIcon && <ActionIcon className="h-4 w-4" />}
+                            {action.label}
+                          </DropdownMenuItem>
+                        )
+                      })}
+                      {extraPrimaryActions.length > 0 && filteredPrimary.length > 0 && (
+                        <DropdownMenuSeparator className="lg:hidden" />
+                      )}
                       {/* Primary actions - shown only on mobile/tablet (hidden on lg+) */}
                       {filteredPrimary.map((action) => {
                         const ActionIcon = action.icon
                         return (
                           <DropdownMenuItem
                             key={action.key}
-                            onClick={() => action.onClick(record)}
+                            onClick={() => (actionOverrides?.[action.key] ?? action.onClick)(record)}
                             className="flex items-center gap-2 lg:hidden"
                           >
                             {ActionIcon && <ActionIcon className="h-4 w-4" />}
@@ -164,18 +217,30 @@ export function GenericObjectDetailViewHeader({
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 {headerConfig.calculatedData.map((calc) => {
                   const CalcIcon = calc.icon
-                  const value = calc.calculator(record)
-                  
+                  const isLatestClassification = calc.formula === 'latestClassification' && objectDefinition.name === 'dossier'
+
                   return (
-                    <div key={calc.key} className="flex items-center gap-2 sm:gap-3 min-w-0">
-                      {CalcIcon && (
+                    <div
+                      key={calc.key}
+                      className={cn(
+                        'flex items-center gap-2 sm:gap-3 min-w-0',
+                        isLatestClassification && 'col-span-full flex-col items-stretch'
+                      )}
+                    >
+                      {CalcIcon && !isLatestClassification && (
                         <div className="flex-shrink-0">
                           <CalcIcon className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
                         </div>
                       )}
-                      <div className="min-w-0 flex-1 truncate">
-                        <p className="text-[11px] sm:text-xs font-medium text-muted-foreground truncate">{t(calc.key, { defaultValue: calc.label })}</p>
-                        <p className="text-xs sm:text-sm font-semibold truncate">{value}</p>
+                      <div className={cn('min-w-0 flex-1 truncate', isLatestClassification && 'w-full')}>
+                        {!isLatestClassification && (
+                          <p className="text-[11px] sm:text-xs font-medium text-muted-foreground truncate">{t(calc.key, { defaultValue: calc.label })}</p>
+                        )}
+                        {isLatestClassification ? (
+                          <DossierHeaderClassificationValue record={record} />
+                        ) : (
+                          <p className="text-xs sm:text-sm font-semibold truncate">{calc.calculator(record)}</p>
+                        )}
                       </div>
                     </div>
                   )

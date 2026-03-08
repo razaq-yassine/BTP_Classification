@@ -21,6 +21,8 @@ export interface CalculatedDataDefinition {
   calculator: (record: GenericRecord) => string | number
   format?: 'currency' | 'percentage' | 'number' | 'text'
   icon?: React.ComponentType<any>
+  /** Formula/key for custom handlers (e.g. "latestClassification" for async fetch) */
+  formula?: string
 }
 
 export interface StatisticsCardDefinition {
@@ -48,7 +50,7 @@ export interface ListViewDefinition {
 export interface FieldDefinition {
   key: string
   label: string
-  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'masterDetail' | 'autoNumber' | 'formula' | 'password' | 'geolocation' | 'address' | 'richText' | 'file' | 'color'
+  type: 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'email' | 'phone' | 'text' | 'url' | 'select' | 'multiselect' | 'reference' | 'masterDetail' | 'autoNumber' | 'formula' | 'password' | 'geolocation' | 'address' | 'richText' | 'file' | 'color' | 'json' | 'secteur-classe-list'
   required?: boolean
   isRequired?: boolean // Alternative to required for compatibility
   isImportant?: boolean // Important fields show popup if empty on submit
@@ -78,6 +80,8 @@ export interface FieldDefinition {
   accept?: string
   /** For color fields: suggested hex values as quick-pick options (e.g. light theme presets) */
   suggestedColors?: string[]
+  /** Validation rules for string inputs (e.g. ICE: pattern, message) */
+  validation?: { pattern?: string; message?: string }
 }
 
 export interface RelatedObjectDefinition {
@@ -123,6 +127,8 @@ export interface ObjectDefinition {
     showInSidebar?: boolean
     group?: string // Nav group title (e.g. "Data", "General")
     parent?: string // Parent item title - puts this under a collapsible parent
+    /** When set, sidebar item is visible only for these profiles. Omit = visible for all who can read. */
+    showInSidebarForProfiles?: string[]
   }
   
   // Field definitions (optional for new format)

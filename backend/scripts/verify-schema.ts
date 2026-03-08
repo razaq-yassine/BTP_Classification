@@ -139,7 +139,7 @@ function getExpectedColumnsFromMetadata(): Map<string, Set<string>> {
             computed?: boolean;
           };
           if (fd.computed || fd.type === "formula") continue;
-          if (fd.type === "reference") {
+          if (fd.type === "reference" || fd.type === "masterDetail") {
             cols.add(toSnakeCase(key) + "_id");
           } else {
             cols.add(toSnakeCase(key));
@@ -172,7 +172,7 @@ async function main(): Promise<number> {
   }
 
   const connectionString =
-    process.env.DATABASE_URL || "mysql://root:root@localhost:3306/generic_saas";
+    process.env.DATABASE_URL || "mysql://root:root@localhost:3306/btp_classification_platform";
   let conn: mysql.Connection;
   try {
     conn = await mysql.createConnection(connectionString);

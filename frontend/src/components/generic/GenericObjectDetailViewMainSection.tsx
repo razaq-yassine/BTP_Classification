@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ImportantFieldsDialog } from '@/components/ui/important-fields-dialog'
+import { DossierClassificationResultBlock } from '@/components/dossier/DossierClassificationResultBlock'
 import { Edit2, ChevronDown, ChevronRight, Save, Undo2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getObjectBorderAccentClasses, getObjectButtonClasses } from '@/utils/object-color'
@@ -831,6 +832,10 @@ function DetailsTabContent({
                       )
                     })}
                   </div>
+                  {objectDefinition.name === 'dossier' &&
+                    (section.title === 'Classification' || section.titleKey === 'classification') && (
+                    <DossierClassificationResultBlock dossierId={record.id!} />
+                  )}
                 </div>
               </CollapsibleContent>
             </div>

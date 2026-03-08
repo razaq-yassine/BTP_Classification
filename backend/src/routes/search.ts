@@ -90,19 +90,18 @@ function toRecord(
 ): Record<string, unknown> {
   const base = { ...row } as Record<string, unknown>;
   const objectName = config.objectName;
-  const computedFields = config.computedFields;
-  if (computedFields) {
-    for (const cf of computedFields) {
-      if (cf.expression === "concat") {
-        const parts = (cf.sourceFields || []).map((f) => String(row[f] ?? ""));
-        base[cf.key] = parts.join(cf.separator || " ").trim();
-      }
-      if (cf.expression === "join" && joinedRow) {
-        const parts = (cf.sourceFields || []).map((f) =>
-          String(joinedRow[f] ?? "")
-        );
-        base[cf.key] = parts.join(cf.separator || " ").trim() || null;
-      }
+  const computedFieldsList = (config.computedFields ?? []) as Array<{ expression?: string; sourceFields?: string[]; key?: string; separator?: string }>;
+  for (const cf of computedFieldsList) {
+    if (!cf.key) continue;
+    if (cf.expression === "concat") {
+      const parts = (cf.sourceFields || []).map((f) => String(row[f] ?? ""));
+      base[cf.key] = parts.join(cf.separator || " ").trim();
+    }
+    if (cf.expression === "join" && joinedRow) {
+      const parts = (cf.sourceFields || []).map((f) =>
+        String(joinedRow[f] ?? "")
+      );
+      base[cf.key] = parts.join(cf.separator || " ").trim() || null;
     }
   }
   if ("join" in config && config.join && joinedRow) {
@@ -186,7 +185,7 @@ async function searchOneEntity(
   const tenantFilter = getTenantFilter(user, config);
   let tenantConds = buildTenantConditions(table as any, tenantFilter);
   if (
-    entityPath === "tenants" &&
+    (entityPath as string) === "tenants" &&
     user?.organizationId != null &&
     user?.tenantId == null
   ) {
@@ -301,7 +300,7 @@ async function fetchRecordsByIds(
       const tenantFilter = getTenantFilter(user, config);
       let tenantConds = buildTenantConditions(table as any, tenantFilter);
       if (
-        entityPath === "tenants" &&
+        (entityPath as string) === "tenants" &&
         user?.organizationId != null &&
         user?.tenantId == null
       ) {

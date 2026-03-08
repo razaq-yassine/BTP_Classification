@@ -15,9 +15,9 @@ import {
 } from '../../../shared/dist/protected-metadata.js'
 
 const VALID_FIELD_TYPES = new Set([
-  'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text', 'url',
+  'string', 'number', 'boolean', 'date', 'datetime', 'email', 'phone', 'text', 'json', 'url',
   'select', 'multiselect', 'reference', 'lookup', 'masterdetail', 'autonumber', 'formula',
-  'password', 'geolocation', 'address', 'richtext', 'file', 'color'
+  'password', 'geolocation', 'address', 'richtext', 'file', 'color', 'secteur-classe-list'
 ])
 
 const VALID_TENANT_MODES = new Set(['single_tenant', 'multi_tenant', 'org_and_tenant'])
@@ -98,6 +98,18 @@ function validateObjectFile(
   }
   if (!data.apiEndpoint || typeof data.apiEndpoint !== 'string' || !data.apiEndpoint.trim()) {
     addError(errors, pathPrefix, 'Missing required: apiEndpoint', 'OBJECT_MISSING_API_ENDPOINT')
+  } else {
+    const expectedPath = (data.tableName as string) || pluralize(objectName)
+    const expectedEndpoint = `/api/${expectedPath}`.replace(/\/+$/, '')
+    const actual = (data.apiEndpoint as string).trim().replace(/\/+$/, '')
+    if (actual !== expectedEndpoint) {
+      addError(
+        errors,
+        pathPrefix,
+        `apiEndpoint must match backend entity path. Expected "${expectedEndpoint}" (from tableName or pluralized object name), got "${actual}". Use camelCase, not kebab-case.`,
+        'OBJECT_API_ENDPOINT_MISMATCH'
+      )
+    }
   }
   if (data.name && data.name !== objectName) {
     addError(errors, pathPrefix, `Object name "${data.name}" does not match folder "${objectName}"`, 'OBJECT_NAME_MISMATCH')

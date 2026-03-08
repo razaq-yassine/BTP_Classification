@@ -1,0 +1,1 @@
+{ "key": "totalEncadrementScore", "label": "Score encadrement total", "type": "number", "required": false, "editable": false, "defaultValue": 0 }
